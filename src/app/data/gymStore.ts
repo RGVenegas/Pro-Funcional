@@ -5,10 +5,12 @@ export interface GymMember {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   plan: MembershipPlan;
   status: MemberStatus;
   balance: number;
   joinDate: string;
+  nextBilling?: string;
 }
 
 const storageKey = 'profuncional-members';
@@ -31,15 +33,15 @@ const initialActivities: GymActivity[] = [
 ];
 
 const initialMembers: GymMember[] = [
-  { id: '1', name: 'Juan Perez', email: 'juan.perez@gmail.com', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-01-15' },
-  { id: '2', name: 'Camila Gonzalez', email: 'camila.gonzalez@gmail.com', plan: 'Standard', status: 'active', balance: -50, joinDate: '2024-02-20' },
-  { id: '3', name: 'Matias Rojas', email: 'matias.rojas@gmail.com', plan: 'Basic', status: 'expired', balance: 0, joinDate: '2023-11-10' },
-  { id: '4', name: 'Antonia Silva', email: 'antonia.silva@gmail.com', plan: 'Premium', status: 'active', balance: 25, joinDate: '2024-03-05' },
-  { id: '5', name: 'Diego Morales', email: 'diego.morales@gmail.com', plan: 'Standard', status: 'suspended', balance: -120, joinDate: '2023-12-01' },
-  { id: '6', name: 'Valentina Soto', email: 'valentina.soto@gmail.com', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-01-25' },
-  { id: '7', name: 'Nicolas Fuentes', email: 'nicolas.fuentes@gmail.com', plan: 'Basic', status: 'active', balance: -30, joinDate: '2024-02-14' },
-  { id: '8', name: 'Fernanda Contreras', email: 'fernanda.contreras@gmail.com', plan: 'Standard', status: 'active', balance: 0, joinDate: '2024-03-10' },
-  { id: '9', name: 'Sebastian Araya', email: 'sebastian.araya@gmail.com', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-04-02' },
+  { id: '1', name: 'Juan Perez', email: 'juan.perez@gmail.com', phone: '+56 9 8765 4321', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-01-15', nextBilling: '2025-02-15' },
+  { id: '2', name: 'Camila Gonzalez', email: 'camila.gonzalez@gmail.com', phone: '+56 9 7654 3210', plan: 'Standard', status: 'active', balance: -50, joinDate: '2024-02-20', nextBilling: '2025-02-20' },
+  { id: '3', name: 'Matias Rojas', email: 'matias.rojas@gmail.com', phone: '+56 9 6543 2109', plan: 'Basic', status: 'expired', balance: 0, joinDate: '2023-11-10', nextBilling: '2025-01-10' },
+  { id: '4', name: 'Antonia Silva', email: 'antonia.silva@gmail.com', phone: '+56 9 5432 1098', plan: 'Premium', status: 'active', balance: 25, joinDate: '2024-03-05', nextBilling: '2025-03-05' },
+  { id: '5', name: 'Diego Morales', email: 'diego.morales@gmail.com', phone: '+56 9 4321 0987', plan: 'Standard', status: 'suspended', balance: -120, joinDate: '2023-12-01', nextBilling: '2025-02-01' },
+  { id: '6', name: 'Valentina Soto', email: 'valentina.soto@gmail.com', phone: '+56 9 3210 9876', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-01-25', nextBilling: '2025-01-25' },
+  { id: '7', name: 'Nicolas Fuentes', email: 'nicolas.fuentes@gmail.com', phone: '+56 9 2109 8765', plan: 'Basic', status: 'active', balance: -30, joinDate: '2024-02-14', nextBilling: '2025-02-14' },
+  { id: '8', name: 'Fernanda Contreras', email: 'fernanda.contreras@gmail.com', phone: '+56 9 1098 7654', plan: 'Standard', status: 'active', balance: 0, joinDate: '2024-03-10', nextBilling: '2025-03-10' },
+  { id: '9', name: 'Sebastian Araya', email: 'sebastian.araya@gmail.com', phone: '+56 9 9876 5432', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-04-02', nextBilling: '2025-04-02' },
 ];
 
 export function getMembers(): GymMember[] {
@@ -57,6 +59,25 @@ export function getMembers(): GymMember[] {
   }
 }
 
+export function getMemberById(id: string): GymMember | undefined {
+  const members = getMembers();
+  return members.find((m) => m.id === id);
+}
+
+export function updateMember(id: string, updates: Partial<Omit<GymMember, 'id'>>): GymMember | null {
+  const members = getMembers();
+  const index = members.findIndex((m) => m.id === id);
+  if (index === -1) return null;
+
+  const updatedMember = { ...members[index], ...updates };
+  members[index] = updatedMember;
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(storageKey, JSON.stringify(members));
+    window.dispatchEvent(new Event(changeEvent));
+  }
+  return updatedMember;
+}
+
 export function addMember(member: Omit<GymMember, 'id' | 'status' | 'balance' | 'joinDate'>): GymMember {
   const members = getMembers();
   const existing = members.find((item) => item.email.toLowerCase() === member.email.toLowerCase());
@@ -68,13 +89,18 @@ export function addMember(member: Omit<GymMember, 'id' | 'status' | 'balance' | 
     status: 'active',
     balance: 0,
     joinDate: new Date().toISOString().slice(0, 10),
+    nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    phone: member.phone || '+56 9 1234 5678',
   };
-  window.localStorage.setItem(storageKey, JSON.stringify([...members, newMember]));
-  window.dispatchEvent(new Event(changeEvent));
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(storageKey, JSON.stringify([...members, newMember]));
+    window.dispatchEvent(new Event(changeEvent));
+  }
   return newMember;
 }
 
 export function subscribeToMembers(onChange: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
   window.addEventListener(changeEvent, onChange);
   window.addEventListener('storage', onChange);
   return () => {
@@ -101,11 +127,14 @@ export function getActivities(): GymActivity[] {
 export function addActivity(activity: Omit<GymActivity, 'id' | 'time'>): void {
   const activities = getActivities();
   const newActivity: GymActivity = { ...activity, id: `activity-${Date.now()}`, time: 'ahora' };
-  window.localStorage.setItem(activityStorageKey, JSON.stringify([newActivity, ...activities]));
-  window.dispatchEvent(new Event(activityChangeEvent));
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(activityStorageKey, JSON.stringify([newActivity, ...activities]));
+    window.dispatchEvent(new Event(activityChangeEvent));
+  }
 }
 
 export function subscribeToActivities(onChange: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
   window.addEventListener(activityChangeEvent, onChange);
   window.addEventListener('storage', onChange);
   return () => {

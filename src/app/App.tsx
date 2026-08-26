@@ -90,8 +90,14 @@ export default function App() {
       ) : (
         <div className="flex min-h-screen flex-col pb-20">
           <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
-            {userView === 'home' && currentUser && <UserHome user={currentUser} />}
-            {userView === 'plan' && currentUser && <UserPlan plan={currentUser.plan} memberName={currentUser.name} />}
+            {userView === 'home' && currentUser && <UserHome user={currentUser} onNavigate={setUserView} />}
+            {userView === 'plan' && currentUser && (
+              <UserPlan
+                plan={currentUser.plan}
+                memberName={currentUser.name}
+                onUpdatePlan={(nextPlan) => setCurrentUser((prev) => prev ? { ...prev, plan: nextPlan } : null)}
+              />
+            )}
             {userView === 'calendar' && currentUser && <UserCalendar memberName={currentUser.name} selectedClasses={currentUser.selectedClasses} />}
             {userView === 'training' && <TrainingTracking />}
             {userView === 'card' && currentUser && <DigitalCard user={currentUser} />}

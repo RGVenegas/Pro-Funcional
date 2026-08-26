@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Mail, Phone, Calendar, Edit, Ban, RefreshCw, Flame, Dumbbell } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowLeft, Mail, Phone, Calendar, Edit, Ban, RefreshCw, Flame, Dumbbell, Check } from 'lucide-react';
 import { StatusBadge } from '../shared/StatusBadge';
+import { addActivity, getMemberById, getMembers, GymMember, subscribeToMembers, updateMember } from '../../data/gymStore';
 
 interface MemberDetailProps {
   memberId: string;
@@ -11,19 +12,29 @@ type Tab = 'info' | 'balance' | 'subscriptions' | 'notes';
 
 export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
   const [activeTab, setActiveTab] = useState<Tab>('info');
+  const [member, setMember] = useState<GymMember>(() => getMemberById(memberId) ?? getMembers()[0]);
+  const [noteText, setNoteText] = useState('');
+  const [notes, setNotes] = useState<Array<{ date: string; author: string; text: string }>>([
+    { date: '10 Ene, 2025', author: 'Administrador', text: 'El miembro solicitó extensión de horario por motivos laborales.' },
+  ]);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  const members = {
-    '1': { name: 'Juan Perez', email: 'juan.perez@gmail.com', plan: 'Premium', status: 'active' as const, balance: 0, joinDate: '2024-01-15', nextBilling: '2025-02-15', attendance: ['2025-01-22', '2025-01-21', '2025-01-20', '2025-01-18', '2025-01-17'] },
-    '2': { name: 'Camila Gonzalez', email: 'camila.gonzalez@gmail.com', plan: 'Standard', status: 'active' as const, balance: -50, joinDate: '2024-02-20', nextBilling: '2025-02-20', attendance: ['2025-01-22', '2025-01-21', '2025-01-20', '2025-01-15'] },
-    '3': { name: 'Matias Rojas', email: 'matias.rojas@gmail.com', plan: 'Basic', status: 'expired' as const, balance: 0, joinDate: '2023-11-10', nextBilling: '2025-01-10', attendance: ['2025-01-20', '2025-01-19'] },
-    '4': { name: 'Antonia Silva', email: 'antonia.silva@gmail.com', plan: 'Premium', status: 'active' as const, balance: 25, joinDate: '2024-03-05', nextBilling: '2025-03-05', attendance: ['2025-01-22', '2025-01-21', '2025-01-20', '2025-01-19', '2025-01-18', '2025-01-17'] },
-    '5': { name: 'Diego Morales', email: 'diego.morales@gmail.com', plan: 'Standard', status: 'suspended' as const, balance: -120, joinDate: '2023-12-01', nextBilling: '2025-02-01', attendance: ['2025-01-22', '2025-01-18'] },
-    '6': { name: 'Valentina Soto', email: 'valentina.soto@gmail.com', plan: 'Premium', status: 'active' as const, balance: 0, joinDate: '2024-01-25', nextBilling: '2025-01-25', attendance: ['2025-01-22', '2025-01-21', '2025-01-20'] },
-    '7': { name: 'Nicolas Fuentes', email: 'nicolas.fuentes@gmail.com', plan: 'Basic', status: 'active' as const, balance: -30, joinDate: '2024-02-14', nextBilling: '2025-02-14', attendance: ['2025-01-22', '2025-01-19', '2025-01-18'] },
-    '8': { name: 'Fernanda Contreras', email: 'fernanda.contreras@gmail.com', plan: 'Standard', status: 'active' as const, balance: 0, joinDate: '2024-03-10', nextBilling: '2025-03-10', attendance: ['2025-01-22', '2025-01-21', '2025-01-20', '2025-01-19'] },
-  };
-  const member = members[memberId as keyof typeof members] ?? members['1'];
-  const attendanceDates = member.attendance.map((date) => new Date(`${date}T12:00:00`));
+  useEffect(() => {
+    const unsub = subscribeToMembers(() => {
+      const updated = getMemberById(memberId);
+      if (updated) setMember(updated);
+    });
+    return unsub;
+  }, [memberId]);
+
+  const formatCLP = (amount: number) =>
+    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
+
+  const planPrices: Record<string, number> = { Basic: 29000, Standard: 59000, Premium: 99000 };
+  const currentPlanPrice = planPrices[member.plan] ?? 59000;
+
+  const attendance = ['2025-01-22', '2025-01-21', '2025-01-20', '2025-01-18', '2025-01-17'];
+  const attendanceDates = attendance.map((date) => new Date(`${date}T12:00:00`));
   let streak = 0;
   for (let index = 0; index < attendanceDates.length; index += 1) {
     const gap = index === 0 ? 0 : (attendanceDates[index - 1].getTime() - attendanceDates[index].getTime()) / 86400000;
@@ -32,22 +43,63 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
   }
 
   const payments = [
-    { date: '2025-01-15', amount: 99, status: 'completed', method: 'Credit Card' },
-    { date: '2024-12-15', amount: 99, status: 'completed', method: 'Credit Card' },
-    { date: '2024-11-15', amount: 99, status: 'completed', method: 'Credit Card' },
+    { date: '2025-01-15', amount: currentPlanPrice, status: 'Completado', method: 'Tarjeta de Crédito' },
+    { date: '2024-12-15', amount: currentPlanPrice, status: 'Completado', method: 'Tarjeta de Crédito' },
+    { date: '2024-11-15', amount: currentPlanPrice, status: 'Completado', method: 'Tarjeta de Crédito' },
   ];
 
   const subscriptions = [
-    { plan: 'Premium', startDate: '2024-01-15', endDate: '2025-02-15', status: 'active' },
-    { plan: 'Standard', startDate: '2023-06-01', endDate: '2024-01-15', status: 'expired' },
+    { plan: member.plan, startDate: member.joinDate, endDate: member.nextBilling || '2025-02-15', status: member.status },
   ];
 
   const tabs = [
-    { id: 'info', label: 'Informacion personal' },
+    { id: 'info', label: 'Información personal' },
     { id: 'balance', label: 'Saldo de cuenta' },
-    { id: 'subscriptions', label: 'Membresias' },
+    { id: 'subscriptions', label: 'Membresías' },
     { id: 'notes', label: 'Notas privadas' },
   ];
+
+  const showFeedback = (msg: string) => {
+    setActionMessage(msg);
+    setTimeout(() => setActionMessage(null), 3000);
+  };
+
+  const handleRenew = () => {
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + 30);
+    const updated = updateMember(member.id, {
+      status: 'active',
+      nextBilling: nextDate.toISOString().slice(0, 10),
+    });
+    if (updated) {
+      setMember(updated);
+      addActivity({ name: member.name, action: `renovó su membresía ${member.plan}` });
+      showFeedback(`Membresía renovada con éxito para ${member.name}.`);
+    }
+  };
+
+  const handleSuspend = () => {
+    const newStatus = member.status === 'suspended' ? 'active' : 'suspended';
+    const updated = updateMember(member.id, { status: newStatus });
+    if (updated) {
+      setMember(updated);
+      addActivity({ name: member.name, action: `${newStatus === 'suspended' ? 'fue suspendido' : 'fue reactivado'}` });
+      showFeedback(`Estado actualizado a ${newStatus === 'suspended' ? 'Suspendido' : 'Activo'}.`);
+    }
+  };
+
+  const handleSaveNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!noteText.trim()) return;
+    const newNote = {
+      date: new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' }),
+      author: 'Administrador',
+      text: noteText.trim(),
+    };
+    setNotes((prev) => [newNote, ...prev]);
+    setNoteText('');
+    showFeedback('Nota guardada correctamente.');
+  };
 
   return (
     <div className="space-y-6">
@@ -55,6 +107,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
       <div className="flex items-center gap-4">
         <button
           onClick={onBack}
+          aria-label="Volver a la lista de miembros"
           className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -65,15 +118,22 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
         </div>
       </div>
 
+      {actionMessage && (
+        <div className="rounded-xl border border-[#09C82C]/40 bg-[#09C82C]/15 p-4 text-[#09C82C] flex items-center gap-2">
+          <Check className="h-5 w-5" />
+          <span className="text-sm font-medium">{actionMessage}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-[#09C82C]/30 bg-[#09C82C]/10 p-5">
           <div className="mb-2 flex items-center gap-2 text-[#09C82C]"><Flame className="h-5 w-5" /><span className="text-sm font-medium">Racha actual</span></div>
-          <p className="text-3xl font-bold text-[#F7F7F7]">{streak} dias</p>
-          <p className="mt-1 text-sm text-white/55">Se pierde despues de 2 dias seguidos sin asistir.</p>
+          <p className="text-3xl font-bold text-[#F7F7F7]">{streak} días</p>
+          <p className="mt-1 text-sm text-white/55">Se pierde después de 2 días seguidos sin asistir.</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-white/5 p-5">
           <div className="mb-2 flex items-center gap-2 text-white/70"><Dumbbell className="h-5 w-5" /><span className="text-sm font-medium">Historial de asistencia</span></div>
-          <p className="text-3xl font-bold text-[#F7F7F7]">{member.attendance.length}</p>
+          <p className="text-3xl font-bold text-[#F7F7F7]">{attendance.length}</p>
           <p className="mt-1 text-sm text-white/55">entrenamientos registrados</p>
         </div>
       </div>
@@ -99,23 +159,29 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <span className="text-sm">{member.phone}</span>
+                <span className="text-sm">{member.phone || '+56 9 8765 4321'}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <button className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2">
-              <Edit className="w-4 h-4" />
-              <span className="hidden sm:inline">Edit</span>
-            </button>
-            <button className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleRenew}
+              className="px-4 py-2 bg-[#09C82C] text-[#010A01] font-semibold hover:bg-[#09C82C]/90 rounded-lg transition-colors flex items-center gap-2"
+            >
               <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">Renew</span>
+              <span>Renovar</span>
             </button>
-            <button className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors flex items-center gap-2">
+            <button
+              onClick={handleSuspend}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                member.status === 'suspended'
+                  ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300'
+                  : 'bg-red-500/20 hover:bg-red-500/30 text-red-400'
+              }`}
+            >
               <Ban className="w-4 h-4" />
-              <span className="hidden sm:inline">Suspend</span>
+              <span>{member.status === 'suspended' ? 'Reactivar' : 'Suspender'}</span>
             </button>
           </div>
         </div>
@@ -147,24 +213,24 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                 <p className="font-medium text-[#F7F7F7]">{member.name}</p>
               </div>
               <div>
-                <label className="text-sm text-white/60 mb-1 block">Correo</label>
+                <label className="text-sm text-white/60 mb-1 block">Correo electrónico</label>
                 <p className="font-medium text-[#F7F7F7]">{member.email}</p>
               </div>
               <div>
-                <label className="text-sm text-white/60 mb-1 block">Telefono</label>
-                <p className="font-medium text-[#F7F7F7]">{member.phone}</p>
+                <label className="text-sm text-white/60 mb-1 block">Teléfono</label>
+                <p className="font-medium text-[#F7F7F7]">{member.phone || '+56 9 8765 4321'}</p>
               </div>
               <div>
                 <label className="text-sm text-white/60 mb-1 block">Fecha de ingreso</label>
-                <p className="font-medium text-[#F7F7F7]">{new Date(member.joinDate).toLocaleDateString()}</p>
+                <p className="font-medium text-[#F7F7F7]">{new Date(member.joinDate).toLocaleDateString('es-CL')}</p>
               </div>
               <div>
-                <label className="text-sm text-white/60 mb-1 block">Membresia actual</label>
-                <p className="font-medium text-[#F7F7F7]">{member.plan}</p>
+                <label className="text-sm text-white/60 mb-1 block">Membresía actual</label>
+                <p className="font-medium text-[#F7F7F7]">Plan {member.plan}</p>
               </div>
               <div>
-                <label className="text-sm text-white/60 mb-1 block">Proximo cobro</label>
-                <p className="font-medium text-[#F7F7F7]">{new Date(member.nextBilling).toLocaleDateString()}</p>
+                <label className="text-sm text-white/60 mb-1 block">Próximo cobro</label>
+                <p className="font-medium text-[#F7F7F7]">{new Date(member.nextBilling || '2025-02-15').toLocaleDateString('es-CL')}</p>
               </div>
             </div>
           )}
@@ -173,7 +239,11 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
             <div className="space-y-6">
               <div className="bg-[#09C82C]/10 border border-[#09C82C]/20 rounded-lg p-4">
                 <p className="text-sm text-white/60 mb-1">Saldo actual</p>
-                <p className="text-3xl font-bold text-[#09C82C]">${member.balance}</p>
+                <p className={`text-3xl font-bold ${member.balance < 0 ? 'text-red-400' : 'text-[#09C82C]'}`}>
+                  {formatCLP(Math.abs(member.balance) * 1000)}
+                  {member.balance < 0 && ' (Deuda pendiente)'}
+                  {member.balance > 0 && ' (Saldo a favor)'}
+                </p>
               </div>
 
               <div>
@@ -182,11 +252,11 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                   {payments.map((payment, index) => (
                     <div key={index} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
                       <div>
-                        <p className="font-medium text-[#F7F7F7]">${payment.amount}</p>
+                        <p className="font-medium text-[#F7F7F7]">{formatCLP(payment.amount)}</p>
                         <p className="text-sm text-white/60">{payment.method}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm">{new Date(payment.date).toLocaleDateString()}</p>
+                        <p className="text-sm text-white/70">{new Date(payment.date).toLocaleDateString('es-CL')}</p>
                         <span className="text-xs px-2 py-1 bg-[#09C82C]/20 text-[#09C82C] rounded">
                           {payment.status}
                         </span>
@@ -204,9 +274,9 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                 <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h4 className="font-semibold text-lg">{sub.plan} Plan</h4>
+                      <h4 className="font-semibold text-lg">Plan {sub.plan}</h4>
                       <p className="text-sm text-white/60">
-                        {new Date(sub.startDate).toLocaleDateString()} - {new Date(sub.endDate).toLocaleDateString()}
+                        {new Date(sub.startDate).toLocaleDateString('es-CL')} - {new Date(sub.endDate).toLocaleDateString('es-CL')}
                       </p>
                     </div>
                     <StatusBadge status={sub.status as any} />
@@ -218,20 +288,26 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
 
           {activeTab === 'notes' && (
             <div className="space-y-4">
-              <textarea
-                className="w-full h-32 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-[#09C82C] resize-none"
-                placeholder="Add clinical notes or observations (private admin notes)..."
-              />
-              <button className="px-4 py-2 bg-[#09C82C] text-[#010A01] rounded-lg hover:bg-[#09C82C]/90 transition-colors font-medium">
-                Save Notes
-              </button>
+              <form onSubmit={handleSaveNote} className="space-y-3">
+                <textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  className="w-full h-32 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-[#09C82C] resize-none"
+                  placeholder="Escribe notas u observaciones privadas del administrador..."
+                />
+                <button type="submit" className="px-4 py-2 bg-[#09C82C] text-[#010A01] rounded-lg hover:bg-[#09C82C]/90 transition-colors font-medium">
+                  Guardar nota
+                </button>
+              </form>
               
               <div className="mt-6 space-y-3">
-                <h4 className="font-semibold">Previous Notes</h4>
-                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                  <p className="text-sm text-white/60 mb-2">Jan 10, 2025 - Admin</p>
-                  <p>Member requested extended hours access due to work schedule.</p>
-                </div>
+                <h4 className="font-semibold">Notas registradas</h4>
+                {notes.map((note, idx) => (
+                  <div key={idx} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <p className="text-sm text-white/60 mb-2">{note.date} - {note.author}</p>
+                    <p className="text-sm text-white/90">{note.text}</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}

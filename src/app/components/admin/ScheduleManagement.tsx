@@ -150,7 +150,7 @@ export function ScheduleManagement() {
             <p className="font-semibold">
             {currentWeek === 0 ? 'Esta semana' : currentWeek > 0 ? `${currentWeek} semana${currentWeek > 1 ? 's' : ''} adelante` : `Hace ${Math.abs(currentWeek)} semana${Math.abs(currentWeek) > 1 ? 's' : ''}`}
           </p>
-          <p className="text-sm text-white/60">Jan 20 - Jan 26, 2025</p>
+          <p className="text-sm text-white/60">20 al 26 de Enero, 2025</p>
         </div>
         <button
           onClick={() => setCurrentWeek(currentWeek + 1)}

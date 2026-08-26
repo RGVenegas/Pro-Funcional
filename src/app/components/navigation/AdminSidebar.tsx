@@ -18,7 +18,7 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
   const MenuContent = () => (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b border-white/10">
-        <h1 className="text-2xl font-bold text-[#09C82C]">GymFlow</h1>
+        <h1 className="text-2xl font-bold tracking-[-0.04em] text-white">PRO<span className="text-[#09C82C]">FUNCIONAL</span></h1>
         <p className="text-sm text-[#F7F7F7]/60 mt-1">Panel administrativo</p>
       </div>
       

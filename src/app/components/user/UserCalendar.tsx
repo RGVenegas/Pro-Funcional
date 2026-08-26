@@ -35,7 +35,7 @@ export function UserCalendar({ memberName, selectedClasses }: UserCalendarProps)
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [cancelledBookings, setCancelledBookings] = useState<string[]>([]);
 
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   const dates = [20, 21, 22, 23, 24, 25, 26];
 
   const defaultMySchedule: Record<number, ClassEvent[]> = {
@@ -167,9 +167,9 @@ export function UserCalendar({ memberName, selectedClasses }: UserCalendarProps)
         </button>
         <div className="text-center">
           <p className="font-semibold">
-            {currentWeek === 0 ? 'This Week' : currentWeek > 0 ? `${currentWeek} Week${currentWeek > 1 ? 's' : ''} Ahead` : `${Math.abs(currentWeek)} Week${Math.abs(currentWeek) > 1 ? 's' : ''} Ago`}
+            {currentWeek === 0 ? 'Esta semana' : currentWeek > 0 ? `${currentWeek} semana${currentWeek > 1 ? 's' : ''} adelante` : `Hace ${Math.abs(currentWeek)} semana${Math.abs(currentWeek) > 1 ? 's' : ''}`}
           </p>
-          <p className="text-sm text-white/60">January 20-26, 2025</p>
+          <p className="text-sm text-white/60">20 al 26 de Enero, 2025</p>
         </div>
         <button
           onClick={() => setCurrentWeek(currentWeek + 1)}

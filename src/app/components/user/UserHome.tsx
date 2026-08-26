@@ -4,15 +4,16 @@ import { AuthUser } from '../auth/Login';
 
 interface UserHomeProps {
   user: AuthUser;
+  onNavigate?: (view: 'home' | 'plan' | 'calendar' | 'training' | 'card' | 'profile') => void;
 }
 
-export function UserHome({ user: account }: UserHomeProps) {
+export function UserHome({ user: account, onNavigate }: UserHomeProps) {
   const selectedClasses = account.selectedClasses ?? [];
   const user = {
     name: account.name,
     nextClass: selectedClasses.length > 0 ? {
       name: selectedClasses[0],
-        time: 'Hoy a las 18:00',
+      time: 'Hoy a las 18:00',
       instructor: 'Mike R.',
     } : null,
   };
@@ -20,21 +21,21 @@ export function UserHome({ user: account }: UserHomeProps) {
   const quickStats = [
     { label: 'Entrenamientos esta semana', value: '5', icon: Dumbbell },
     { label: 'Clases elegidas', value: String(selectedClasses.length), icon: Calendar },
-    { label: 'Dias consecutivos', value: '12', icon: TrendingUp },
+    { label: 'Días consecutivos', value: '12', icon: TrendingUp },
   ];
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-to-br from-[#09C82C]/20 to-[#09C82C]/5 rounded-xl p-6 backdrop-blur-sm border border-[#09C82C]/20">
-        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Bienvenido de nuevo, {user.name}!</h1>
-        <p className="text-white/60">Listo para superar tus objetivos de hoy?</p>
+        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">¡Bienvenido de nuevo, {user.name}!</h1>
+        <p className="text-white/60">¿Listo para superar tus objetivos de hoy?</p>
       </div>
 
       {/* Next Training */}
       {user.nextClass && (
         <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
-          <h3 className="font-semibold mb-4 text-[#F7F7F7]">Proxima sesion de entrenamiento</h3>
+          <h3 className="font-semibold mb-4 text-[#F7F7F7]">Próxima sesión de entrenamiento</h3>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-[#09C82C]/20 rounded-lg flex items-center justify-center flex-shrink-0">
               <Dumbbell className="w-6 h-6 text-[#09C82C]" />
@@ -45,7 +46,10 @@ export function UserHome({ user: account }: UserHomeProps) {
             </div>
             <div className="text-right">
               <p className="text-sm font-medium text-[#F7F7F7]">{user.nextClass.time}</p>
-              <button className="text-sm text-[#09C82C] hover:underline mt-1">
+              <button
+                onClick={() => onNavigate?.('calendar')}
+                className="text-sm text-[#09C82C] hover:underline mt-1"
+              >
                 Ver detalles
               </button>
             </div>
@@ -73,16 +77,22 @@ export function UserHome({ user: account }: UserHomeProps) {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <button className="bg-white/5 hover:bg-white/10 rounded-xl p-6 backdrop-blur-sm border border-white/10 transition-colors text-left">
-          <Calendar className="w-8 h-8 text-[#09C82C] mb-3" />
+        <button
+          onClick={() => onNavigate?.('calendar')}
+          className="bg-white/5 hover:bg-white/10 rounded-xl p-6 backdrop-blur-sm border border-white/10 transition-colors text-left group"
+        >
+          <Calendar className="w-8 h-8 text-[#09C82C] mb-3 transition-transform group-hover:scale-110" />
           <h3 className="font-semibold mb-1 text-[#F7F7F7]">Reservar una clase</h3>
-          <p className="text-sm text-white/60">Asegura tu lugar en las proximas sesiones</p>
+          <p className="text-sm text-white/60">Asegura tu lugar en las próximas sesiones</p>
         </button>
         
-        <button className="bg-white/5 hover:bg-white/10 rounded-xl p-6 backdrop-blur-sm border border-white/10 transition-colors text-left">
-          <QrCode className="w-8 h-8 text-[#09C82C] mb-3" />
+        <button
+          onClick={() => onNavigate?.('card')}
+          className="bg-white/5 hover:bg-white/10 rounded-xl p-6 backdrop-blur-sm border border-white/10 transition-colors text-left group"
+        >
+          <QrCode className="w-8 h-8 text-[#09C82C] mb-3 transition-transform group-hover:scale-110" />
           <h3 className="font-semibold mb-1 text-[#F7F7F7]">Ver tarjeta QR</h3>
-          <p className="text-sm text-white/60">Accede a tu tarjeta digital de membresia</p>
+          <p className="text-sm text-white/60">Accede a tu tarjeta digital de membresía</p>
         </button>
       </div>
     </div>

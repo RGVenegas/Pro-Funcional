@@ -102,7 +102,7 @@ export function TrainingTracking() {
                 <div className="w-full bg-[#09C82C] rounded-t-lg" style={{ height: '100%' }} />
               </div>
               <span className="text-xs text-white/60">
-                {['M', 'T', 'W', 'T', 'F', 'S', 'S'][index]}
+                {['L', 'M', 'M', 'J', 'V', 'S', 'D'][index]}
               </span>
             </div>
           ))}
@@ -117,7 +117,7 @@ export function TrainingTracking() {
             <div key={date}>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-2 h-2 bg-[#09C82C] rounded-full" />
-                <p className="font-medium text-[#F7F7F7]">{new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                <p className="font-medium text-[#F7F7F7] capitalize">{new Date(date).toLocaleDateString('es-CL', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
               </div>
               <div className="ml-5 space-y-3 border-l-2 border-white/10 pl-6">
                 {daySessions.map((session) => (

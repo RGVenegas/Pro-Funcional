@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import { ArrowRight, Check, Dumbbell, Eye, EyeOff, LockKeyhole, Mail, UserRound, UsersRound } from 'lucide-react';
-import { addActivity, addMember } from '../../data/gymStore';
+import { addActivity, addMember, getMembers } from '../../data/gymStore';
 
 type AccessMode = 'member' | 'register' | 'staff';
 export type AuthRole = 'user' | 'admin';
@@ -72,12 +72,35 @@ export function Login({ onAuthenticated }: LoginProps) {
 
     setFormError('');
     setIsSubmitted(true);
-    const user: AuthUser = {
-      name: mode === 'staff' ? 'Personal del gimnasio' : 'Juan Perez',
-      email,
-      plan: 'Premium',
-      selectedClasses: [],
-    };
+
+    let user: AuthUser;
+    if (mode === 'staff') {
+      user = {
+        name: 'Personal del gimnasio',
+        email,
+        plan: 'Premium',
+        selectedClasses: [],
+      };
+    } else {
+      const existing = getMembers().find((m) => m.email.toLowerCase() === email.toLowerCase());
+      if (existing) {
+        user = {
+          name: existing.name,
+          email: existing.email,
+          plan: existing.plan,
+          selectedClasses: ['Entrenamiento HIIT'],
+        };
+      } else {
+        const fallbackName = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        user = {
+          name: fallbackName || 'Miembro ProFuncional',
+          email,
+          plan: 'Premium',
+          selectedClasses: ['Entrenamiento HIIT'],
+        };
+        addMember({ name: user.name, email: user.email, plan: user.plan });
+      }
+    }
     window.setTimeout(() => onAuthenticated(mode === 'staff' ? 'admin' : 'user', user), 450);
   };
 
