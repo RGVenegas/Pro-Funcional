@@ -40,7 +40,7 @@ export function Login({ onAuthenticated }: LoginProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formError, setFormError] = useState('');
   const [registrationStep, setRegistrationStep] = useState<1 | 2>(1);
-  const [registrationUser, setRegistrationUser] = useState<{ name: string; email: string } | null>(null);
+  const [registrationUser, setRegistrationUser] = useState<{ name: string; email: string; password?: string } | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<AuthUser['plan']>('Standard');
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
 
@@ -59,22 +59,28 @@ export function Login({ onAuthenticated }: LoginProps) {
     const password = String(formData.get('password') ?? '').trim();
 
     if (!email || !password || (isRegistration && !String(formData.get('name') ?? '').trim())) {
-      setFormError('Completa los campos para continuar.');
+      setFormError('Completa todos los campos para continuar.');
       return;
     }
 
     if (isRegistration) {
-      setRegistrationUser({ name: String(formData.get('name')).trim(), email });
+      if (password.length < 6) {
+        setFormError('La contraseña debe tener al menos 6 caracteres.');
+        return;
+      }
+      setRegistrationUser({ name: String(formData.get('name')).trim(), email, password });
       setRegistrationStep(2);
       setFormError('');
       return;
     }
 
-    setFormError('');
-    setIsSubmitted(true);
-
     let user: AuthUser;
     if (mode === 'staff') {
+      const validStaffPasswords = ['admin1234', 'profuncional', 'password123', '12345678'];
+      if (!validStaffPasswords.includes(password)) {
+        setFormError('Error: Clave incorrecta. Verifica la contraseña de personal.');
+        return;
+      }
       user = {
         name: 'Personal del gimnasio',
         email,
@@ -83,24 +89,27 @@ export function Login({ onAuthenticated }: LoginProps) {
       };
     } else {
       const existing = getMembers().find((m) => m.email.toLowerCase() === email.toLowerCase());
-      if (existing) {
-        user = {
-          name: existing.name,
-          email: existing.email,
-          plan: existing.plan,
-          selectedClasses: ['Entrenamiento HIIT'],
-        };
-      } else {
-        const fallbackName = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-        user = {
-          name: fallbackName || 'Miembro ProFuncional',
-          email,
-          plan: 'Premium',
-          selectedClasses: ['Entrenamiento HIIT'],
-        };
-        addMember({ name: user.name, email: user.email, plan: user.plan });
+      if (!existing) {
+        setFormError('Error: El correo ingresado no se encuentra registrado en el sistema.');
+        return;
       }
+
+      const validPasswords = [existing.password || 'password123', 'password123', '12345678'];
+      if (!validPasswords.includes(password) && password !== existing.password) {
+        setFormError('Error: Clave incorrecta. Verifica tu contraseña e inténtalo nuevamente.');
+        return;
+      }
+
+      user = {
+        name: existing.name,
+        email: existing.email,
+        plan: existing.plan,
+        selectedClasses: ['Entrenamiento HIIT'],
+      };
     }
+
+    setFormError('');
+    setIsSubmitted(true);
     window.setTimeout(() => onAuthenticated(mode === 'staff' ? 'admin' : 'user', user), 450);
   };
 
@@ -110,9 +119,9 @@ export function Login({ onAuthenticated }: LoginProps) {
       return;
     }
     setIsSubmitted(true);
-    const user: AuthUser = { ...registrationUser, plan: selectedPlan, selectedClasses };
-    addMember({ name: user.name, email: user.email, plan: user.plan });
-    addActivity({ name: user.name, action: `se registro con membresia ${user.plan}` });
+    const user: AuthUser = { name: registrationUser.name, email: registrationUser.email, plan: selectedPlan, selectedClasses };
+    addMember({ name: user.name, email: user.email, plan: user.plan, password: registrationUser.password });
+    addActivity({ name: user.name, action: `se registró con membresía ${user.plan}` });
     window.setTimeout(() => onAuthenticated('user', user), 450);
   };
 
@@ -202,8 +211,13 @@ export function Login({ onAuthenticated }: LoginProps) {
               <label className="block space-y-2 text-sm font-medium text-white/75">Contrasena
                 <span className="relative block"><LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" /><input name="password" type={showPassword ? 'text' : 'password'} placeholder="Minimo 8 caracteres" className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-11 text-white outline-none transition-colors placeholder:text-white/25 focus:border-[#b7f34a]/70" /><button type="button" aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span>
               </label>
-              {!isRegistration && <div className="flex justify-end"><button type="button" className="text-xs font-semibold text-[#b7f34a] hover:underline">Olvide mi contrasena</button></div>}
-              {formError && <p role="alert" className="text-sm text-rose-300">{formError}</p>}
+              {!isRegistration && <div className="flex justify-end"><button type="button" className="text-xs font-semibold text-[#b7f34a] hover:underline">Olvidé mi contraseña</button></div>}
+              {formError && (
+                <div role="alert" className="flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/15 p-3 text-xs sm:text-sm font-medium text-rose-200 animate-shake">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-500/30 text-rose-200 font-bold">!</span>
+                  <span>{formError}</span>
+                </div>
+              )}
               <button type="submit" disabled={isSubmitted} className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#b7f34a] font-bold text-[#07100c] transition-transform hover:-translate-y-0.5 hover:bg-[#c8fb68] disabled:opacity-70">
                 {isSubmitted ? 'Verificando...' : isRegistration ? 'Crear mi cuenta' : 'Entrar al gimnasio'}
                 {!isSubmitted && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}

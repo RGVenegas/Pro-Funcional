@@ -5,6 +5,7 @@ export interface GymMember {
   id: string;
   name: string;
   email: string;
+  password?: string;
   phone?: string;
   plan: MembershipPlan;
   status: MemberStatus;
@@ -33,15 +34,15 @@ const initialActivities: GymActivity[] = [
 ];
 
 const initialMembers: GymMember[] = [
-  { id: '1', name: 'Juan Perez', email: 'juan.perez@gmail.com', phone: '+56 9 8765 4321', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-01-15', nextBilling: '2025-02-15' },
-  { id: '2', name: 'Camila Gonzalez', email: 'camila.gonzalez@gmail.com', phone: '+56 9 7654 3210', plan: 'Standard', status: 'active', balance: -50, joinDate: '2024-02-20', nextBilling: '2025-02-20' },
-  { id: '3', name: 'Matias Rojas', email: 'matias.rojas@gmail.com', phone: '+56 9 6543 2109', plan: 'Basic', status: 'expired', balance: 0, joinDate: '2023-11-10', nextBilling: '2025-01-10' },
-  { id: '4', name: 'Antonia Silva', email: 'antonia.silva@gmail.com', phone: '+56 9 5432 1098', plan: 'Premium', status: 'active', balance: 25, joinDate: '2024-03-05', nextBilling: '2025-03-05' },
-  { id: '5', name: 'Diego Morales', email: 'diego.morales@gmail.com', phone: '+56 9 4321 0987', plan: 'Standard', status: 'suspended', balance: -120, joinDate: '2023-12-01', nextBilling: '2025-02-01' },
-  { id: '6', name: 'Valentina Soto', email: 'valentina.soto@gmail.com', phone: '+56 9 3210 9876', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-01-25', nextBilling: '2025-01-25' },
-  { id: '7', name: 'Nicolas Fuentes', email: 'nicolas.fuentes@gmail.com', phone: '+56 9 2109 8765', plan: 'Basic', status: 'active', balance: -30, joinDate: '2024-02-14', nextBilling: '2025-02-14' },
-  { id: '8', name: 'Fernanda Contreras', email: 'fernanda.contreras@gmail.com', phone: '+56 9 1098 7654', plan: 'Standard', status: 'active', balance: 0, joinDate: '2024-03-10', nextBilling: '2025-03-10' },
-  { id: '9', name: 'Sebastian Araya', email: 'sebastian.araya@gmail.com', phone: '+56 9 9876 5432', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-04-02', nextBilling: '2025-04-02' },
+  { id: '1', name: 'Juan Perez', email: 'juan.perez@gmail.com', password: 'password123', phone: '+56 9 8765 4321', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-01-15', nextBilling: '2025-02-15' },
+  { id: '2', name: 'Camila Gonzalez', email: 'camila.gonzalez@gmail.com', password: 'password123', phone: '+56 9 7654 3210', plan: 'Standard', status: 'active', balance: -50, joinDate: '2024-02-20', nextBilling: '2025-02-20' },
+  { id: '3', name: 'Matias Rojas', email: 'matias.rojas@gmail.com', password: 'password123', phone: '+56 9 6543 2109', plan: 'Basic', status: 'expired', balance: 0, joinDate: '2023-11-10', nextBilling: '2025-01-10' },
+  { id: '4', name: 'Antonia Silva', email: 'antonia.silva@gmail.com', password: 'password123', phone: '+56 9 5432 1098', plan: 'Premium', status: 'active', balance: 25, joinDate: '2024-03-05', nextBilling: '2025-03-05' },
+  { id: '5', name: 'Diego Morales', email: 'diego.morales@gmail.com', password: 'password123', phone: '+56 9 4321 0987', plan: 'Standard', status: 'suspended', balance: -120, joinDate: '2023-12-01', nextBilling: '2025-02-01' },
+  { id: '6', name: 'Valentina Soto', email: 'valentina.soto@gmail.com', password: 'password123', phone: '+56 9 3210 9876', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-01-25', nextBilling: '2025-01-25' },
+  { id: '7', name: 'Nicolas Fuentes', email: 'nicolas.fuentes@gmail.com', password: 'password123', phone: '+56 9 2109 8765', plan: 'Basic', status: 'active', balance: -30, joinDate: '2024-02-14', nextBilling: '2025-02-14' },
+  { id: '8', name: 'Fernanda Contreras', email: 'fernanda.contreras@gmail.com', password: 'password123', phone: '+56 9 1098 7654', plan: 'Standard', status: 'active', balance: 0, joinDate: '2024-03-10', nextBilling: '2025-03-10' },
+  { id: '9', name: 'Sebastian Araya', email: 'sebastian.araya@gmail.com', password: 'password123', phone: '+56 9 9876 5432', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-04-02', nextBilling: '2025-04-02' },
 ];
 
 export function getMembers(): GymMember[] {
@@ -52,7 +53,8 @@ export function getMembers(): GymMember[] {
     return initialMembers;
   }
   try {
-    return JSON.parse(saved) as GymMember[];
+    const list = JSON.parse(saved) as GymMember[];
+    return list.map((m) => ({ ...m, password: m.password || 'password123' }));
   } catch {
     window.localStorage.setItem(storageKey, JSON.stringify(initialMembers));
     return initialMembers;
