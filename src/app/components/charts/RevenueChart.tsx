@@ -1,15 +1,16 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export function RevenueChart() {
+interface RevenueChartProps {
+  monthlyRevenue: number;
+}
+
+export function RevenueChart({ monthlyRevenue }: RevenueChartProps) {
+  const formatCLP = (amount: number) =>
+    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
+
   const data = [
-    { month: 'Jul', revenue: 24500 },
-    { month: 'Aug', revenue: 25200 },
-    { month: 'Sep', revenue: 26100 },
-    { month: 'Oct', revenue: 26800 },
-    { month: 'Nov', revenue: 27300 },
-    { month: 'Dec', revenue: 27900 },
-    { month: 'Jan', revenue: 28450 },
+    { month: 'Actual', revenue: monthlyRevenue },
   ];
 
   return (
@@ -24,7 +25,7 @@ export function RevenueChart() {
         <YAxis 
           stroke="rgba(255,255,255,0.6)"
           style={{ fontSize: '12px' }}
-          tickFormatter={(value) => `$${value / 1000}k`}
+          tickFormatter={(value) => `${formatCLP(value).replace(',00', '')}`}
         />
         <Tooltip
           contentStyle={{
@@ -33,7 +34,7 @@ export function RevenueChart() {
             borderRadius: '8px',
             color: '#fff',
           }}
-          formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
+          formatter={(value: number) => [formatCLP(value), 'Ingresos']}
         />
         <Bar 
           dataKey="revenue" 

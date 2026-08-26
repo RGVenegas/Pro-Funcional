@@ -14,9 +14,9 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   };
 
   const labels = {
-    active: 'Active',
-    expired: 'Expired',
-    suspended: 'Suspended',
+    active: 'Activo',
+    expired: 'Vencido',
+    suspended: 'Suspendido',
   };
 
   return (

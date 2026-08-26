@@ -10,16 +10,16 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'members', label: 'Members', icon: Users },
-    { id: 'schedule', label: 'Schedule', icon: Calendar },
+    { id: 'dashboard', label: 'Resumen', icon: LayoutDashboard },
+    { id: 'members', label: 'Miembros', icon: Users },
+    { id: 'schedule', label: 'Horarios', icon: Calendar },
   ];
 
   const MenuContent = () => (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b border-white/10">
         <h1 className="text-2xl font-bold text-[#09C82C]">GymFlow</h1>
-        <p className="text-sm text-[#F7F7F7]/60 mt-1">Admin Panel</p>
+        <p className="text-sm text-[#F7F7F7]/60 mt-1">Panel administrativo</p>
       </div>
       
       <nav className="flex-1 p-4">

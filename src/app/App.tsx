@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { LogOut, UserRound } from 'lucide-react';
+import { AuthUser, Login } from './components/auth/Login';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { MembersList } from './components/admin/MembersList';
 import { MemberDetail } from './components/admin/MemberDetail';
@@ -8,15 +10,17 @@ import { UserPlan } from './components/user/UserPlan';
 import { UserCalendar } from './components/user/UserCalendar';
 import { TrainingTracking } from './components/user/TrainingTracking';
 import { DigitalCard } from './components/user/DigitalCard';
+import { UserProfile } from './components/user/UserProfile';
 import { AdminSidebar } from './components/navigation/AdminSidebar';
 import { UserBottomNav } from './components/navigation/UserBottomNav';
 
 type Role = 'admin' | 'user';
 type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule';
-type UserView = 'home' | 'plan' | 'calendar' | 'training' | 'card';
+type UserView = 'home' | 'plan' | 'calendar' | 'training' | 'card' | 'profile';
 
 export default function App() {
-  const [role, setRole] = useState<Role>('admin');
+  const [role, setRole] = useState<Role | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [adminView, setAdminView] = useState<AdminView>('dashboard');
   const [userView, setUserView] = useState<UserView>('home');
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
@@ -31,31 +35,39 @@ export default function App() {
     setAdminView('members');
   };
 
+  const handleLogout = () => {
+    setRole(null);
+    setCurrentUser(null);
+    setAdminView('dashboard');
+    setUserView('home');
+    setSelectedMemberId(null);
+  };
+
+  if (!role) {
+    return <Login onAuthenticated={(nextRole, user) => { setRole(nextRole); setCurrentUser(user); }} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#010A01] text-white">
-      {/* Role Switcher - For demo purposes */}
-      <div className="fixed top-4 right-4 z-50 flex gap-2">
+      <button
+        onClick={handleLogout}
+        aria-label="Cerrar sesion"
+        title="Cerrar sesion"
+        className="fixed right-4 top-4 z-50 rounded-lg bg-white/10 p-2 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+      >
+        <LogOut className="h-5 w-5" />
+      </button>
+
+      {role === 'user' && (
         <button
-          onClick={() => setRole('admin')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            role === 'admin' 
-              ? 'bg-[#09C82C] text-[#010A01]' 
-              : 'bg-white/10 text-white hover:bg-white/20'
-          }`}
+          onClick={() => setUserView('profile')}
+          aria-label="Abrir perfil"
+          title="Abrir perfil"
+          className="fixed right-16 top-4 z-50 rounded-lg bg-white/10 p-2 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
         >
-          Admin View
+          <UserRound className="h-5 w-5" />
         </button>
-        <button
-          onClick={() => setRole('user')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            role === 'user' 
-              ? 'bg-[#09C82C] text-[#010A01]' 
-              : 'bg-white/10 text-white hover:bg-white/20'
-          }`}
-        >
-          User View
-        </button>
-      </div>
+      )}
 
       {role === 'admin' ? (
         <div className="flex min-h-screen">
@@ -76,13 +88,14 @@ export default function App() {
           </main>
         </div>
       ) : (
-        <div className="flex flex-col min-h-screen pb-20 lg:pb-0">
+        <div className="flex min-h-screen flex-col pb-20">
           <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
-            {userView === 'home' && <UserHome />}
-            {userView === 'plan' && <UserPlan />}
-            {userView === 'calendar' && <UserCalendar />}
+            {userView === 'home' && currentUser && <UserHome user={currentUser} />}
+            {userView === 'plan' && currentUser && <UserPlan plan={currentUser.plan} memberName={currentUser.name} />}
+            {userView === 'calendar' && currentUser && <UserCalendar memberName={currentUser.name} selectedClasses={currentUser.selectedClasses} />}
             {userView === 'training' && <TrainingTracking />}
-            {userView === 'card' && <DigitalCard />}
+            {userView === 'card' && currentUser && <DigitalCard user={currentUser} />}
+            {userView === 'profile' && currentUser && <UserProfile user={currentUser} />}
           </main>
           <UserBottomNav 
             currentView={userView} 

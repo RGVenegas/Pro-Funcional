@@ -45,8 +45,8 @@ export function TrainingTracking() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Training History</h1>
-        <p className="text-white/60">Track your progress and workouts</p>
+        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Historial de entrenamiento</h1>
+        <p className="text-white/60">Sigue tu progreso y tus entrenamientos</p>
       </div>
 
       {/* Statistics Cards */}
@@ -58,7 +58,7 @@ export function TrainingTracking() {
             </div>
           </div>
           <p className="text-2xl font-bold">{stats.thisWeek}</p>
-          <p className="text-sm text-white/60">This Week</p>
+          <p className="text-sm text-white/60">Esta semana</p>
         </div>
 
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
@@ -68,7 +68,7 @@ export function TrainingTracking() {
             </div>
           </div>
           <p className="text-2xl font-bold">{stats.totalHours}h</p>
-          <p className="text-sm text-white/60">Total Hours</p>
+          <p className="text-sm text-white/60">Horas totales</p>
         </div>
 
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
@@ -78,7 +78,7 @@ export function TrainingTracking() {
             </div>
           </div>
           <p className="text-2xl font-bold">{stats.streak}</p>
-          <p className="text-sm text-white/60">Day Streak</p>
+          <p className="text-sm text-white/60">Dias seguidos</p>
         </div>
 
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
@@ -88,13 +88,13 @@ export function TrainingTracking() {
             </div>
           </div>
           <p className="text-2xl font-bold">{stats.avgPerWeek}</p>
-          <p className="text-sm text-white/60">Avg/Week</p>
+          <p className="text-sm text-white/60">Promedio semanal</p>
         </div>
       </div>
 
       {/* Progress Chart Placeholder */}
       <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
-        <h3 className="font-semibold mb-4 text-[#F7F7F7]">Weekly Activity</h3>
+        <h3 className="font-semibold mb-4 text-[#F7F7F7]">Actividad semanal</h3>
         <div className="flex items-end gap-2 h-32">
           {[3, 5, 4, 6, 5, 7, 5].map((height, index) => (
             <div key={index} className="flex-1 flex flex-col items-center gap-2">
@@ -111,7 +111,7 @@ export function TrainingTracking() {
 
       {/* Workout Timeline */}
       <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
-        <h3 className="font-semibold mb-4 text-[#F7F7F7]">Recent Workouts</h3>
+        <h3 className="font-semibold mb-4 text-[#F7F7F7]">Entrenamientos recientes</h3>
         <div className="space-y-6">
           {Object.entries(groupedSessions).map(([date, daySessions]) => (
             <div key={date}>
@@ -125,7 +125,7 @@ export function TrainingTracking() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h4 className="font-semibold text-[#F7F7F7]">{session.name}</h4>
-                        <p className="text-sm text-white/60">{session.type}</p>
+                        <p className="text-sm text-white/60">{session.type === 'Group Class' ? 'Clase grupal' : 'Entrenamiento individual'}</p>
                       </div>
                       <span className="text-sm text-[#09C82C] font-medium">{session.duration} min</span>
                     </div>

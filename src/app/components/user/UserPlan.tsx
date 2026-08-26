@@ -1,9 +1,18 @@
 import React from 'react';
 import { Check, Sparkles, Clock, Calendar } from 'lucide-react';
+import { addActivity } from '../../data/gymStore';
 
-export function UserPlan() {
+interface UserPlanProps {
+  plan: 'Basic' | 'Standard' | 'Premium';
+  memberName: string;
+}
+
+export function UserPlan({ plan: selectedPlan = 'Premium', memberName }: UserPlanProps) {
+  const formatCLP = (amount: number) =>
+    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
+
   const currentPlan = {
-    name: 'Premium',
+    name: selectedPlan,
     status: 'active',
     price: 99,
     startDate: '2024-01-15',
@@ -22,20 +31,20 @@ export function UserPlan() {
     {
       name: 'Basic',
       price: 29,
-      description: 'Perfect for getting started',
-      features: ['Gym access during off-peak hours', 'Basic equipment access', 'Mobile app'],
+      description: 'Ideal para comenzar',
+      features: ['Acceso al gimnasio en horario valle', 'Acceso a equipamiento basico', 'Aplicacion movil'],
     },
     {
       name: 'Standard',
       price: 59,
-      description: 'Great for regular training',
-      features: ['Unlimited gym access', 'Group classes (5/month)', 'Locker rental', 'Mobile app'],
+      description: 'Perfecto para entrenar con frecuencia',
+      features: ['Acceso ilimitado al gimnasio', 'Clases grupales (5 al mes)', 'Arriendo de casillero', 'Aplicacion movil'],
     },
     {
       name: 'Premium',
       price: 99,
-      description: 'Complete fitness experience',
-      features: ['All Standard features', 'Unlimited group classes', 'Personal training sessions', 'Nutrition guidance'],
+      description: 'La experiencia de entrenamiento completa',
+      features: ['Todos los beneficios Standard', 'Clases grupales ilimitadas', 'Sesiones con entrenador personal', 'Orientacion nutricional'],
       popular: true,
     },
   ];
@@ -47,8 +56,8 @@ export function UserPlan() {
   return (
     <div className="space-y-6 max-w-6xl">
       <div>
-        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">My Plan</h1>
-        <p className="text-white/60">Manage your subscription and benefits</p>
+        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Mi membresia</h1>
+        <p className="text-white/60">Administra tu suscripcion y beneficios</p>
       </div>
 
       {/* Current Plan */}
@@ -58,10 +67,10 @@ export function UserPlan() {
             <div className="flex items-center gap-3 mb-2">
               <h2 className="text-3xl font-bold text-[#F7F7F7]">{currentPlan.name}</h2>
               <span className="px-3 py-1 bg-[#09C82C]/30 text-[#09C82C] rounded-full text-sm font-medium">
-                Active
+                Activa
               </span>
             </div>
-            <p className="text-2xl font-bold text-[#09C82C]">${currentPlan.price}/month</p>
+            <p className="text-2xl font-bold text-[#09C82C]">{formatCLP(currentPlan.price * 1000)}/mes</p>
           </div>
           <Sparkles className="w-8 h-8 text-[#09C82C]" />
         </div>
@@ -70,14 +79,14 @@ export function UserPlan() {
           <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
             <Calendar className="w-5 h-5 text-[#09C82C]" />
             <div>
-              <p className="text-xs text-white/60">Started</p>
+              <p className="text-xs text-white/60">Inicio</p>
               <p className="font-medium">{new Date(currentPlan.startDate).toLocaleDateString()}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
             <Clock className="w-5 h-5 text-[#09C82C]" />
             <div>
-              <p className="text-xs text-white/60">Expires</p>
+              <p className="text-xs text-white/60">Vencimiento</p>
               <p className="font-medium">{new Date(currentPlan.expirationDate).toLocaleDateString()}</p>
             </div>
           </div>
@@ -86,13 +95,13 @@ export function UserPlan() {
         {daysUntilExpiration <= 30 && (
           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-4">
             <p className="text-yellow-400 text-sm">
-              ⚠️ Your plan expires in {daysUntilExpiration} days. Renew now to continue enjoying all benefits!
+              Tu plan vence en {daysUntilExpiration} dias. Renueva ahora para seguir disfrutando tus beneficios.
             </p>
           </div>
         )}
 
         <div className="mb-6">
-          <h3 className="font-semibold mb-3 text-[#F7F7F7]">Included Benefits</h3>
+          <h3 className="font-semibold mb-3 text-[#F7F7F7]">Beneficios incluidos</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {currentPlan.benefits.map((benefit, index) => (
               <div key={index} className="flex items-center gap-2">
@@ -106,18 +115,18 @@ export function UserPlan() {
         </div>
 
         <div className="flex gap-3">
-          <button className="flex-1 px-6 py-3 bg-[#09C82C] text-[#010A01] rounded-lg hover:bg-[#09C82C]/90 transition-colors font-medium">
-            Renew Plan
+          <button onClick={() => addActivity({ name: memberName, action: `renovo la membresia ${currentPlan.name}` })} className="flex-1 px-6 py-3 bg-[#09C82C] text-[#010A01] rounded-lg hover:bg-[#09C82C]/90 transition-colors font-medium">
+            Renovar membresia
           </button>
           <button className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors font-medium">
-            Cancel
+            Cancelar
           </button>
         </div>
       </div>
 
       {/* Available Plans */}
       <div>
-        <h2 className="text-2xl font-bold mb-4 text-[#F7F7F7]">Upgrade or Change Plan</h2>
+        <h2 className="text-2xl font-bold mb-4 text-[#F7F7F7]">Cambiar de membresia</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {availablePlans.map((plan) => (
             <div
@@ -130,14 +139,14 @@ export function UserPlan() {
             >
               {plan.popular && (
                 <span className="inline-block px-3 py-1 bg-[#09C82C] text-[#010A01] rounded-full text-xs font-medium mb-4">
-                  Current Plan
+                  Membresia actual
                 </span>
               )}
               <h3 className="text-xl font-bold mb-2 text-[#F7F7F7]">{plan.name}</h3>
               <p className="text-white/60 text-sm mb-4">{plan.description}</p>
               <p className="text-3xl font-bold mb-6">
-                ${plan.price}
-                <span className="text-sm text-white/60 font-normal">/month</span>
+                {formatCLP(plan.price * 1000)}
+                <span className="text-sm text-white/60 font-normal">/mes</span>
               </p>
               <ul className="space-y-2 mb-6">
                 {plan.features.map((feature, index) => (
@@ -155,7 +164,7 @@ export function UserPlan() {
                     : 'bg-white/10 hover:bg-white/20 text-white'
                 }`}
               >
-                {plan.name === currentPlan.name ? 'Current Plan' : 'Select Plan'}
+                {plan.name === currentPlan.name ? 'Membresia actual' : 'Seleccionar plan'}
               </button>
             </div>
           ))}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Mail, Phone, Calendar, Edit, Ban, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, Edit, Ban, RefreshCw, Flame, Dumbbell } from 'lucide-react';
 import { StatusBadge } from '../shared/StatusBadge';
 
 interface MemberDetailProps {
@@ -12,18 +12,24 @@ type Tab = 'info' | 'balance' | 'subscriptions' | 'notes';
 export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
   const [activeTab, setActiveTab] = useState<Tab>('info');
 
-  // Mock data - in real app, fetch based on memberId
-  const member = {
-    id: memberId,
-    name: 'John Smith',
-    email: 'john.smith@email.com',
-    phone: '+1 (555) 123-4567',
-    joinDate: '2024-01-15',
-    plan: 'Premium',
-    status: 'active' as const,
-    balance: 0,
-    nextBilling: '2025-02-15',
+  const members = {
+    '1': { name: 'Juan Perez', email: 'juan.perez@gmail.com', plan: 'Premium', status: 'active' as const, balance: 0, joinDate: '2024-01-15', nextBilling: '2025-02-15', attendance: ['2025-01-22', '2025-01-21', '2025-01-20', '2025-01-18', '2025-01-17'] },
+    '2': { name: 'Camila Gonzalez', email: 'camila.gonzalez@gmail.com', plan: 'Standard', status: 'active' as const, balance: -50, joinDate: '2024-02-20', nextBilling: '2025-02-20', attendance: ['2025-01-22', '2025-01-21', '2025-01-20', '2025-01-15'] },
+    '3': { name: 'Matias Rojas', email: 'matias.rojas@gmail.com', plan: 'Basic', status: 'expired' as const, balance: 0, joinDate: '2023-11-10', nextBilling: '2025-01-10', attendance: ['2025-01-20', '2025-01-19'] },
+    '4': { name: 'Antonia Silva', email: 'antonia.silva@gmail.com', plan: 'Premium', status: 'active' as const, balance: 25, joinDate: '2024-03-05', nextBilling: '2025-03-05', attendance: ['2025-01-22', '2025-01-21', '2025-01-20', '2025-01-19', '2025-01-18', '2025-01-17'] },
+    '5': { name: 'Diego Morales', email: 'diego.morales@gmail.com', plan: 'Standard', status: 'suspended' as const, balance: -120, joinDate: '2023-12-01', nextBilling: '2025-02-01', attendance: ['2025-01-22', '2025-01-18'] },
+    '6': { name: 'Valentina Soto', email: 'valentina.soto@gmail.com', plan: 'Premium', status: 'active' as const, balance: 0, joinDate: '2024-01-25', nextBilling: '2025-01-25', attendance: ['2025-01-22', '2025-01-21', '2025-01-20'] },
+    '7': { name: 'Nicolas Fuentes', email: 'nicolas.fuentes@gmail.com', plan: 'Basic', status: 'active' as const, balance: -30, joinDate: '2024-02-14', nextBilling: '2025-02-14', attendance: ['2025-01-22', '2025-01-19', '2025-01-18'] },
+    '8': { name: 'Fernanda Contreras', email: 'fernanda.contreras@gmail.com', plan: 'Standard', status: 'active' as const, balance: 0, joinDate: '2024-03-10', nextBilling: '2025-03-10', attendance: ['2025-01-22', '2025-01-21', '2025-01-20', '2025-01-19'] },
   };
+  const member = members[memberId as keyof typeof members] ?? members['1'];
+  const attendanceDates = member.attendance.map((date) => new Date(`${date}T12:00:00`));
+  let streak = 0;
+  for (let index = 0; index < attendanceDates.length; index += 1) {
+    const gap = index === 0 ? 0 : (attendanceDates[index - 1].getTime() - attendanceDates[index].getTime()) / 86400000;
+    if (gap > 2) break;
+    streak += 1;
+  }
 
   const payments = [
     { date: '2025-01-15', amount: 99, status: 'completed', method: 'Credit Card' },
@@ -37,10 +43,10 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
   ];
 
   const tabs = [
-    { id: 'info', label: 'Personal Info' },
-    { id: 'balance', label: 'Account Balance' },
-    { id: 'subscriptions', label: 'Subscriptions' },
-    { id: 'notes', label: 'Clinical Notes' },
+    { id: 'info', label: 'Informacion personal' },
+    { id: 'balance', label: 'Saldo de cuenta' },
+    { id: 'subscriptions', label: 'Membresias' },
+    { id: 'notes', label: 'Notas privadas' },
   ];
 
   return (
@@ -54,8 +60,21 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-[#F7F7F7]">Member Details</h1>
-          <p className="text-white/60">Complete member information</p>
+          <h1 className="text-3xl font-bold text-[#F7F7F7]">Detalle del miembro</h1>
+          <p className="text-white/60">Historial y datos del miembro</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-[#09C82C]/30 bg-[#09C82C]/10 p-5">
+          <div className="mb-2 flex items-center gap-2 text-[#09C82C]"><Flame className="h-5 w-5" /><span className="text-sm font-medium">Racha actual</span></div>
+          <p className="text-3xl font-bold text-[#F7F7F7]">{streak} dias</p>
+          <p className="mt-1 text-sm text-white/55">Se pierde despues de 2 dias seguidos sin asistir.</p>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+          <div className="mb-2 flex items-center gap-2 text-white/70"><Dumbbell className="h-5 w-5" /><span className="text-sm font-medium">Historial de asistencia</span></div>
+          <p className="text-3xl font-bold text-[#F7F7F7]">{member.attendance.length}</p>
+          <p className="mt-1 text-sm text-white/55">entrenamientos registrados</p>
         </div>
       </div>
 
@@ -124,27 +143,27 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
           {activeTab === 'info' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm text-white/60 mb-1 block">Full Name</label>
+                <label className="text-sm text-white/60 mb-1 block">Nombre completo</label>
                 <p className="font-medium text-[#F7F7F7]">{member.name}</p>
               </div>
               <div>
-                <label className="text-sm text-white/60 mb-1 block">Email</label>
+                <label className="text-sm text-white/60 mb-1 block">Correo</label>
                 <p className="font-medium text-[#F7F7F7]">{member.email}</p>
               </div>
               <div>
-                <label className="text-sm text-white/60 mb-1 block">Phone</label>
+                <label className="text-sm text-white/60 mb-1 block">Telefono</label>
                 <p className="font-medium text-[#F7F7F7]">{member.phone}</p>
               </div>
               <div>
-                <label className="text-sm text-white/60 mb-1 block">Join Date</label>
+                <label className="text-sm text-white/60 mb-1 block">Fecha de ingreso</label>
                 <p className="font-medium text-[#F7F7F7]">{new Date(member.joinDate).toLocaleDateString()}</p>
               </div>
               <div>
-                <label className="text-sm text-white/60 mb-1 block">Current Plan</label>
+                <label className="text-sm text-white/60 mb-1 block">Membresia actual</label>
                 <p className="font-medium text-[#F7F7F7]">{member.plan}</p>
               </div>
               <div>
-                <label className="text-sm text-white/60 mb-1 block">Next Billing</label>
+                <label className="text-sm text-white/60 mb-1 block">Proximo cobro</label>
                 <p className="font-medium text-[#F7F7F7]">{new Date(member.nextBilling).toLocaleDateString()}</p>
               </div>
             </div>
@@ -153,12 +172,12 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
           {activeTab === 'balance' && (
             <div className="space-y-6">
               <div className="bg-[#09C82C]/10 border border-[#09C82C]/20 rounded-lg p-4">
-                <p className="text-sm text-white/60 mb-1">Current Balance</p>
+                <p className="text-sm text-white/60 mb-1">Saldo actual</p>
                 <p className="text-3xl font-bold text-[#09C82C]">${member.balance}</p>
               </div>
 
               <div>
-                <h3 className="font-semibold mb-4 text-[#F7F7F7]">Payment History</h3>
+                <h3 className="font-semibold mb-4 text-[#F7F7F7]">Historial de pagos</h3>
                 <div className="space-y-3">
                   {payments.map((payment, index) => (
                     <div key={index} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { FormEvent, useState } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Users, User } from 'lucide-react';
+import { addActivity } from '../../data/gymStore';
 
 type CalendarTab = 'my-schedule' | 'gym-schedule';
 
@@ -13,14 +14,31 @@ interface ClassEvent {
   isBooked?: boolean;
 }
 
-export function UserCalendar() {
+interface Booking {
+  id: string;
+  name: string;
+  date: string;
+  time: string;
+  instructor: string;
+}
+
+interface UserCalendarProps {
+  memberName: string;
+  selectedClasses: string[];
+}
+
+export function UserCalendar({ memberName, selectedClasses }: UserCalendarProps) {
+  const chosenClasses = selectedClasses ?? [];
   const [activeTab, setActiveTab] = useState<CalendarTab>('my-schedule');
   const [currentWeek, setCurrentWeek] = useState(0);
+  const [bookingClass, setBookingClass] = useState<ClassEvent | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [cancelledBookings, setCancelledBookings] = useState<string[]>([]);
 
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const dates = [20, 21, 22, 23, 24, 25, 26];
 
-  const mySchedule: Record<number, ClassEvent[]> = {
+  const defaultMySchedule: Record<number, ClassEvent[]> = {
     20: [
       { id: '1', name: 'Morning Yoga', time: '06:00', instructor: 'Sarah K.', isBooked: true },
       { id: '2', name: 'HIIT Training', time: '18:00', instructor: 'Mike R.', isBooked: true },
@@ -32,6 +50,14 @@ export function UserCalendar() {
       { id: '4', name: 'HIIT Training', time: '17:00', instructor: 'Mike R.', isBooked: true },
     ],
   };
+
+  const mySchedule: Record<number, ClassEvent[]> = chosenClasses.length > 0
+    ? chosenClasses.reduce<Record<number, ClassEvent[]>>((schedule, className, index) => {
+      const date = 20 + index;
+      schedule[date] = [{ id: `selected-${index}`, name: className, time: '18:00', instructor: 'Por asignar', isBooked: true }];
+      return schedule;
+    }, {})
+    : defaultMySchedule;
 
   const gymSchedule: Record<number, ClassEvent[]> = {
     20: [
@@ -65,6 +91,38 @@ export function UserCalendar() {
     ],
   };
 
+  const handleBooking = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!bookingClass) return;
+    const formData = new FormData(event.currentTarget);
+    setBookings((current) => [...current, {
+      id: `${bookingClass.id}-${Date.now()}`,
+      name: bookingClass.name,
+      date: String(formData.get('date')),
+      time: String(formData.get('time')),
+      instructor: String(formData.get('instructor')),
+    }]);
+    addActivity({ name: memberName, action: `agendo ${bookingClass.name} a las ${String(formData.get('time'))}` });
+    setBookingClass(null);
+  };
+
+  const handleCancel = (event: ClassEvent) => {
+    if (cancelledBookings.includes(event.id)) return;
+    const notification = {
+      id: `${event.id}-${Date.now()}`,
+      member: memberName,
+      className: event.name,
+      time: event.time,
+      instructor: event.instructor,
+      createdAt: new Date().toISOString(),
+    };
+    const savedNotifications = JSON.parse(localStorage.getItem('profuncional-notifications') ?? '[]');
+    localStorage.setItem('profuncional-notifications', JSON.stringify([notification, ...savedNotifications]));
+    window.dispatchEvent(new CustomEvent('profuncional-booking-cancelled', { detail: notification }));
+    setCancelledBookings((current) => [...current, event.id]);
+    setBookings((current) => current.filter((booking) => booking.id !== event.id));
+  };
+
   const getAvailabilityColor = (booked: number, capacity: number) => {
     const percentage = (booked / capacity) * 100;
     if (percentage >= 90) return 'text-red-400';
@@ -75,8 +133,8 @@ export function UserCalendar() {
   return (
     <div className="space-y-6 max-w-6xl">
       <div>
-        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Calendar</h1>
-        <p className="text-white/60">View and manage your training schedule</p>
+        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Calendario</h1>
+        <p className="text-white/60">Consulta y administra tu horario de entrenamiento</p>
       </div>
 
       {/* Tabs */}
@@ -87,7 +145,7 @@ export function UserCalendar() {
             activeTab === 'my-schedule' ? 'bg-[#09C82C] text-[#010A01]' : 'text-white/80'
           }`}
         >
-          My Schedule
+          Mi horario
         </button>
         <button
           onClick={() => setActiveTab('gym-schedule')}
@@ -95,7 +153,7 @@ export function UserCalendar() {
             activeTab === 'gym-schedule' ? 'bg-[#09C82C] text-[#010A01]' : 'text-white/80'
           }`}
         >
-          Gym Schedule
+          Horario del gimnasio
         </button>
       </div>
 
@@ -126,7 +184,9 @@ export function UserCalendar() {
         {days.map((day, index) => {
           const date = dates[index];
           const schedule = activeTab === 'my-schedule' ? mySchedule : gymSchedule;
-          const events = schedule[date] || [];
+          const events = activeTab === 'my-schedule'
+            ? (schedule[date] || []).filter((event) => !cancelledBookings.includes(event.id))
+            : schedule[date] || [];
           const isToday = index === 2; // Wednesday for demo
 
           return (
@@ -166,25 +226,25 @@ export function UserCalendar() {
                         <div className="flex items-center gap-1">
                           <Users className="w-3 h-3" />
                           <span className={getAvailabilityColor(event.booked!, event.capacity)}>
-                            {event.booked}/{event.capacity}
+                            {Math.max(0, event.booked! - (cancelledBookings.includes(event.id) ? 1 : 0))}/{event.capacity}
                           </span>
                         </div>
                         {!event.isBooked && (
-                          <button className="text-[#09C82C] hover:underline">
-                            Book
+                          <button type="button" className="text-[#09C82C] hover:underline" onClick={() => setBookingClass(event)}>
+                            Reservar
                           </button>
                         )}
                         {event.isBooked && (
-                          <button className="text-red-400 hover:underline">
-                            Cancel
+                          <button type="button" onClick={() => handleCancel(event)} className="text-red-400 hover:underline">
+                            Cancelar
                           </button>
                         )}
                       </div>
                     )}
 
                     {activeTab === 'my-schedule' && (
-                      <button className="text-xs text-red-400 hover:underline">
-                        Cancel booking
+                      <button type="button" onClick={() => handleCancel(event)} className="text-xs text-red-400 hover:underline">
+                        Cancelar reserva
                       </button>
                     )}
                   </div>
@@ -194,6 +254,38 @@ export function UserCalendar() {
           );
         })}
       </div>
+
+      {activeTab === 'gym-schedule' && bookingClass && (
+        <form onSubmit={handleBooking} className="rounded-xl border border-[#09C82C]/30 bg-[#09C82C]/10 p-6">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#09C82C]">Nueva reserva</p>
+              <h3 className="mt-1 text-xl font-bold">{bookingClass.name}</h3>
+            </div>
+            <button type="button" onClick={() => setBookingClass(null)} className="text-sm text-white/60 hover:text-white">Cerrar</button>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <label className="text-sm text-white/70">Fecha<input required name="date" type="date" defaultValue="2025-01-23" className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-black/20 px-3 text-white outline-none focus:border-[#09C82C]" /></label>
+            <label className="text-sm text-white/70">Hora<input required name="time" type="time" defaultValue={bookingClass.time} className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-black/20 px-3 text-white outline-none focus:border-[#09C82C]" /></label>
+            <label className="text-sm text-white/70">Profesor<input required name="instructor" type="text" defaultValue={bookingClass.instructor} className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-black/20 px-3 text-white outline-none focus:border-[#09C82C]" /></label>
+          </div>
+          <button type="submit" className="mt-5 rounded-lg bg-[#09C82C] px-5 py-3 font-semibold text-[#010A01] hover:bg-[#09C82C]/90">Confirmar reserva</button>
+        </form>
+      )}
+
+      {bookings.length > 0 && (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+          <h3 className="mb-4 font-semibold text-[#F7F7F7]">Mis reservas nuevas</h3>
+          <div className="space-y-3">
+            {bookings.map((booking) => (
+              <div key={booking.id} className="flex flex-col gap-1 rounded-lg border border-white/10 bg-black/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div><p className="font-medium">{booking.name}</p><p className="text-sm text-white/55">con {booking.instructor}</p></div>
+                <p className="text-sm text-[#09C82C]">{booking.date} a las {booking.time}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

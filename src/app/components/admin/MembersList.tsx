@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Filter, Eye } from 'lucide-react';
 import { StatusBadge } from '../shared/StatusBadge';
+import { getMembers, GymMember, subscribeToMembers } from '../../data/gymStore';
 
 interface Member {
   id: string;
@@ -19,17 +20,11 @@ interface MembersListProps {
 export function MembersList({ onViewMember }: MembersListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [members, setMembers] = useState<GymMember[]>(getMembers);
+  const formatCLP = (amount: number) =>
+    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
 
-  const members: Member[] = [
-    { id: '1', name: 'John Smith', email: 'john.smith@email.com', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-01-15' },
-    { id: '2', name: 'Emma Wilson', email: 'emma.wilson@email.com', plan: 'Standard', status: 'active', balance: -50, joinDate: '2024-02-20' },
-    { id: '3', name: 'Michael Brown', email: 'michael.brown@email.com', plan: 'Basic', status: 'expired', balance: 0, joinDate: '2023-11-10' },
-    { id: '4', name: 'Sarah Davis', email: 'sarah.davis@email.com', plan: 'Premium', status: 'active', balance: 25, joinDate: '2024-03-05' },
-    { id: '5', name: 'James Johnson', email: 'james.johnson@email.com', plan: 'Standard', status: 'suspended', balance: -120, joinDate: '2023-12-01' },
-    { id: '6', name: 'Lisa Anderson', email: 'lisa.anderson@email.com', plan: 'Premium', status: 'active', balance: 0, joinDate: '2024-01-25' },
-    { id: '7', name: 'David Martinez', email: 'david.martinez@email.com', plan: 'Basic', status: 'active', balance: -30, joinDate: '2024-02-14' },
-    { id: '8', name: 'Jennifer Taylor', email: 'jennifer.taylor@email.com', plan: 'Standard', status: 'active', balance: 0, joinDate: '2024-03-10' },
-  ];
+  useEffect(() => subscribeToMembers(() => setMembers(getMembers())), []);
 
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -41,8 +36,8 @@ export function MembersList({ onViewMember }: MembersListProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Members</h1>
-        <p className="text-white/60">Manage your gym members</p>
+        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Miembros</h1>
+        <p className="text-white/60">Administra los miembros de tu gimnasio</p>
       </div>
 
       {/* Search and Filters */}
@@ -51,7 +46,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
           <input
             type="text"
-            placeholder="Search members..."
+            placeholder="Buscar miembros..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-[#09C82C]"
@@ -65,7 +60,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
               filterStatus === 'all' ? 'bg-[#09C82C] text-[#010A01]' : 'bg-white/5 text-white hover:bg-white/10'
             }`}
           >
-            All
+            Todos
           </button>
           <button
             onClick={() => setFilterStatus('active')}
@@ -73,7 +68,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
               filterStatus === 'active' ? 'bg-[#09C82C] text-[#010A01]' : 'bg-white/5 text-white hover:bg-white/10'
             }`}
           >
-            Active
+            Activos
           </button>
           <button
             onClick={() => setFilterStatus('expired')}
@@ -81,7 +76,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
               filterStatus === 'expired' ? 'bg-[#09C82C] text-[#010A01]' : 'bg-white/5 text-white hover:bg-white/10'
             }`}
           >
-            Expired
+            Vencidos
           </button>
         </div>
       </div>
@@ -92,16 +87,16 @@ export function MembersList({ onViewMember }: MembersListProps) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10 bg-[#F7F7F7]/5">
-                <th className="text-left p-4 text-[#F7F7F7]/80 font-medium">Member</th>
-                <th className="text-left p-4 text-[#F7F7F7]/80 font-medium hidden md:table-cell">Plan</th>
-                <th className="text-left p-4 text-[#F7F7F7]/80 font-medium">Status</th>
-                <th className="text-left p-4 text-[#F7F7F7]/80 font-medium hidden lg:table-cell">Balance</th>
-                <th className="text-right p-4 text-[#F7F7F7]/80 font-medium">Actions</th>
+                <th className="text-left p-4 text-[#F7F7F7]/80 font-medium">Miembro</th>
+                <th className="text-left p-4 text-[#F7F7F7]/80 font-medium hidden md:table-cell">Membresia</th>
+                <th className="text-left p-4 text-[#F7F7F7]/80 font-medium">Estado</th>
+                <th className="text-left p-4 text-[#F7F7F7]/80 font-medium hidden lg:table-cell">Saldo</th>
+                <th className="text-right p-4 text-[#F7F7F7]/80 font-medium">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredMembers.map((member) => (
-                <tr key={member.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <tr key={member.id} className="cursor-pointer border-b border-white/5 hover:bg-white/5 transition-colors" onClick={() => onViewMember(member.id)}>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-[#09C82C]/20 flex items-center justify-center flex-shrink-0">
@@ -110,7 +105,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium truncate text-[#F7F7F7]">{member.name}</p>
+                        <button type="button" className="font-medium truncate text-left text-[#F7F7F7] hover:text-[#09C82C]" onClick={() => onViewMember(member.id)}>{member.name}</button>
                         <p className="text-sm text-white/40 truncate hidden sm:block">{member.email}</p>
                       </div>
                     </div>
@@ -123,9 +118,9 @@ export function MembersList({ onViewMember }: MembersListProps) {
                   </td>
                   <td className="p-4 hidden lg:table-cell">
                     <span className={member.balance < 0 ? 'text-red-400' : member.balance > 0 ? 'text-[#09C82C]' : 'text-white/60'}>
-                      ${Math.abs(member.balance)}
-                      {member.balance < 0 && ' debt'}
-                      {member.balance > 0 && ' credit'}
+                      {formatCLP(Math.abs(member.balance) * 1000)}
+                      {member.balance < 0 && ' deuda'}
+                      {member.balance > 0 && ' credito'}
                     </span>
                   </td>
                   <td className="p-4 text-right">
@@ -134,7 +129,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
                       className="inline-flex items-center gap-2 px-3 py-2 bg-[#09C82C] text-[#010A01] rounded-lg hover:bg-[#09C82C]/90 transition-colors"
                     >
                       <Eye className="w-4 h-4" />
-                      <span className="hidden sm:inline">View</span>
+                      <span className="hidden sm:inline">Ver</span>
                     </button>
                   </td>
                 </tr>

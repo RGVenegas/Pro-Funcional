@@ -1,23 +1,24 @@
 import React from 'react';
-import { Home, CreditCard, Calendar, Activity, Wallet } from 'lucide-react';
+import { Home, CreditCard, Calendar, Activity, Wallet, UserRound } from 'lucide-react';
 
 interface UserBottomNavProps {
   currentView: string;
-  onNavigate: (view: 'home' | 'plan' | 'calendar' | 'training' | 'card') => void;
+  onNavigate: (view: 'home' | 'plan' | 'calendar' | 'training' | 'card' | 'profile') => void;
 }
 
 export function UserBottomNav({ currentView, onNavigate }: UserBottomNavProps) {
   const navItems = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'plan', label: 'My Plan', icon: Wallet },
-    { id: 'calendar', label: 'Calendar', icon: Calendar },
-    { id: 'training', label: 'Training', icon: Activity },
-    { id: 'card', label: 'Card', icon: CreditCard },
+    { id: 'home', label: 'Inicio', icon: Home },
+    { id: 'plan', label: 'Membresia', icon: Wallet },
+    { id: 'calendar', label: 'Calendario', icon: Calendar },
+    { id: 'training', label: 'Entrenamiento', icon: Activity },
+    { id: 'card', label: 'Tarjeta', icon: CreditCard },
+    { id: 'profile', label: 'Perfil', icon: UserRound },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[#010A01] border-t border-white/10 lg:hidden">
-      <div className="flex justify-around items-center h-16">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#010A01] border-t border-white/10">
+      <div className="mx-auto flex h-16 max-w-4xl items-center justify-around">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;

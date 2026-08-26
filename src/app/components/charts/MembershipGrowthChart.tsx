@@ -4,12 +4,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 export function MembershipGrowthChart() {
   const data = [
     { month: 'Jul', members: 280 },
-    { month: 'Aug', members: 290 },
+    { month: 'Ago', members: 290 },
     { month: 'Sep', members: 305 },
     { month: 'Oct', members: 315 },
     { month: 'Nov', members: 325 },
-    { month: 'Dec', members: 335 },
-    { month: 'Jan', members: 342 },
+    { month: 'Dic', members: 335 },
+    { month: 'Ene', members: 342 },
   ];
 
   return (
