@@ -56,7 +56,7 @@ export function DigitalCard({ user: account }: DigitalCardProps) {
                   <Sparkles className="w-6 h-6 text-[#09C82C]" />
                   <h2 className="text-2xl font-bold tracking-[-0.04em] text-white">PRO<span className="text-[#09C82C]">FUNCIONAL</span></h2>
                 </div>
-                <p className="text-sm text-white/60">Centro de entrenamiento funcional</p>
+                <p className="text-sm text-white/60">Centro Kinésico-Deportivo</p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-white/60 mb-1">ID de miembro</p>

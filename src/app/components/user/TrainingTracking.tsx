@@ -1,144 +1,189 @@
-import React from 'react';
-import { Calendar, TrendingUp, Dumbbell, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, TrendingUp, Dumbbell, Zap, Stethoscope, Activity, AlertTriangle, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Area, AreaChart } from 'recharts';
 
-interface WorkoutSession {
-  id: string;
-  name: string;
+interface ClinicalSessionRecord {
   date: string;
-  duration: number;
-  type: string;
-  instructor?: string;
+  evaPain: number;
+  romDegrees: number;
+  notes: string;
+  professional: string;
 }
 
 export function TrainingTracking() {
-  const sessions: WorkoutSession[] = [
-    { id: '1', name: 'HIIT Training', date: '2025-01-22', duration: 45, type: 'Group Class', instructor: 'Mike R.' },
-    { id: '2', name: 'Morning Yoga', date: '2025-01-22', duration: 60, type: 'Group Class', instructor: 'Sarah K.' },
-    { id: '3', name: 'Strength Training', date: '2025-01-21', duration: 90, type: 'Solo Workout' },
-    { id: '4', name: 'Morning Yoga', date: '2025-01-20', duration: 60, type: 'Group Class', instructor: 'Sarah K.' },
-    { id: '5', name: 'CrossFit', date: '2025-01-20', duration: 60, type: 'Group Class', instructor: 'John D.' },
-    { id: '6', name: 'Cardio Session', date: '2025-01-19', duration: 45, type: 'Solo Workout' },
-    { id: '7', name: 'Spinning', date: '2025-01-18', duration: 45, type: 'Group Class', instructor: 'Emma L.' },
-    { id: '8', name: 'HIIT Training', date: '2025-01-17', duration: 45, type: 'Group Class', instructor: 'Mike R.' },
+  const [activeChart, setActiveChart] = useState<'pain' | 'rom'>('pain');
+
+  // Evolution data over time
+  const clinicalProgressData = [
+    { session: 'Sesión 1', date: '05 Ene', evaPain: 8, romDegrees: 85, note: 'Inicio tto. Dolor agudo' },
+    { session: 'Sesión 2', date: '10 Ene', evaPain: 7, romDegrees: 95, note: 'Terapia manual y descarga' },
+    { session: 'Sesión 3', date: '15 Ene', evaPain: 5, romDegrees: 110, note: 'Ejercicios isométricos' },
+    { session: 'Sesión 4', date: '19 Ene', evaPain: 4, romDegrees: 120, note: 'Readaptación neuromuscular' },
+    { session: 'Sesión 5', date: '22 Ene', evaPain: 3, romDegrees: 130, note: 'Transición a funcional' },
   ];
 
-  const stats = {
-    thisWeek: 5,
-    totalHours: 12.5,
-    streak: 12,
-    avgPerWeek: 4.2,
-  };
-
-  const groupByDate = (sessions: WorkoutSession[]) => {
-    const grouped: Record<string, WorkoutSession[]> = {};
-    sessions.forEach(session => {
-      if (!grouped[session.date]) {
-        grouped[session.date] = [];
-      }
-      grouped[session.date].push(session);
-    });
-    return grouped;
-  };
-
-  const groupedSessions = groupByDate(sessions);
+  const sessions = [
+    { id: '1', name: 'Sesión Kinesiología & Terapia Manual', date: '2025-01-22', duration: 50, type: 'Box Clínico', instructor: 'Klgo. Andrés Morales' },
+    { id: '2', name: 'Entrenamiento Funcional Adaptado', date: '2025-01-21', duration: 45, type: 'Gimnasio', instructor: 'Prof. Mike R.' },
+    { id: '3', name: 'Sesión Kinesiología (Control ROM)', date: '2025-01-19', duration: 50, type: 'Box Clínico', instructor: 'Klga. Valeria Reyes' },
+    { id: '4', name: 'Readaptación Funcional y Core', date: '2025-01-17', duration: 60, type: 'Gimnasio', instructor: 'Prof. Mike R.' },
+  ];
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Historial de entrenamiento</h1>
-        <p className="text-white/60">Sigue tu progreso y tus entrenamientos</p>
+        <h1 className="text-3xl font-bold mb-1 text-[#F7F7F7]">Mi Evolución Kinésica & Física</h1>
+        <p className="text-white/60 text-sm">Monitoreo de dolor (EVA), rango de movilidad (ROM) y sesiones realizadas</p>
+      </div>
+
+      {/* Alerta Médica de Restricciones */}
+      <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5 flex items-start gap-3.5 text-amber-200">
+        <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400">Pauta Médica y Restricciones Activas para el Gimnasio</h3>
+          <p className="text-sm font-medium text-white/90 mt-1">
+            "Evitar sentadillas profundas &gt;90° y saltos de impacto alto por recuperación de tendinopatía / post-op."
+          </p>
+          <span className="text-xs text-amber-300/70 mt-1 block">Prescrito por Klgo. Andrés Morales · Vigente</span>
+        </div>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-[#09C82C]/20 rounded-lg flex items-center justify-center">
-              <Calendar className="w-4 h-4 text-[#09C82C]" />
-            </div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-white/60">Dolor Actual (EVA)</span>
+            <ArrowDownRight className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-2xl font-bold">{stats.thisWeek}</p>
-          <p className="text-sm text-white/60">Esta semana</p>
+          <p className="text-2xl font-bold text-emerald-400">3 <span className="text-xs text-white/50">/ 10</span></p>
+          <p className="text-[11px] text-white/50">-62% desde inicio</p>
         </div>
 
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-[#09C82C]/20 rounded-lg flex items-center justify-center">
-              <Dumbbell className="w-4 h-4 text-[#09C82C]" />
-            </div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-white/60">Movilidad (ROM)</span>
+            <ArrowUpRight className="w-4 h-4 text-[#09C82C]" />
           </div>
-          <p className="text-2xl font-bold">{stats.totalHours}h</p>
-          <p className="text-sm text-white/60">Horas totales</p>
+          <p className="text-2xl font-bold text-[#09C82C]">130°</p>
+          <p className="text-[11px] text-white/50">+45° ganados</p>
         </div>
 
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-[#09C82C]/20 rounded-lg flex items-center justify-center">
-              <Zap className="w-4 h-4 text-[#09C82C]" />
-            </div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-white/60">Sesiones Hechas</span>
+            <Stethoscope className="w-4 h-4 text-white/60" />
           </div>
-          <p className="text-2xl font-bold">{stats.streak}</p>
-          <p className="text-sm text-white/60">Dias seguidos</p>
+          <p className="text-2xl font-bold text-white">5</p>
+          <p className="text-[11px] text-white/50">de 8 en paquete</p>
         </div>
 
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-[#09C82C]/20 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-[#09C82C]" />
-            </div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-white/60">Días Constantes</span>
+            <Zap className="w-4 h-4 text-amber-400" />
           </div>
-          <p className="text-2xl font-bold">{stats.avgPerWeek}</p>
-          <p className="text-sm text-white/60">Promedio semanal</p>
+          <p className="text-2xl font-bold text-amber-300">12</p>
+          <p className="text-[11px] text-white/50">Racha activa</p>
         </div>
       </div>
 
-      {/* Progress Chart Placeholder */}
-      <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
-        <h3 className="font-semibold mb-4 text-[#F7F7F7]">Actividad semanal</h3>
-        <div className="flex items-end gap-2 h-32">
-          {[3, 5, 4, 6, 5, 7, 5].map((height, index) => (
-            <div key={index} className="flex-1 flex flex-col items-center gap-2">
-              <div className="w-full bg-[#09C82C]/20 rounded-t-lg hover:bg-[#09C82C]/30 transition-colors" style={{ height: `${height * 14}%` }}>
-                <div className="w-full bg-[#09C82C] rounded-t-lg" style={{ height: '100%' }} />
-              </div>
-              <span className="text-xs text-white/60">
-                {['L', 'M', 'M', 'J', 'V', 'S', 'D'][index]}
-              </span>
-            </div>
-          ))}
+      {/* HU-06: Gráficos de Evolución de Dolor EVA y Movilidad ROM */}
+      <div className="bg-white/5 rounded-2xl p-6 backdrop-blur-sm border border-white/10 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+          <div>
+            <h3 className="font-bold text-lg text-white">Curva de Recuperación Física</h3>
+            <p className="text-xs text-white/60">Evolución sesión a sesión registrada por el equipo de kinesiología</p>
+          </div>
+
+          <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 self-start sm:self-auto">
+            <button
+              onClick={() => setActiveChart('pain')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                activeChart === 'pain' ? 'bg-emerald-500 text-black' : 'text-white/60 hover:text-white'
+              }`}
+            >
+              Dolor (Escala EVA 1-10)
+            </button>
+            <button
+              onClick={() => setActiveChart('rom')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                activeChart === 'rom' ? 'bg-[#09C82C] text-black' : 'text-white/60 hover:text-white'
+              }`}
+            >
+              Movilidad Articular (ROM °)
+            </button>
+          </div>
+        </div>
+
+        {/* Gráfico Recharts */}
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            {activeChart === 'pain' ? (
+              <AreaChart data={clinicalProgressData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="painGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                <XAxis dataKey="date" stroke="#ffffff60" fontSize={12} />
+                <YAxis domain={[0, 10]} stroke="#ffffff60" fontSize={12} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#101a14', borderColor: '#ffffff20', borderRadius: '0.75rem', color: '#fff' }}
+                  formatter={(value: any) => [`${value} / 10`, 'Nivel de Dolor (EVA)']}
+                  labelFormatter={(label) => `Fecha: ${label}`}
+                />
+                <Area type="monotone" dataKey="evaPain" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#painGradient)" />
+              </AreaChart>
+            ) : (
+              <AreaChart data={clinicalProgressData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="romGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#09C82C" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#09C82C" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                <XAxis dataKey="date" stroke="#ffffff60" fontSize={12} />
+                <YAxis domain={[60, 150]} stroke="#ffffff60" fontSize={12} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#101a14', borderColor: '#ffffff20', borderRadius: '0.75rem', color: '#fff' }}
+                  formatter={(value: any) => [`${value}°`, 'Movilidad Articular (ROM)']}
+                  labelFormatter={(label) => `Fecha: ${label}`}
+                />
+                <Area type="monotone" dataKey="romDegrees" stroke="#09C82C" strokeWidth={3} fillOpacity={1} fill="url(#romGradient)" />
+              </AreaChart>
+            )}
+          </ResponsiveContainer>
+        </div>
+
+        <div className="flex justify-between items-center text-xs text-white/50 pt-2 border-t border-white/5 font-mono">
+          <span>{activeChart === 'pain' ? '📉 Meta: Dolor ≤ 2/10 para alta kinésica' : '📈 Meta: ROM completo ≥ 135°'}</span>
+          <span>Actualizado tras última atención</span>
         </div>
       </div>
 
-      {/* Workout Timeline */}
-      <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
-        <h3 className="font-semibold mb-4 text-[#F7F7F7]">Entrenamientos recientes</h3>
-        <div className="space-y-6">
-          {Object.entries(groupedSessions).map(([date, daySessions]) => (
-            <div key={date}>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-2 h-2 bg-[#09C82C] rounded-full" />
-                <p className="font-medium text-[#F7F7F7] capitalize">{new Date(date).toLocaleDateString('es-CL', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+      {/* Historial de Sesiones */}
+      <div className="bg-white/5 rounded-2xl p-6 backdrop-blur-sm border border-white/10">
+        <h3 className="font-bold mb-4 text-[#F7F7F7] text-lg">Historial de Sesiones Kinésicas y Funcionales</h3>
+        <div className="space-y-4">
+          {sessions.map((session) => (
+            <div key={session.id} className="bg-white/5 rounded-xl p-4 border border-white/10 hover:border-white/20 transition-colors">
+              <div className="flex items-start justify-between mb-1.5">
+                <div>
+                  <h4 className="font-bold text-white text-sm">{session.name}</h4>
+                  <p className="text-xs text-white/60">{session.type} · {session.instructor}</p>
+                </div>
+                <span className="text-xs text-[#09C82C] font-semibold bg-[#09C82C]/10 border border-[#09C82C]/20 px-2.5 py-1 rounded-lg">
+                  {session.duration} min
+                </span>
               </div>
-              <div className="ml-5 space-y-3 border-l-2 border-white/10 pl-6">
-                {daySessions.map((session) => (
-                  <div key={session.id} className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h4 className="font-semibold text-[#F7F7F7]">{session.name}</h4>
-                        <p className="text-sm text-white/60">{session.type === 'Group Class' ? 'Clase grupal' : 'Entrenamiento individual'}</p>
-                      </div>
-                      <span className="text-sm text-[#09C82C] font-medium">{session.duration} min</span>
-                    </div>
-                    {session.instructor && (
-                      <p className="text-sm text-white/60">Instructor: {session.instructor}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs text-white/40">{new Date(session.date).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
             </div>
           ))}
         </div>
       </div>
     </div>
   );
-}
+}

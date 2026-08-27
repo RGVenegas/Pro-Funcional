@@ -1,6 +1,6 @@
-# ProFuncional - Plataforma de Gestión de Entrenamiento Funcional
+# ProFuncional — Sistema de Gestión Kinésico-Deportiva
 
-Aplicación web integral para la gestión de gimnasios y centros de entrenamiento funcional (**ProFuncional**), con paneles independientes para miembros y personal administrativo.
+Ecosistema digital compuesto por un **Programa de Escritorio/PC** para la administración, kinesiólogos y entrenadores del centro, y una **App Web Móvil (PWA)** para pacientes y alumnos. Conecta la kinesiología y la rehabilitación con el entrenamiento funcional, gestionando citas, fichas clínicas evolutivas (SOAP, EVA, ROM) y control de saldo de paquetes.
 
 ---
 
@@ -9,9 +9,9 @@ Aplicación web integral para la gestión de gimnasios y centros de entrenamient
 - **Frontend**: React 18 + TypeScript
 - **Bundler & Tooling**: Vite 6
 - **Estilos**: Tailwind CSS v4 + Radix UI + Lucide Icons
-- **Gráficos & Animaciones**: Recharts + Motion (Framer Motion)
-- **Utilidades**: Canvas Confetti, Sonner, QRCode.react, Date-fns, React Hook Form
-- **Almacenamiento**: Persistencia reactiva en `localStorage` con eventos en vivo
+- **Gráficos & Métricas**: Recharts (Curvas de dolor EVA y ROM) + Motion (Framer Motion)
+- **Utilidades**: QRCode.react, Sonner, Canvas Confetti, Date-fns, React Hook Form
+- **Almacenamiento**: Persistencia reactiva en `localStorage` con emisión de eventos en tiempo real
 
 ---
 
@@ -38,33 +38,28 @@ npm run build
 
 ## 🔐 Credenciales de Acceso y Demostración
 
-El sistema cuenta con validación estricta de credenciales y mensajes de error ante contraseñas incorrectas o correos no registrados.
+El sistema cuenta con validación estricta de credenciales y perfiles preconfigurados con historiales clínicos y paquetes:
 
-| Perfil | Correo de Acceso | Contraseña Válida | Vista / Rol |
+| Perfil | Correo de Acceso | Contraseña Válida | Paquete / Rol |
 | :--- | :--- | :--- | :--- |
-| **Miembro (Premium)** | `juan.perez@gmail.com` | `password123` *(o `12345678`)* | Panel de Miembro |
-| **Miembro (Standard)** | `camila.gonzalez@gmail.com` | `password123` *(o `12345678`)* | Panel de Miembro |
-| **Miembro (Basic - Vencido)** | `matias.rojas@gmail.com` | `password123` *(o `12345678`)* | Panel de Miembro |
-| **Personal / Admin** | `admin@profuncional.cl` *(o cualquier correo)* | `admin1234` | Panel Administrativo |
-
-> **Registro de Nuevos Miembros:**  
-> Puedes registrar un nuevo usuario desde la pestaña **"Registrarme"**. Al completar los dos pasos (datos y selección de membresía/clases), la cuenta se guardará en la base de datos local y podrás iniciar sesión con la contraseña que hayas definido.
+| **Paciente (LCA / Readaptación)** | `camila.gonzalez@gmail.com` | `password123` *(o `12345678`)* | Pack Recuperación Activa (8 ses) |
+| **Paciente (Tendinopatía / Funcional)** | `juan.perez@gmail.com` | `password123` *(o `12345678`)* | Pack Readaptación Total (12 ses) |
+| **Paciente (Hombro doloroso)** | `matias.rojas@gmail.com` | `password123` *(o `12345678`)* | Pack Básico Kinesiológico (4 ses) |
+| **Personal (Kinesiólogo / Admin / Coach)** | `admin@profuncional.cl` | `admin1234` | Programa PC Staff |
 
 ---
 
-## 📱 Funcionalidades Principales
+## 🗺️ Módulos e Historias de Usuario Implementadas
 
-### 👤 Panel de Miembro (Usuario)
-- **Inicio (Home)**: Resumen personalizado, próxima clase programada con acceso directo y métricas de entrenamientos semanales y racha.
-- **Mi Membresía (Planes)**: Consulta de beneficios, días restantes de vigencia, botón de renovación directa y selector interactivo para cambiar de plan (Basic, Standard, Premium) con actualización en tiempo real.
-- **Calendario & Reservas**: Visualización del horario semanal de clases (HIIT, Yoga, CrossFit, Spinning, etc.), reserva y cancelación de cupos.
-- **Historial de Entrenamiento**: Gráficos de actividad semanal, registro cronológico de sesiones y control de racha.
-- **Tarjeta Digital (QR)**: Credencial digital con código QR dinámico (`PROFUNCIONAL:ID`) para acceso por torniquete o tótem, con opciones de guardar o compartir.
-- **Perfil**: Datos personales y estado de la cuenta.
+### 💻 Programa PC (Staff / Kinesiólogos / Entrenadores / Admin)
+- **HU-01 & HU-02 · Parrilla de Citas y Asistencia**: Visualización de boxes kinésicos y clases funcionales con botones para marcar **"Asistió"** o **"No-Show"** (Inasistencia).
+- **HU-05 · Ficha Clínica Evolutiva (SOAP, EVA, ROM)**: Formulario interactivo con escala de dolor **EVA (1 a 10)**, movilidad articular **ROM en grados (°)**, notas **SOAP** (Subjetivo, Objetivo, Análisis, Plan) y prescripción de restricciones para el gimnasio.
+- **HU-07 · Alertas de Restricciones para Entrenadores**: Identificación visible de restricciones médicas de alumnos inscritos en cada clase (ej. *"⚠️ Evitar flexión >90° por LCA"*).
+- **HU-08 · Dashboard de Métricas y Control de Ausentismo**: Control de ocupación, balance de sesiones kinésicas y cálculo de **Tasa de No-Show (< 5%)**.
 
-### 🛡️ Panel de Personal (Administración)
-- **Dashboard / Resumen**: Indicadores clave (KPIs) de miembros totales, ingresos mensuales en CLP, membresías activas y porcentaje de ocupación de clases, junto a gráficos de crecimiento y actividad reciente en vivo.
-- **Gestión de Miembros**: Búsqueda en tiempo real, filtros por estado (Activos, Vencidos, Todos), visualización de saldos/deudas en CLP.
-- **Detalle de Miembro**: Ficha clínica con historial de asistencia, cálculo automático de racha, historial de pagos, notas privadas del administrador y acciones directas para **Renovar** o **Suspender/Reactivar**.
-- **Gestión de Horarios**: Administración de clases en modo fijo o flexible, control de aforos y centro de notificaciones de cancelaciones.
+### 📱 App Web Móvil (Pacientes / Alumnos)
+- **HU-03 · Agendamiento Autónomo (<30s)**: Reserva ágil de sesiones en box kinésico o clases funcionales con descuento automático de 1 sesión de saldo.
+- **HU-04 · Cancelación, Reagendamiento y Control de Saldo**: Cancelación a tiempo con reintegro automático de la sesión a su paquete activo (packs de 4, 8 o 12 sesiones).
+- **HU-06 · Gráficos de Evolución Física**: Curva interactiva de descenso del dolor en escala **EVA (1-10)** y aumento del rango de movimiento **ROM (grados °)** mediante gráficos Recharts.
+- **Credencial Digital QR**: Pase digital dinámico con código QR (`PROFUNCIONAL:ID`) para acceso a torniquetes o recepción.
 

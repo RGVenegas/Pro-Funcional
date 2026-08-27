@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, DollarSign, TrendingUp, Calendar } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Calendar, Stethoscope, UserX } from 'lucide-react';
 import { KPICard } from '../shared/KPICard';
 import { MembershipGrowthChart } from '../charts/MembershipGrowthChart';
 import { RevenueChart } from '../charts/RevenueChart';
@@ -10,45 +10,51 @@ export function AdminDashboard() {
   const [activities, setActivities] = useState<GymActivity[]>(getActivities);
   useEffect(() => subscribeToMembers(() => setMembers(getMembers())), []);
   useEffect(() => subscribeToActivities(() => setActivities(getActivities())), []);
-  const planPrices: Record<string, number> = { Basic: 29000, Standard: 59000, Premium: 99000 };
+  
+  const planPrices: Record<string, number> = { Basic: 45000, Standard: 85000, Premium: 120000 };
   const activeMembers = members.filter((member) => member.status === 'active');
   const monthlyRevenueValue = activeMembers.reduce((total, member) => total + planPrices[member.plan], 0);
   const monthlyRevenue = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(monthlyRevenueValue);
+  
+  const totalRemainingSessions = members.reduce((acc, m) => acc + (m.remainingSessions || 0), 0);
+  const totalPurchasedSessions = members.reduce((acc, m) => acc + (m.totalSessions || 8), 0);
+
+  const noShowRate = '3.8%'; // Target is < 5%
+
   const classSlots = [
     [15, 20], [12, 15], [22, 25], [18, 20], [10, 15], [8, 20], [12, 12],
     [16, 20], [14, 15], [25, 30], [11, 15], [20, 25], [19, 20], [12, 20],
-    [13, 15], [18, 25], [17, 20], [15, 15], [21, 25], [10, 20], [8, 15],
   ];
   const occupiedSpots = classSlots.reduce((total, [booked]) => total + booked, 0);
   const totalSpots = classSlots.reduce((total, [, capacity]) => total + capacity, 0);
-  const occupancy = ((occupiedSpots / totalSpots) * 100).toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const occupancy = ((occupiedSpots / totalSpots) * 100).toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Resumen</h1>
-        <p className="text-white/60">Rendimiento general de tu gimnasio</p>
+        <h1 className="text-3xl font-bold mb-1 text-[#F7F7F7]">Dashboard Kinésico-Deportivo</h1>
+        <p className="text-white/60 text-sm">Control de rendimiento clínico, paquetes de sesiones y ausentismo</p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Miembros registrados"
+          title="Pacientes / Alumnos"
           value={String(members.length)}
           icon={Users}
         />
         <KPICard
-          title="Ingresos mensuales por membresias"
-          value={monthlyRevenue}
-          icon={DollarSign}
+          title="Tasa de No-Show (Ausentismo)"
+          value={noShowRate}
+          icon={UserX}
         />
         <KPICard
-          title="Membresias activas"
-          value={String(activeMembers.length)}
-          icon={TrendingUp}
+          title="Sesiones en Saldo Activo"
+          value={`${totalRemainingSessions} / ${totalPurchasedSessions}`}
+          icon={Stethoscope}
         />
         <KPICard
-          title="Ocupacion de clases"
+          title="Ocupación de Boxes & Clases"
           value={`${occupancy}%`}
           icon={Calendar}
         />

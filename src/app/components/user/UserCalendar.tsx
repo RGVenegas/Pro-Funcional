@@ -1,6 +1,6 @@
-import React, { FormEvent, useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Users, User } from 'lucide-react';
-import { addActivity } from '../../data/gymStore';
+import React, { FormEvent, useEffect, useState } from 'react';
+import { ChevronLeft, ChevronRight, Clock, Users, User, Stethoscope, Dumbbell, AlertCircle, CheckCircle } from 'lucide-react';
+import { addActivity, consumeSession, getMembers, refundSession, subscribeToMembers, updateMember } from '../../data/gymStore';
 
 type CalendarTab = 'my-schedule' | 'gym-schedule';
 
@@ -9,6 +9,7 @@ interface ClassEvent {
   name: string;
   time: string;
   instructor: string;
+  type?: 'kine' | 'functional';
   capacity?: number;
   booked?: number;
   isBooked?: boolean;
@@ -34,80 +35,120 @@ export function UserCalendar({ memberName, selectedClasses }: UserCalendarProps)
   const [bookingClass, setBookingClass] = useState<ClassEvent | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [cancelledBookings, setCancelledBookings] = useState<string[]>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Find member to manage session balance
+  const [member, setMember] = useState(() => {
+    const list = getMembers();
+    return list.find((m) => m.name.toLowerCase() === memberName.toLowerCase()) || list[0];
+  });
+
+  useEffect(() => {
+    const unsub = subscribeToMembers(() => {
+      const list = getMembers();
+      const found = list.find((m) => m.name.toLowerCase() === memberName.toLowerCase()) || list[0];
+      if (found) setMember(found);
+    });
+    return unsub;
+  }, [memberName]);
 
   const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   const dates = [20, 21, 22, 23, 24, 25, 26];
 
   const defaultMySchedule: Record<number, ClassEvent[]> = {
     20: [
-      { id: '1', name: 'Morning Yoga', time: '06:00', instructor: 'Sarah K.', isBooked: true },
-      { id: '2', name: 'HIIT Training', time: '18:00', instructor: 'Mike R.', isBooked: true },
+      { id: '1', name: 'Sesión Kinesiología (Box 1)', time: '08:00', instructor: 'Klgo. Andrés Morales', type: 'kine', isBooked: true },
+      { id: '2', name: 'Entrenamiento Funcional HIIT', time: '18:00', instructor: 'Prof. Mike R.', type: 'functional', isBooked: true },
     ],
     22: [
-      { id: '3', name: 'Morning Yoga', time: '06:00', instructor: 'Sarah K.', isBooked: true },
+      { id: '3', name: 'Control Kinésico & Movilidad', time: '09:00', instructor: 'Klga. Valeria Reyes', type: 'kine', isBooked: true },
     ],
     24: [
-      { id: '4', name: 'HIIT Training', time: '17:00', instructor: 'Mike R.', isBooked: true },
+      { id: '4', name: 'Readaptación Funcional Grupal', time: '17:00', instructor: 'Prof. Carlos Vega', type: 'functional', isBooked: true },
     ],
   };
 
   const mySchedule: Record<number, ClassEvent[]> = chosenClasses.length > 0
     ? chosenClasses.reduce<Record<number, ClassEvent[]>>((schedule, className, index) => {
       const date = 20 + index;
-      schedule[date] = [{ id: `selected-${index}`, name: className, time: '18:00', instructor: 'Por asignar', isBooked: true }];
+      schedule[date] = [{ id: `selected-${index}`, name: className, time: '18:00', instructor: 'Equipo ProFuncional', isBooked: true }];
       return schedule;
     }, {})
     : defaultMySchedule;
 
   const gymSchedule: Record<number, ClassEvent[]> = {
     20: [
-      { id: '1', name: 'Morning Yoga', time: '06:00', instructor: 'Sarah K.', capacity: 20, booked: 15, isBooked: true },
-      { id: '2', name: 'HIIT Training', time: '09:00', instructor: 'Mike R.', capacity: 15, booked: 12, isBooked: false },
-      { id: '3', name: 'Spinning', time: '17:00', instructor: 'Emma L.', capacity: 25, booked: 22, isBooked: false },
-      { id: '4', name: 'CrossFit', time: '19:00', instructor: 'John D.', capacity: 20, booked: 18, isBooked: true },
+      { id: '1', name: 'Box Clínico Kinesiología 1', time: '08:00', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, booked: 1, isBooked: true },
+      { id: '2', name: 'Entrenamiento Funcional HIIT', time: '09:00', instructor: 'Prof. Mike R.', type: 'functional', capacity: 12, booked: 8, isBooked: false },
+      { id: '3', name: 'Readaptación de Tren Inferior', time: '17:00', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 10, booked: 7, isBooked: false },
+      { id: '4', name: 'Box Clínico Kinesiología 2', time: '19:00', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, booked: 1, isBooked: true },
     ],
     21: [
-      { id: '5', name: 'Pilates', time: '07:00', instructor: 'Lisa M.', capacity: 15, booked: 10, isBooked: false },
-      { id: '6', name: 'Boxing', time: '18:00', instructor: 'Mike R.', capacity: 12, booked: 12, isBooked: false },
+      { id: '5', name: 'Evaluación Kinésica & ROM', time: '07:00', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, booked: 0, isBooked: false },
+      { id: '6', name: 'Entrenamiento Funcional y Core', time: '18:00', instructor: 'Prof. Mike R.', type: 'functional', capacity: 12, booked: 10, isBooked: false },
     ],
     22: [
-      { id: '7', name: 'Morning Yoga', time: '06:00', instructor: 'Sarah K.', capacity: 20, booked: 16, isBooked: true },
-      { id: '8', name: 'Zumba', time: '17:00', instructor: 'Maria S.', capacity: 30, booked: 25, isBooked: false },
+      { id: '7', name: 'Box Clínico Kinesiología 1', time: '09:00', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, booked: 1, isBooked: true },
+      { id: '8', name: 'Readaptación Cardiovascular', time: '17:00', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 12, booked: 9, isBooked: false },
     ],
     23: [
-      { id: '9', name: 'Pilates', time: '07:00', instructor: 'Lisa M.', capacity: 15, booked: 11, isBooked: false },
-      { id: '10', name: 'Spinning', time: '18:00', instructor: 'Emma L.', capacity: 25, booked: 20, isBooked: false },
+      { id: '9', name: 'Terapia Manual & Descarga', time: '07:00', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, booked: 0, isBooked: false },
+      { id: '10', name: 'Entrenamiento Funcional HIIT', time: '18:00', instructor: 'Prof. Mike R.', type: 'functional', capacity: 12, booked: 11, isBooked: false },
     ],
     24: [
-      { id: '11', name: 'Morning Yoga', time: '06:00', instructor: 'Sarah K.', capacity: 20, booked: 12, isBooked: false },
-      { id: '12', name: 'HIIT Training', time: '17:00', instructor: 'Mike R.', capacity: 15, booked: 13, isBooked: true },
+      { id: '11', name: 'Box Clínico Kinesiología 2', time: '08:00', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, booked: 0, isBooked: false },
+      { id: '12', name: 'Readaptación Funcional Total', time: '17:00', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 10, booked: 8, isBooked: true },
     ],
     25: [
-      { id: '13', name: 'Yoga Flow', time: '09:00', instructor: 'Sarah K.', capacity: 20, booked: 17, isBooked: false },
-      { id: '14', name: 'Spinning', time: '11:00', instructor: 'Emma L.', capacity: 25, booked: 21, isBooked: false },
+      { id: '13', name: 'Taller de Movilidad y ROM', time: '09:00', instructor: 'Klgo. Andrés Morales', type: 'functional', capacity: 15, booked: 10, isBooked: false },
+      { id: '14', name: 'Entrenamiento Funcional HIIT', time: '11:00', instructor: 'Prof. Mike R.', type: 'functional', capacity: 12, booked: 8, isBooked: false },
     ],
     26: [
-      { id: '15', name: 'Gentle Yoga', time: '09:00', instructor: 'Sarah K.', capacity: 20, booked: 10, isBooked: false },
+      { id: '15', name: 'Evaluación y Pauta Domiciliaria', time: '09:00', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, booked: 0, isBooked: false },
     ],
+  };
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   const handleBooking = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!bookingClass) return;
+
+    // Descontar 1 sesión del saldo
+    if (member) {
+      if ((member.remainingSessions ?? 0) <= 0) {
+        showToast('⚠️ No tienes sesiones disponibles en tu paquete. Renueva en la pestaña Membresía.');
+        return;
+      }
+      consumeSession(member.id);
+    }
+
     const formData = new FormData(event.currentTarget);
-    setBookings((current) => [...current, {
+    const newBooking: Booking = {
       id: `${bookingClass.id}-${Date.now()}`,
       name: bookingClass.name,
       date: String(formData.get('date')),
       time: String(formData.get('time')),
       instructor: String(formData.get('instructor')),
-    }]);
-    addActivity({ name: memberName, action: `agendo ${bookingClass.name} a las ${String(formData.get('time'))}` });
+    };
+
+    setBookings((current) => [...current, newBooking]);
+    addActivity({ name: memberName, action: `agendó ${bookingClass.name} a las ${String(formData.get('time'))} (-1 sesión de saldo)` });
+    showToast(`¡Sesión agendada con éxito en <30s! Te quedan ${(member?.remainingSessions ?? 5) - 1} sesiones.`);
     setBookingClass(null);
   };
 
   const handleCancel = (event: ClassEvent) => {
     if (cancelledBookings.includes(event.id)) return;
+
+    // Reembolsar 1 sesión al saldo del paquete
+    if (member) {
+      refundSession(member.id);
+    }
+
     const notification = {
       id: `${event.id}-${Date.now()}`,
       member: memberName,
@@ -119,23 +160,41 @@ export function UserCalendar({ memberName, selectedClasses }: UserCalendarProps)
     const savedNotifications = JSON.parse(localStorage.getItem('profuncional-notifications') ?? '[]');
     localStorage.setItem('profuncional-notifications', JSON.stringify([notification, ...savedNotifications]));
     window.dispatchEvent(new CustomEvent('profuncional-booking-cancelled', { detail: notification }));
+    
     setCancelledBookings((current) => [...current, event.id]);
     setBookings((current) => current.filter((booking) => booking.id !== event.id));
+    addActivity({ name: memberName, action: `canceló a tiempo su reserva en ${event.name} (+1 sesión reembolsada)` });
+    showToast(`Reserva cancelada a tiempo. ¡1 sesión ha sido devuelta a tu saldo!`);
   };
 
   const getAvailabilityColor = (booked: number, capacity: number) => {
     const percentage = (booked / capacity) * 100;
-    if (percentage >= 90) return 'text-red-400';
-    if (percentage >= 70) return 'text-yellow-400';
-    return 'text-[#09C82C]';
+    if (percentage >= 90) return 'text-red-400 font-bold';
+    if (percentage >= 70) return 'text-yellow-400 font-semibold';
+    return 'text-[#09C82C] font-semibold';
   };
 
   return (
-    <div className="space-y-6 max-w-6xl">
-      <div>
-        <h1 className="text-3xl font-bold mb-2 text-[#F7F7F7]">Calendario</h1>
-        <p className="text-white/60">Consulta y administra tu horario de entrenamiento</p>
+    <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 text-[#F7F7F7]">Calendario & Agendamiento</h1>
+          <p className="text-white/60 text-sm">Reserva tu sesión kinésica o entrenamiento funcional en &lt;30 segundos</p>
+        </div>
+
+        {/* Saldo banner */}
+        <div className="bg-[#09C82C]/10 border border-[#09C82C]/30 px-4 py-2 rounded-xl flex items-center gap-2.5 text-xs text-[#09C82C] font-semibold">
+          <Stethoscope className="w-4 h-4" />
+          <span>Saldo disponible: <strong>{member?.remainingSessions ?? 5} de {member?.totalSessions ?? 8} sesiones</strong></span>
+        </div>
       </div>
+
+      {toastMessage && (
+        <div className="rounded-xl border border-[#09C82C]/40 bg-[#09C82C]/15 p-4 text-[#09C82C] flex items-center gap-2">
+          <CheckCircle className="h-5 w-5 flex-shrink-0" />
+          <span className="text-sm font-medium">{toastMessage}</span>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2 bg-white/5 p-1 rounded-lg w-fit">
