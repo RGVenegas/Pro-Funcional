@@ -1,6 +1,4 @@
-import React, { FormEvent, useState } from 'react';
-import { ArrowRight, Check, Dumbbell, Eye, EyeOff, LockKeyhole, Mail, UserRound, UsersRound } from 'lucide-react';
-import { addActivity, addMember, getMembers } from '../../data/gymStore';
+import { apiLogin, apiRegister } from '../../services/authService';
 
 type AccessMode = 'member' | 'register' | 'staff';
 export type AuthRole = 'user' | 'admin';
@@ -18,19 +16,19 @@ interface LoginProps {
 
 const modeCopy: Record<AccessMode, { eyebrow: string; title: string; description: string }> = {
   member: {
-    eyebrow: 'MIEMBROS',
+    eyebrow: 'MIEMBROS & PACIENTES',
     title: 'Tu constancia tiene acceso.',
-    description: 'Entra para consultar tus clases, progreso y membresia.',
+    description: 'Entra para consultar tus citas kinésicas, saldo y progreso.',
   },
   register: {
-    eyebrow: 'NUEVO MIEMBRO',
+    eyebrow: 'NUEVO PACIENTE',
     title: 'Empieza donde otros se detienen.',
-    description: 'Unete a nuestra familia y da el primer paso hacia tu mejor version.',
+    description: 'Únete a ProFuncional y da el primer paso hacia tu recuperación.',
   },
   staff: {
-    eyebrow: 'PERSONAL DEL GIMNASIO',
+    eyebrow: 'PERSONAL DEL CENTRO',
     title: 'Todo el equipo, bajo control.',
-    description: 'Accede a las herramientas de gestion de ProFuncional.',
+    description: 'Acceso para Kinesiólogos, Entrenadores y Administración.',
   },
 };
 
@@ -44,15 +42,15 @@ export function Login({ onAuthenticated }: LoginProps) {
   const [selectedPlan, setSelectedPlan] = useState<AuthUser['plan']>('Standard');
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
 
-  const classOptions = ['Entrenamiento HIIT', 'Yoga', 'Spinning', 'CrossFit', 'Pilates', 'Boxeo'];
+  const classOptions = ['Kinesiología Box 1', 'Kinesiología Box 2', 'Readaptación Funcional', 'Entrenamiento HIIT', 'Pilates Clínico', 'Yoga'];
   const planOptions: Array<{ name: AuthUser['plan']; price: string }> = [
-    { name: 'Basic', price: '$29.000/mes' }, { name: 'Standard', price: '$59.000/mes' }, { name: 'Premium', price: '$99.000/mes' },
+    { name: 'Basic', price: '4 sesiones' }, { name: 'Standard', price: '8 sesiones' }, { name: 'Premium', price: '12 sesiones' },
   ];
 
   const isRegistration = mode === 'register';
   const copy = modeCopy[mode];
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get('email') ?? '').trim();
@@ -74,55 +72,44 @@ export function Login({ onAuthenticated }: LoginProps) {
       return;
     }
 
-    let user: AuthUser;
-    if (mode === 'staff') {
-      const validStaffPasswords = ['admin1234', 'profuncional', 'password123', '12345678'];
-      if (!validStaffPasswords.includes(password)) {
-        setFormError('Error: Clave incorrecta. Verifica la contraseña de personal.');
-        return;
-      }
-      user = {
-        name: 'Personal del gimnasio',
-        email,
-        plan: 'Premium',
-        selectedClasses: [],
-      };
-    } else {
-      const existing = getMembers().find((m) => m.email.toLowerCase() === email.toLowerCase());
-      if (!existing) {
-        setFormError('Error: El correo ingresado no se encuentra registrado en el sistema.');
-        return;
-      }
-
-      const validPasswords = [existing.password || 'password123', 'password123', '12345678'];
-      if (!validPasswords.includes(password) && password !== existing.password) {
-        setFormError('Error: Clave incorrecta. Verifica tu contraseña e inténtalo nuevamente.');
-        return;
-      }
-
-      user = {
-        name: existing.name,
-        email: existing.email,
-        plan: existing.plan,
-        selectedClasses: ['Entrenamiento HIIT'],
-      };
-    }
-
     setFormError('');
     setIsSubmitted(true);
-    window.setTimeout(() => onAuthenticated(mode === 'staff' ? 'admin' : 'user', user), 450);
+
+    try {
+      const response = await apiLogin({
+        email,
+        password,
+        role: mode === 'staff' ? 'staff' : 'member',
+      });
+
+      onAuthenticated(response.role, response.user);
+    } catch (err: any) {
+      setIsSubmitted(false);
+      setFormError(err.message || 'Error al iniciar sesión.');
+    }
   };
 
-  const completeRegistration = () => {
+  const completeRegistration = async () => {
     if (!registrationUser || selectedClasses.length === 0) {
-      setFormError('Elige al menos una clase para continuar.');
+      setFormError('Elige al menos un servicio o clase para continuar.');
       return;
     }
     setIsSubmitted(true);
-    const user: AuthUser = { name: registrationUser.name, email: registrationUser.email, plan: selectedPlan, selectedClasses };
-    addMember({ name: user.name, email: user.email, plan: user.plan, password: registrationUser.password });
-    addActivity({ name: user.name, action: `se registró con membresía ${user.plan}` });
-    window.setTimeout(() => onAuthenticated('user', user), 450);
+
+    try {
+      const response = await apiRegister({
+        name: registrationUser.name,
+        email: registrationUser.email,
+        password: registrationUser.password,
+        plan: selectedPlan,
+        selectedClasses,
+      });
+
+      onAuthenticated('user', response.user);
+    } catch (err: any) {
+      setIsSubmitted(false);
+      setFormError(err.message || 'Error al registrar la cuenta.');
+    }
   };
 
   const selectMode = (nextMode: AccessMode) => {
