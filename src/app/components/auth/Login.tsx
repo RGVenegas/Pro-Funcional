@@ -1,3 +1,5 @@
+import React, { FormEvent, useState } from 'react';
+import { ArrowRight, Check, Dumbbell, Eye, EyeOff, LockKeyhole, Mail, UserRound, UsersRound } from 'lucide-react';
 import { apiLogin, apiRegister } from '../../services/authService';
 
 type AccessMode = 'member' | 'register' | 'staff';
