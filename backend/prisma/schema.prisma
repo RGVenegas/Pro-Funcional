@@ -1,0 +1,146 @@
+// Prisma Schema para ProFuncional — PostgreSQL (Supabase)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  KINESIOLOGO
+  COACH
+  PATIENT
+}
+
+enum MemberStatus {
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+}
+
+enum MembershipPlan {
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
+enum SlotType {
+  KINE_BOX
+  FUNCTIONAL
+}
+
+enum BookingStatus {
+  RESERVED
+  ATTENDED
+  NO_SHOW
+  CANCELLED
+}
+
+model User {
+  id                   String                 @id @default(uuid())
+  email                String                 @unique
+  password             String
+  name                 String
+  phone                String?
+  role                 Role                   @default(PATIENT)
+  status               MemberStatus           @default(ACTIVE)
+  balance              Float                  @default(0)
+  physicalRestrictions String?
+  joinDate             DateTime               @default(now())
+  nextBilling          DateTime?
+  packages             SessionPackage[]
+  bookings             Booking[]
+  clinicalRecords      ClinicalEvaluation[]   @relation("PatientEvaluations")
+  evaluationsGiven     ClinicalEvaluation[]   @relation("ProfessionalEvaluations")
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  @@map("users")
+}
+
+model SessionPackage {
+  id                String         @id @default(uuid())
+  userId            String
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan              MembershipPlan @default(STANDARD)
+  packName          String
+  totalSessions     Int            @default(8)
+  remainingSessions Int            @default(8)
+  price             Float          @default(59000)
+  isActive          Boolean        @default(true)
+  expiresAt         DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@map("session_packages")
+}
+
+model ScheduleBlock {
+  id          String        @id @default(uuid())
+  dayOfWeek   String        // "Monday", "Tuesday", "Wednesday", etc.
+  startTime   String        // "08:00"
+  endTime     String        // "09:00"
+  title       String        // e.g. "Box Clínico Kinesiología 1"
+  instructor  String        // e.g. "Klgo. Andrés Morales"
+  type        SlotType      @default(KINE_BOX)
+  capacity    Int           @default(1)
+  isActive    Boolean       @default(true)
+  bookings    Booking[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("schedule_blocks")
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  scheduleBlockId String
+  scheduleBlock   ScheduleBlock @relation(fields: [scheduleBlockId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookingDate     DateTime      // Fecha exacta agendada
+  status          BookingStatus @default(RESERVED)
+  isRefunded      Boolean       @default(false)
+  cancelledAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([bookingDate, scheduleBlockId])
+  @@map("bookings")
+}
+
+model ClinicalEvaluation {
+  id                   String    @id @default(uuid())
+  patientId            String
+  patient              User      @relation("PatientEvaluations", fields: [patientId], references: [id], onDelete: Cascade)
+  professionalId       String?
+  professional         User?     @relation("ProfessionalEvaluations", fields: [professionalId], references: [id], onDelete: SetNull)
+  professionalName     String
+  date                 DateTime  @default(now())
+  evaPain              Int       // Escala EVA: 1 a 10
+  romDegrees           Int       // Rango de Movilidad Articular en Grados (°)
+  jointOrArea          String    // e.g. "Rodilla derecha", "Hombro izquierdo"
+  subjective           String    @db.Text
+  objective            String    @db.Text
+  assessment           String    @db.Text
+  plan                 String    @db.Text
+  physicalRestrictions String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@map("clinical_evaluations")
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  userName  String
+  action    String
+  createdAt DateTime @default(now())
+
+  @@map("activity_logs")
+}
