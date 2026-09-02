@@ -8,7 +8,7 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const styles = {
-    active: 'bg-[#09C82C]/20 text-[#09C82C] border-[#09C82C]/30',
+    active: 'bg-[#00B4D8]/20 text-[#00B4D8] border-[#00B4D8]/30',
     expired: 'bg-white/10 text-white/60 border-white/20',
     suspended: 'bg-red-500/20 text-red-400 border-red-500/30',
   };

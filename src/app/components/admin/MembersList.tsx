@@ -49,7 +49,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
             placeholder="Buscar miembros..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-[#09C82C]"
+            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-[#00B4D8]"
           />
         </div>
         
@@ -57,7 +57,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
           <button
             onClick={() => setFilterStatus('all')}
             className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-              filterStatus === 'all' ? 'bg-[#09C82C] text-[#010A01]' : 'bg-white/5 text-white hover:bg-white/10'
+              filterStatus === 'all' ? 'bg-[#00B4D8] text-[#021826] font-bold' : 'bg-white/5 text-white hover:bg-white/10'
             }`}
           >
             Todos
@@ -65,7 +65,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
           <button
             onClick={() => setFilterStatus('active')}
             className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-              filterStatus === 'active' ? 'bg-[#09C82C] text-[#010A01]' : 'bg-white/5 text-white hover:bg-white/10'
+              filterStatus === 'active' ? 'bg-[#00B4D8] text-[#021826] font-bold' : 'bg-white/5 text-white hover:bg-white/10'
             }`}
           >
             Activos
@@ -73,7 +73,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
           <button
             onClick={() => setFilterStatus('expired')}
             className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-              filterStatus === 'expired' ? 'bg-[#09C82C] text-[#010A01]' : 'bg-white/5 text-white hover:bg-white/10'
+              filterStatus === 'expired' ? 'bg-[#00B4D8] text-[#021826] font-bold' : 'bg-white/5 text-white hover:bg-white/10'
             }`}
           >
             Vencidos
@@ -99,13 +99,13 @@ export function MembersList({ onViewMember }: MembersListProps) {
                 <tr key={member.id} className="cursor-pointer border-b border-white/5 hover:bg-white/5 transition-colors" onClick={() => onViewMember(member.id)}>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#09C82C]/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-[#09C82C] font-semibold">
+                      <div className="w-10 h-10 rounded-full bg-[#00B4D8]/20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[#00B4D8] font-semibold">
                           {member.name.split(' ').map(n => n[0]).join('')}
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <button type="button" className="font-medium truncate text-left text-[#F7F7F7] hover:text-[#09C82C]" onClick={() => onViewMember(member.id)}>{member.name}</button>
+                        <button type="button" className="font-medium truncate text-left text-[#F7F7F7] hover:text-[#00B4D8]" onClick={() => onViewMember(member.id)}>{member.name}</button>
                         <p className="text-sm text-white/40 truncate hidden sm:block">{member.email}</p>
                       </div>
                     </div>
@@ -117,7 +117,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
                     <StatusBadge status={member.status} />
                   </td>
                   <td className="p-4 hidden lg:table-cell">
-                    <span className={member.balance < 0 ? 'text-red-400' : member.balance > 0 ? 'text-[#09C82C]' : 'text-white/60'}>
+                    <span className={member.balance < 0 ? 'text-red-400' : member.balance > 0 ? 'text-[#00B4D8]' : 'text-white/60'}>
                       {formatCLP(Math.abs(member.balance) * 1000)}
                       {member.balance < 0 && ' deuda'}
                       {member.balance > 0 && ' credito'}
@@ -126,7 +126,7 @@ export function MembersList({ onViewMember }: MembersListProps) {
                   <td className="p-4 text-right">
                     <button
                       onClick={() => onViewMember(member.id)}
-                      className="inline-flex items-center gap-2 px-3 py-2 bg-[#09C82C] text-[#010A01] rounded-lg hover:bg-[#09C82C]/90 transition-colors"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-[#00B4D8] text-[#021826] font-bold rounded-lg hover:bg-[#00B4D8]/90 transition-colors"
                     >
                       <Eye className="w-4 h-4" />
                       <span className="hidden sm:inline">Ver</span>

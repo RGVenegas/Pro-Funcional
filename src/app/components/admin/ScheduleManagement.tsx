@@ -1,5 +1,5 @@
 import React, { useEffect, useState, FormEvent } from 'react';
-import { Bell, ChevronLeft, ChevronRight, Users, AlertTriangle, CheckCircle, XCircle, Stethoscope, Dumbbell, Clock, Plus, Trash2, PlusCircle } from 'lucide-react';
+import { Bell, ChevronLeft, ChevronRight, Users, User, AlertTriangle, CheckCircle, XCircle, Stethoscope, Dumbbell, Clock, Plus, Trash2, PlusCircle } from 'lucide-react';
 import {
   addActivity,
   getCentralScheduleBlocks,
@@ -58,6 +58,20 @@ export function ScheduleManagement() {
     Friday: 'Viernes', Saturday: 'Sábado', Sunday: 'Domingo',
   };
 
+  const getWeekRangeLabel = (weekOffset: number) => {
+    const baseMonday = new Date(2025, 0, 20);
+    const start = new Date(baseMonday);
+    start.setDate(baseMonday.getDate() + weekOffset * 7);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+
+    const monthStart = start.toLocaleDateString('es-ES', { month: 'short' });
+    const monthEnd = end.toLocaleDateString('es-ES', { month: 'short' });
+    const monthText = monthStart === monthEnd ? monthStart : `${monthStart} - ${monthEnd}`;
+
+    return `${start.getDate()} al ${end.getDate()} de ${monthText}, ${start.getFullYear()}`;
+  };
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
@@ -67,7 +81,7 @@ export function ScheduleManagement() {
     const percentage = (booked / capacity) * 100;
     if (percentage >= 90) return 'bg-red-500/20 text-red-300 border-red-500/30';
     if (percentage >= 60) return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-    return 'bg-[#09C82C]/20 text-[#09C82C] border-[#09C82C]/30';
+    return 'bg-[#00B4D8]/15 text-[#00B4D8] border-[#00B4D8]/30';
   };
 
   const handleCreateBlock = (e: FormEvent<HTMLFormElement>) => {
@@ -139,7 +153,7 @@ export function ScheduleManagement() {
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#09C82C] text-[#010A01] text-xs font-bold hover:bg-[#09C82C]/90 transition-transform hover:scale-105 flex items-center gap-2 shadow-lg"
+            className="px-4 py-2.5 rounded-xl bg-[#00B4D8] text-[#021826] text-xs font-bold hover:bg-[#00B4D8]/90 transition-transform hover:scale-105 flex items-center gap-2 shadow-lg shadow-[#00B4D8]/20"
           >
             <PlusCircle className="w-4 h-4" />
             + Configurar Nuevo Bloque
@@ -149,7 +163,7 @@ export function ScheduleManagement() {
             <button
               onClick={() => setMode('classes')}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-                mode === 'classes' ? 'bg-[#09C82C] text-[#010A01]' : 'text-white/70 hover:text-white'
+                mode === 'classes' ? 'bg-[#00B4D8] text-[#021826]' : 'text-white/70 hover:text-white'
               }`}
             >
               <Dumbbell className="w-4 h-4" />
@@ -158,7 +172,7 @@ export function ScheduleManagement() {
             <button
               onClick={() => setMode('kine-boxes')}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-                mode === 'kine-boxes' ? 'bg-[#09C82C] text-[#010A01]' : 'text-white/70 hover:text-white'
+                mode === 'kine-boxes' ? 'bg-[#00B4D8] text-[#021826]' : 'text-white/70 hover:text-white'
               }`}
             >
               <Stethoscope className="w-4 h-4" />
@@ -169,7 +183,7 @@ export function ScheduleManagement() {
       </div>
 
       {toastMessage && (
-        <div className="rounded-xl border border-[#09C82C]/40 bg-[#09C82C]/15 p-4 text-[#09C82C] flex items-center gap-2">
+        <div className="rounded-xl border border-[#00B4D8]/40 bg-[#00B4D8]/15 p-4 text-[#00B4D8] flex items-center gap-2">
           <CheckCircle className="h-5 w-5 flex-shrink-0" />
           <span className="text-sm font-medium">{toastMessage}</span>
         </div>
@@ -204,7 +218,7 @@ export function ScheduleManagement() {
           <p className="font-bold text-white">
             {currentWeek === 0 ? 'Esta semana' : currentWeek > 0 ? `${currentWeek} semana${currentWeek > 1 ? 's' : ''} adelante` : `Hace ${Math.abs(currentWeek)} semana${Math.abs(currentWeek) > 1 ? 's' : ''}`}
           </p>
-          <p className="text-xs text-white/60">20 al 26 de Enero, 2025</p>
+          <p className="text-xs text-white/60">{getWeekRangeLabel(currentWeek)}</p>
         </div>
         <button
           onClick={() => setCurrentWeek(currentWeek + 1)}
@@ -215,36 +229,33 @@ export function ScheduleManagement() {
       </div>
 
       {/* Schedule Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {days.slice(0, 5).map((day) => {
-          const dayBlocks = blocks.filter((b) => b.dayOfWeek === day && b.isActive);
-          const slots = mode === 'kine-boxes' ? dayBlocks.filter((s) => s.type === 'kine') : dayBlocks;
+      <div className="overflow-x-auto pb-4 pt-1 -mx-2 px-2 custom-scrollbar">
+        <div className="grid grid-cols-7 min-w-[1260px] gap-3.5">
+          {days.map((day) => {
+            const dayBlocks = blocks.filter((b) => b.dayOfWeek === day && b.isActive);
+            const slots = mode === 'kine-boxes' ? dayBlocks.filter((s) => s.type === 'kine') : dayBlocks;
 
-          return (
-            <div key={day} className="bg-white/5 rounded-xl p-5 backdrop-blur-sm border border-white/10 space-y-4">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <h3 className="font-bold text-lg text-white">{dayLabels[day]}</h3>
-                <span className="text-xs text-white/50">{slots.length} bloque{slots.length === 1 ? '' : 's'}</span>
-              </div>
+            return (
+              <div key={day} className="bg-white/5 rounded-2xl p-3.5 backdrop-blur-sm border border-white/10 flex flex-col justify-start gap-3">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2.5 px-0.5">
+                  <h3 className="font-bold text-base text-white">{dayLabels[day]}</h3>
+                  <span className="text-[11px] text-white/50 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">{slots.length} {slots.length === 1 ? 'bloque' : 'bloques'}</span>
+                </div>
 
-              <div className="space-y-3">
-                {slots.map((slot) => {
-                  const hasRestrictions = slot.students.some((st) => Boolean(st.restrictions));
-                  const bookedCount = slot.students.length;
+                <div className="space-y-3">
+                  {slots.map((slot) => {
+                    const hasRestrictions = slot.students.some((st) => Boolean(st.restrictions));
+                    const bookedCount = slot.students.length;
 
-                  return (
-                    <div
-                      key={slot.id}
-                      className={`p-4 rounded-xl border transition-all hover:scale-[1.01] ${getOccupancyColor(bookedCount, slot.capacity)}`}
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div onClick={() => setSelectedBlock(slot)} className="cursor-pointer flex-1">
-                          <p className="font-bold text-sm text-white">{slot.title}</p>
-                          <p className="text-xs text-white/70">{slot.instructor}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono font-bold bg-black/40 px-2 py-0.5 rounded text-white flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-[#09C82C]" />
+                    return (
+                      <div
+                        key={slot.id}
+                        className={`p-3 rounded-xl border transition-all hover:scale-[1.01] ${getOccupancyColor(bookedCount, slot.capacity)} flex flex-col justify-between`}
+                      >
+                        {/* Top bar: Hora + Eliminar */}
+                        <div className="flex items-center justify-between gap-1 mb-2">
+                          <span className="text-[11px] font-mono font-bold bg-black/60 px-2 py-0.5 rounded-md text-white flex items-center gap-1 whitespace-nowrap border border-white/10">
+                            <Clock className="w-3 h-3 text-[#00B4D8] flex-shrink-0" />
                             {slot.startTime} - {slot.endTime}
                           </span>
                           <button
@@ -253,73 +264,85 @@ export function ScheduleManagement() {
                               handleDeleteBlock(slot.id, slot.title);
                             }}
                             title="Eliminar bloque horario"
-                            className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                            className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-md transition-colors flex-shrink-0 ml-auto"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                      </div>
 
-                      {/* Alerta de restricción destacada para entrenadores */}
-                      {hasRestrictions && (
-                        <div className="mb-2.5 rounded-lg bg-amber-500/20 border border-amber-500/40 p-2 flex items-center gap-1.5 text-[11px] text-amber-200 font-medium">
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                          <span>¡Alumnos con restricciones físicas registradas!</span>
+                        {/* Info principal: Título e Instructor */}
+                        <div onClick={() => setSelectedBlock(slot)} className="cursor-pointer mb-2 space-y-0.5">
+                          <p className="font-bold text-xs leading-snug text-white">{slot.title}</p>
+                          <p className="text-[11px] text-white/70 truncate flex items-center gap-1">
+                            <User className="w-3 h-3 text-white/40 flex-shrink-0" />
+                            {slot.instructor}
+                          </p>
                         </div>
-                      )}
 
-                      {/* Alumnos inscritos */}
-                      <div className="space-y-1.5 pt-1">
-                        {slot.students.map((st) => (
-                          <div key={st.id} className="flex items-center justify-between text-xs bg-black/30 px-2.5 py-1.5 rounded-lg">
-                            <span className="font-medium text-white truncate max-w-[130px]">{st.name}</span>
-                            
-                            <div className="flex items-center gap-1">
-                              {st.restrictions && (
-                                <span title={st.restrictions} className="text-[10px] bg-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded font-bold">
-                                  ⚠️ Restricción
-                                </span>
-                              )}
-                              <span
-                                className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
-                                  st.status === 'attended'
-                                    ? 'bg-emerald-500/30 text-emerald-300'
-                                    : st.status === 'no-show'
-                                    ? 'bg-rose-500/30 text-rose-300'
-                                    : 'bg-white/10 text-white/70'
-                                }`}
-                              >
-                                {st.status === 'attended' ? 'Asistió' : st.status === 'no-show' ? 'No-Show' : 'Pendiente'}
-                              </span>
-                            </div>
+                        {/* Alerta de restricción destacada */}
+                        {hasRestrictions && (
+                          <div className="mb-2 rounded-lg bg-amber-500/20 border border-amber-500/40 px-2 py-1 flex items-center gap-1.5 text-[10px] text-amber-200 font-medium leading-tight">
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                            <span className="truncate">Restricción médica</span>
                           </div>
-                        ))}
-                      </div>
+                        )}
 
-                      <div onClick={() => setSelectedBlock(slot)} className="mt-3 flex items-center justify-between text-xs text-white/60 pt-2 border-t border-white/10 cursor-pointer">
-                        <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {bookedCount}/{slot.capacity} cupos</span>
-                        <span className="text-[#09C82C] font-semibold">Ver detalle & asistencia →</span>
-                      </div>
-                    </div>
-                  );
-                })}
+                        {/* Lista compacta de alumnos */}
+                        {slot.students.length > 0 && (
+                          <div className="space-y-1 mb-2 pt-1">
+                            {slot.students.map((st) => (
+                              <div key={st.id} className="flex items-center justify-between text-[11px] bg-black/40 px-2 py-1 rounded-lg gap-1 border border-white/5">
+                                <span className="font-medium text-white truncate max-w-[80px]" title={st.name}>{st.name}</span>
+                                
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  {st.restrictions && (
+                                    <span title={st.restrictions} className="text-[9px] bg-amber-500/30 text-amber-300 px-1 py-0.5 rounded font-bold">
+                                      ⚠️
+                                    </span>
+                                  )}
+                                  <span
+                                    className={`text-[9px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap ${
+                                      st.status === 'attended'
+                                        ? 'bg-emerald-500/30 text-emerald-300'
+                                        : st.status === 'no-show'
+                                        ? 'bg-rose-500/30 text-rose-300'
+                                        : 'bg-white/10 text-white/70'
+                                    }`}
+                                  >
+                                    {st.status === 'attended' ? 'Asistió' : st.status === 'no-show' ? 'No-Show' : 'Pendient.'}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
-                {slots.length === 0 && (
-                  <p className="text-white/40 text-xs text-center py-6">No hay bloques agendados para este día.</p>
-                )}
+                        {/* Footer */}
+                        <div onClick={() => setSelectedBlock(slot)} className="mt-auto flex items-center justify-between text-[11px] text-white/60 pt-2 border-t border-white/10 cursor-pointer">
+                          <span className="flex items-center gap-1 whitespace-nowrap"><Users className="w-3 h-3 flex-shrink-0" /> {bookedCount}/{slot.capacity}</span>
+                          <span className="text-[#00B4D8] font-semibold text-[10px] sm:text-[11px] whitespace-nowrap">Ver detalle →</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {slots.length === 0 && (
+                    <p className="text-white/40 text-xs text-center py-6">No hay bloques agendados.</p>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* Modal HU-01: Configurar Nuevo Bloque Horario */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <form onSubmit={handleCreateBlock} className="bg-[#101a14] border border-white/15 rounded-2xl p-6 w-full max-w-lg space-y-4 shadow-2xl text-white">
+          <form onSubmit={handleCreateBlock} className="bg-[#0b1726] border border-white/15 rounded-2xl p-6 w-full max-w-lg space-y-4 shadow-2xl text-white">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div>
-                <span className="text-xs font-bold uppercase text-[#09C82C]">HU-01 · Programa PC</span>
+                <span className="text-xs font-bold uppercase text-[#00B4D8]">HU-01 · Programa PC</span>
                 <h3 className="text-xl font-bold mt-0.5">Configurar Nuevo Bloque Horario</h3>
               </div>
               <button type="button" onClick={() => setIsAddModalOpen(false)} className="text-white/50 hover:text-white text-sm bg-white/5 p-2 rounded-lg">✕</button>
@@ -328,7 +351,7 @@ export function ScheduleManagement() {
             <div className="grid grid-cols-2 gap-4">
               <label className="text-xs text-white/70 col-span-2">
                 Día de la Semana
-                <select name="dayOfWeek" required className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#09C82C]">
+                <select name="dayOfWeek" required className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]">
                   <option value="Monday">Lunes</option>
                   <option value="Tuesday">Martes</option>
                   <option value="Wednesday">Miércoles</option>
@@ -341,27 +364,27 @@ export function ScheduleManagement() {
 
               <label className="text-xs text-white/70 col-span-2">
                 Nombre de la Clase / Box Clínico
-                <input required name="title" placeholder="Ej. Box Clínico Kinesiología 3 / HIIT Funcional" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#09C82C]" />
+                <input required name="title" placeholder="Ej. Box Clínico Kinesiología 3 / HIIT Funcional" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]" />
               </label>
 
               <label className="text-xs text-white/70 col-span-2">
                 Profesional / Kinesiólogo / Entrenador
-                <input required name="instructor" defaultValue="Klgo. Andrés Morales" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#09C82C]" />
+                <input required name="instructor" defaultValue="Klgo. Andrés Morales" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]" />
               </label>
 
               <label className="text-xs text-white/70">
                 Hora Inicio
-                <input required name="startTime" type="time" defaultValue="08:00" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#09C82C]" />
+                <input required name="startTime" type="time" defaultValue="08:00" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]" />
               </label>
 
               <label className="text-xs text-white/70">
                 Hora Fin
-                <input required name="endTime" type="time" defaultValue="09:00" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#09C82C]" />
+                <input required name="endTime" type="time" defaultValue="09:00" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]" />
               </label>
 
               <label className="text-xs text-white/70">
                 Tipo de Atención
-                <select name="type" required className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#09C82C]">
+                <select name="type" required className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]">
                   <option value="kine">Box Kinésico (Individual)</option>
                   <option value="functional">Clase Funcional (Grupal)</option>
                 </select>
@@ -369,13 +392,13 @@ export function ScheduleManagement() {
 
               <label className="text-xs text-white/70">
                 Capacidad Máxima (Cupos)
-                <input required name="capacity" type="number" min="1" max="30" defaultValue="1" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#09C82C]" />
+                <input required name="capacity" type="number" min="1" max="30" defaultValue="1" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]" />
               </label>
             </div>
 
             <div className="pt-3 flex justify-end gap-3 border-t border-white/10">
               <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2.5 rounded-xl bg-white/10 text-white text-xs font-bold hover:bg-white/20">Cancelar</button>
-              <button type="submit" className="px-5 py-2.5 rounded-xl bg-[#09C82C] text-[#010A01] text-xs font-bold hover:bg-[#09C82C]/90">Guardar Bloque Horario</button>
+              <button type="submit" className="px-5 py-2.5 rounded-xl bg-[#00B4D8] text-[#021826] text-xs font-bold hover:bg-[#00B4D8]/90">Guardar Bloque Horario</button>
             </div>
           </form>
         </div>
@@ -384,10 +407,10 @@ export function ScheduleManagement() {
       {/* Modal / Drawer de Detalle de Clase & Asistencia */}
       {selectedBlock && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#101a14] border border-white/15 rounded-2xl p-6 w-full max-w-xl space-y-5 shadow-2xl text-white">
+          <div className="bg-[#0b1726] border border-white/15 rounded-2xl p-6 w-full max-w-xl space-y-5 shadow-2xl text-white">
             <div className="flex items-start justify-between border-b border-white/10 pb-4">
               <div>
-                <span className="text-xs font-bold uppercase text-[#09C82C] tracking-wider">{selectedBlock.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
+                <span className="text-xs font-bold uppercase text-[#00B4D8] tracking-wider">{selectedBlock.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
                 <h3 className="text-xl font-bold mt-1">{selectedBlock.title}</h3>
                 <p className="text-xs text-white/60">{selectedBlock.instructor} · {selectedBlock.startTime} - {selectedBlock.endTime} hrs ({dayLabels[selectedBlock.dayOfWeek]})</p>
               </div>
@@ -401,7 +424,7 @@ export function ScheduleManagement() {
 
             <div>
               <h4 className="font-bold text-sm mb-3 text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#09C82C]" />
+                <Users className="w-4 h-4 text-[#00B4D8]" />
                 Lista de Alumnos Inscritos y Control de Asistencia
               </h4>
 
@@ -473,7 +496,7 @@ export function ScheduleManagement() {
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setSelectedBlock(null)}
-                className="px-5 py-2.5 rounded-xl bg-[#09C82C] text-[#010A01] text-xs font-bold hover:bg-[#09C82C]/90"
+                className="px-5 py-2.5 rounded-xl bg-[#00B4D8] text-[#021826] text-xs font-bold hover:bg-[#00B4D8]/90"
               >
                 Listo
               </button>

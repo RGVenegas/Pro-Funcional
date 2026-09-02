@@ -136,42 +136,42 @@ export function Login({ onAuthenticated }: LoginProps) {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#07100c] text-[#f4f7f2]">
-      <div className="pointer-events-none absolute -right-40 -top-40 h-[32rem] w-[32rem] rounded-full border border-[#b7f34a]/10 bg-[#b7f34a]/[0.04]" />
+    <main className="relative min-h-screen overflow-hidden bg-[#030f1d] text-[#f4f7f2]">
+      <div className="pointer-events-none absolute -right-40 -top-40 h-[32rem] w-[32rem] rounded-full border border-[#00B4D8]/10 bg-[#00B4D8]/[0.04]" />
       <div className="pointer-events-none absolute -bottom-56 -left-40 h-[34rem] w-[34rem] rounded-full border border-white/[0.06] bg-white/[0.02]" />
       <div className="pointer-events-none absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:72px_72px]" />
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-between px-6 py-7 lg:px-12 lg:py-10">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#b7f34a] text-[#07100c]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00B4D8] text-[#030f1d]">
               <Dumbbell className="h-5 w-5" strokeWidth={2.5} />
             </div>
-            <span className="text-lg font-bold tracking-[-0.04em]">PRO<span className="text-[#b7f34a]">FUNCIONAL</span></span>
+            <span className="text-lg font-bold tracking-[-0.04em]">PRO<span className="text-[#00B4D8]">FUNCIONAL</span></span>
           </div>
           <span className="hidden text-xs font-semibold uppercase tracking-[0.22em] text-white/35 sm:block">Entrena con intencion</span>
         </header>
 
         <div className="grid items-center gap-14 py-12 lg:grid-cols-[minmax(0,1fr)_460px] lg:gap-24 lg:py-16">
           <section className="max-w-xl">
-            <p className="mb-5 text-xs font-bold uppercase tracking-[0.3em] text-[#b7f34a]">{copy.eyebrow}</p>
+            <p className="mb-5 text-xs font-bold uppercase tracking-[0.3em] text-[#00B4D8]">{copy.eyebrow}</p>
             <h1 className="max-w-lg text-5xl font-black leading-[0.95] tracking-[-0.065em] text-white sm:text-7xl">{copy.title}</h1>
             <p className="mt-7 max-w-md text-base leading-7 text-white/55">{copy.description}</p>
             <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/65">
               {['Acceso seguro', 'Clases en un solo lugar', 'Progreso que se nota'].map((item) => (
-                <span key={item} className="flex items-center gap-2"><Check className="h-4 w-4 text-[#b7f34a]" />{item}</span>
+                <span key={item} className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00B4D8]" />{item}</span>
               ))}
             </div>
           </section>
 
-          <section className="rounded-[1.75rem] border border-white/10 bg-[#101a14]/90 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8">
+          <section className="rounded-[1.75rem] border border-white/10 bg-[#0b1726]/90 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8">
             <div className="mb-7 flex gap-1 rounded-xl border border-white/10 bg-black/20 p-1">
               {([
                 ['member', 'Miembro'],
                 ['register', 'Registrarme'],
                 ['staff', 'Personal'],
               ] as const).map(([value, label]) => (
-                <button key={value} type="button" onClick={() => selectMode(value)} className={`flex-1 rounded-lg px-2 py-2.5 text-xs font-semibold transition-colors ${mode === value ? 'bg-[#b7f34a] text-[#07100c]' : 'text-white/50 hover:text-white'}`}>
+                <button key={value} type="button" onClick={() => selectMode(value)} className={`flex-1 rounded-lg px-2 py-2.5 text-xs font-semibold transition-colors ${mode === value ? 'bg-[#00B4D8] text-[#030f1d] font-bold shadow-md shadow-[#00B4D8]/20' : 'text-white/50 hover:text-white'}`}>
                   {label}
                 </button>
               ))}
@@ -187,38 +187,38 @@ export function Login({ onAuthenticated }: LoginProps) {
                 <div>
                   <p className="mb-3 text-sm font-medium text-white/75">Elige tu membresia</p>
                   <div className="grid grid-cols-3 gap-2">
-                    {planOptions.map((plan) => <button key={plan.name} type="button" onClick={() => setSelectedPlan(plan.name)} className={`rounded-xl border p-3 text-left transition-colors ${selectedPlan === plan.name ? 'border-[#b7f34a] bg-[#b7f34a]/15' : 'border-white/10 bg-white/[0.03] hover:border-white/30'}`}><span className="block text-sm font-bold">{plan.name}</span><span className="mt-1 block text-xs text-white/50">{plan.price}</span></button>)}
+                    {planOptions.map((plan) => <button key={plan.name} type="button" onClick={() => setSelectedPlan(plan.name)} className={`rounded-xl border p-3 text-left transition-colors ${selectedPlan === plan.name ? 'border-[#00B4D8] bg-[#00B4D8]/15' : 'border-white/10 bg-white/[0.03] hover:border-white/30'}`}><span className="block text-sm font-bold">{plan.name}</span><span className="mt-1 block text-xs text-white/50">{plan.price}</span></button>)}
                   </div>
                 </div>
                 <div>
                   <p className="mb-3 text-sm font-medium text-white/75">Elige tus clases</p>
                   <div className="grid grid-cols-2 gap-2">
-                    {classOptions.map((className) => { const isSelected = selectedClasses.includes(className); return <button key={className} type="button" onClick={() => setSelectedClasses((current) => isSelected ? current.filter((item) => item !== className) : [...current, className])} className={`rounded-xl border px-3 py-3 text-left text-sm transition-colors ${isSelected ? 'border-[#b7f34a] bg-[#b7f34a]/15 text-[#b7f34a]' : 'border-white/10 bg-white/[0.03] text-white/70 hover:border-white/30'}`}>{isSelected ? '✓ ' : ''}{className}</button>; })}
+                    {classOptions.map((className) => { const isSelected = selectedClasses.includes(className); return <button key={className} type="button" onClick={() => setSelectedClasses((current) => isSelected ? current.filter((item) => item !== className) : [...current, className])} className={`rounded-xl border px-3 py-3 text-left text-sm transition-colors ${isSelected ? 'border-[#00B4D8] bg-[#00B4D8]/15 text-[#00B4D8] font-bold' : 'border-white/10 bg-white/[0.03] text-white/70 hover:border-white/30'}`}>{isSelected ? '✓ ' : ''}{className}</button>; })}
                   </div>
                 </div>
                 {formError && <p role="alert" className="text-sm text-rose-300">{formError}</p>}
-                <button type="button" disabled={isSubmitted} onClick={completeRegistration} className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#b7f34a] font-bold text-[#07100c] disabled:opacity-70">{isSubmitted ? 'Creando tu perfil...' : 'Entrar a mi cuenta'}{!isSubmitted && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}</button>
+                <button type="button" disabled={isSubmitted} onClick={completeRegistration} className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#00B4D8] font-bold text-[#030f1d] disabled:opacity-70 shadow-lg shadow-[#00B4D8]/20">{isSubmitted ? 'Creando tu perfil...' : 'Entrar a mi cuenta'}{!isSubmitted && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}</button>
               </div>
             ) : <form onSubmit={handleSubmit} className="space-y-4">
               {isRegistration && (
                 <label className="block space-y-2 text-sm font-medium text-white/75">Nombre completo
-                  <span className="relative block"><UserRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" /><input name="name" type="text" placeholder="Tu nombre" className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-4 text-white outline-none transition-colors placeholder:text-white/25 focus:border-[#b7f34a]/70" /></span>
+                  <span className="relative block"><UserRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" /><input name="name" type="text" placeholder="Tu nombre" className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-4 text-white outline-none transition-colors placeholder:text-white/25 focus:border-[#00B4D8]/70" /></span>
                 </label>
               )}
               <label className="block space-y-2 text-sm font-medium text-white/75">Correo electronico
-                <span className="relative block"><Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" /><input name="email" type="email" placeholder="nombre@correo.com" className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-4 text-white outline-none transition-colors placeholder:text-white/25 focus:border-[#b7f34a]/70" /></span>
+                <span className="relative block"><Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" /><input name="email" type="email" placeholder="nombre@correo.com" className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-4 text-white outline-none transition-colors placeholder:text-white/25 focus:border-[#00B4D8]/70" /></span>
               </label>
               <label className="block space-y-2 text-sm font-medium text-white/75">Contrasena
-                <span className="relative block"><LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" /><input name="password" type={showPassword ? 'text' : 'password'} placeholder="Minimo 8 caracteres" className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-11 text-white outline-none transition-colors placeholder:text-white/25 focus:border-[#b7f34a]/70" /><button type="button" aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span>
+                <span className="relative block"><LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" /><input name="password" type={showPassword ? 'text' : 'password'} placeholder="Minimo 8 caracteres" className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-11 text-white outline-none transition-colors placeholder:text-white/25 focus:border-[#00B4D8]/70" /><button type="button" aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span>
               </label>
-              {!isRegistration && <div className="flex justify-end"><button type="button" className="text-xs font-semibold text-[#b7f34a] hover:underline">Olvidé mi contraseña</button></div>}
+              {!isRegistration && <div className="flex justify-end"><button type="button" className="text-xs font-semibold text-[#00B4D8] hover:underline">Olvidé mi contraseña</button></div>}
               {formError && (
                 <div role="alert" className="flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/15 p-3 text-xs sm:text-sm font-medium text-rose-200 animate-shake">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-500/30 text-rose-200 font-bold">!</span>
                   <span>{formError}</span>
                 </div>
               )}
-              <button type="submit" disabled={isSubmitted} className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#b7f34a] font-bold text-[#07100c] transition-transform hover:-translate-y-0.5 hover:bg-[#c8fb68] disabled:opacity-70">
+              <button type="submit" disabled={isSubmitted} className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#00B4D8] font-bold text-[#030f1d] transition-transform hover:-translate-y-0.5 hover:bg-[#00C4EB] disabled:opacity-70 shadow-lg shadow-[#00B4D8]/20">
                 {isSubmitted ? 'Verificando...' : isRegistration ? 'Crear mi cuenta' : 'Entrar al gimnasio'}
                 {!isSubmitted && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
               </button>

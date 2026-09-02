@@ -18,7 +18,7 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
   const MenuContent = () => (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b border-white/10">
-        <h1 className="text-2xl font-bold tracking-[-0.04em] text-white">PRO<span className="text-[#09C82C]">FUNCIONAL</span></h1>
+        <h1 className="text-2xl font-bold tracking-[-0.04em] text-white">PRO<span className="text-[#00B4D8]">FUNCIONAL</span></h1>
         <p className="text-sm text-[#F7F7F7]/60 mt-1">Panel administrativo</p>
       </div>
       
@@ -36,7 +36,7 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
                 isActive 
-                  ? 'bg-[#09C82C] text-[#010A01]' 
+                  ? 'bg-[#00B4D8] text-[#021826] font-bold shadow-md shadow-[#00B4D8]/20' 
                   : 'text-white/80 hover:bg-white/10'
               }`}
             >
@@ -54,7 +54,7 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white/10 rounded-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white/10 rounded-lg text-white"
       >
         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
@@ -69,7 +69,7 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-[#010A01] border-r border-white/10 z-40 transition-transform lg:translate-x-0 ${
+        className={`fixed top-0 left-0 h-full w-64 bg-[#05111d] border-r border-white/10 z-40 transition-transform lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

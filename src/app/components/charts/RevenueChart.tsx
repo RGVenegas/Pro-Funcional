@@ -29,8 +29,8 @@ export function RevenueChart({ monthlyRevenue }: RevenueChartProps) {
         />
         <Tooltip
           contentStyle={{
-            backgroundColor: 'rgba(1, 10, 1, 0.95)',
-            border: '1px solid rgba(9, 200, 44, 0.3)',
+            backgroundColor: 'rgba(11, 23, 38, 0.95)',
+            border: '1px solid rgba(0, 180, 216, 0.3)',
             borderRadius: '8px',
             color: '#fff',
           }}
@@ -38,7 +38,7 @@ export function RevenueChart({ monthlyRevenue }: RevenueChartProps) {
         />
         <Bar 
           dataKey="revenue" 
-          fill="#09C82C"
+          fill="#00B4D8"
           radius={[8, 8, 0, 0]}
         />
       </BarChart>

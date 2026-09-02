@@ -169,7 +169,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
 
         <button
           onClick={() => { setActiveTab('clinical'); setShowSoapForm(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#09C82C] text-[#010A01] font-bold hover:bg-[#09C82C]/90 transition-transform hover:scale-105"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00B4D8] text-[#021826] font-bold hover:bg-[#00B4D8]/90 transition-transform hover:scale-105 shadow-lg shadow-[#00B4D8]/20"
         >
           <PlusCircle className="w-5 h-5" />
           <span>Nueva Atención SOAP</span>
@@ -177,7 +177,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
       </div>
 
       {actionMessage && (
-        <div className="rounded-xl border border-[#09C82C]/40 bg-[#09C82C]/15 p-4 text-[#09C82C] flex items-center gap-2">
+        <div className="rounded-xl border border-[#00B4D8]/40 bg-[#00B4D8]/15 p-4 text-[#00B4D8] flex items-center gap-2">
           <Check className="h-5 w-5" />
           <span className="text-sm font-medium">{actionMessage}</span>
         </div>
@@ -196,8 +196,8 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-[#09C82C]/30 bg-[#09C82C]/10 p-5">
-          <div className="mb-2 flex items-center justify-between text-[#09C82C]">
+        <div className="rounded-xl border border-[#00B4D8]/30 bg-[#00B4D8]/10 p-5">
+          <div className="mb-2 flex items-center justify-between text-[#00B4D8]">
             <span className="text-xs font-bold uppercase tracking-wider">Saldo de Sesiones</span>
             <Activity className="h-5 w-5" />
           </div>
@@ -205,7 +205,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
           <p className="mt-1 text-xs text-white/60">sesiones disponibles de {member.packName || 'su paquete'}</p>
           <div className="mt-3 w-full bg-black/30 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-[#09C82C] h-full rounded-full transition-all"
+              className="bg-[#00B4D8] h-full rounded-full transition-all"
               style={{ width: `${((member.remainingSessions ?? 5) / (member.totalSessions ?? 8)) * 100}%` }}
             />
           </div>
@@ -239,8 +239,8 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
       {/* Profile Card */}
       <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div className="w-20 h-20 rounded-full bg-[#09C82C]/20 flex items-center justify-center flex-shrink-0">
-            <span className="text-3xl text-[#09C82C] font-semibold">
+          <div className="w-20 h-20 rounded-full bg-[#00B4D8]/20 flex items-center justify-center flex-shrink-0">
+            <span className="text-3xl text-[#00B4D8] font-semibold">
               {member.name.split(' ').map(n => n[0]).join('')}
             </span>
           </div>
@@ -249,7 +249,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
               <h2 className="text-2xl font-bold text-[#F7F7F7]">{member.name}</h2>
               <StatusBadge status={member.status} />
-              <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-[#09C82C] font-medium border border-white/10">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-[#00B4D8] font-medium border border-white/10">
                 {member.packName || `Pack ${member.plan}`}
               </span>
             </div>
@@ -268,7 +268,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={handleRenew}
-              className="px-4 py-2 bg-[#09C82C] text-[#010A01] font-semibold hover:bg-[#09C82C]/90 rounded-lg transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-[#00B4D8] text-[#021826] font-bold hover:bg-[#00B4D8]/90 rounded-lg transition-colors flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Acreditar / Renovar Pack</span>
@@ -297,7 +297,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
               onClick={() => setActiveTab(tab.id as Tab)}
               className={`px-6 py-4 font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? 'text-[#09C82C] border-b-2 border-[#09C82C] bg-white/[0.02]'
+                  ? 'text-[#00B4D8] border-b-2 border-[#00B4D8] bg-white/[0.02]'
                   : 'text-white/60 hover:text-white'
               }`}
             >
@@ -311,11 +311,11 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
           {activeTab === 'clinical' && (
             <div className="space-y-6">
               {showSoapForm ? (
-                <form onSubmit={handleSaveEvaluation} className="rounded-xl border border-[#09C82C]/40 bg-[#09C82C]/5 p-6 space-y-6">
+                <form onSubmit={handleSaveEvaluation} className="rounded-xl border border-[#00B4D8]/40 bg-[#00B4D8]/5 p-6 space-y-6">
                   <div className="flex items-center justify-between border-b border-white/10 pb-4">
                     <div>
                       <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        <Stethoscope className="w-5 h-5 text-[#09C82C]" />
+                        <Stethoscope className="w-5 h-5 text-[#00B4D8]" />
                         Nueva Evaluación Kinésica y Nota SOAP
                       </h3>
                       <p className="text-xs text-white/60 mt-1">Registra la evolución del paciente, dolor en escala EVA y movilidad ROM</p>
@@ -338,7 +338,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                         value={jointOrArea}
                         onChange={(e) => setJointOrArea(e.target.value)}
                         placeholder="Ej: Rodilla derecha (LCA), Hombro, Columna"
-                        className="w-full h-11 px-3 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#09C82C] outline-none"
+                        className="w-full h-11 px-3 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00B4D8] outline-none"
                       />
                     </div>
 
@@ -355,7 +355,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                         max={10}
                         value={evaPain}
                         onChange={(e) => setEvaPain(Number(e.target.value))}
-                        className="w-full accent-[#09C82C] cursor-pointer mt-2"
+                        className="w-full accent-[#00B4D8] cursor-pointer mt-2"
                       />
                       <div className="flex justify-between text-[10px] text-white/40 mt-1 font-mono">
                         <span>1 (Sin dolor)</span>
@@ -374,7 +374,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                           value={romDegrees}
                           onChange={(e) => setRomDegrees(Number(e.target.value))}
                           placeholder="Ej: 110"
-                          className="w-full h-11 px-3 pr-8 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#09C82C] outline-none font-bold"
+                          className="w-full h-11 px-3 pr-8 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00B4D8] outline-none font-bold"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 font-bold">°</span>
                       </div>
@@ -384,8 +384,8 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                   {/* Notas SOAP */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-[#09C82C] flex items-center gap-1.5">
-                        <span className="h-4 w-4 rounded-full bg-[#09C82C]/20 text-[#09C82C] flex items-center justify-center text-[10px]">S</span>
+                      <label className="text-xs font-bold text-[#00B4D8] flex items-center gap-1.5">
+                        <span className="h-4 w-4 rounded-full bg-[#00B4D8]/20 text-[#00B4D8] flex items-center justify-center text-[10px]">S</span>
                         Subjetivo (Lo que el paciente refiere)
                       </label>
                       <textarea
@@ -393,13 +393,13 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                         value={soapS}
                         onChange={(e) => setSoapS(e.target.value)}
                         placeholder="Dolor al apoyar, sensación de inestabilidad, molestias matutinas..."
-                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#09C82C] outline-none resize-none"
+                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#00B4D8] outline-none resize-none"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-[#09C82C] flex items-center gap-1.5">
-                        <span className="h-4 w-4 rounded-full bg-[#09C82C]/20 text-[#09C82C] flex items-center justify-center text-[10px]">O</span>
+                      <label className="text-xs font-bold text-[#00B4D8] flex items-center gap-1.5">
+                        <span className="h-4 w-4 rounded-full bg-[#00B4D8]/20 text-[#00B4D8] flex items-center justify-center text-[10px]">O</span>
                         Objetivo (Hallazgos del kinesiólogo, palpación, pruebas)
                       </label>
                       <textarea
@@ -407,13 +407,13 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                         value={soapO}
                         onChange={(e) => setSoapO(e.target.value)}
                         placeholder="Edema leve, test ortopédicos, fuerza muscular 4/5..."
-                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#09C82C] outline-none resize-none"
+                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#00B4D8] outline-none resize-none"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-[#09C82C] flex items-center gap-1.5">
-                        <span className="h-4 w-4 rounded-full bg-[#09C82C]/20 text-[#09C82C] flex items-center justify-center text-[10px]">A</span>
+                      <label className="text-xs font-bold text-[#00B4D8] flex items-center gap-1.5">
+                        <span className="h-4 w-4 rounded-full bg-[#00B4D8]/20 text-[#00B4D8] flex items-center justify-center text-[10px]">A</span>
                         Análisis / Evaluación (Diagnóstico kinésico y progreso)
                       </label>
                       <textarea
@@ -421,13 +421,13 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                         value={soapA}
                         onChange={(e) => setSoapA(e.target.value)}
                         placeholder="Fase proliferativa, respuesta positiva a la carga excéntrica..."
-                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#09C82C] outline-none resize-none"
+                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#00B4D8] outline-none resize-none"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-[#09C82C] flex items-center gap-1.5">
-                        <span className="h-4 w-4 rounded-full bg-[#09C82C]/20 text-[#09C82C] flex items-center justify-center text-[10px]">P</span>
+                      <label className="text-xs font-bold text-[#00B4D8] flex items-center gap-1.5">
+                        <span className="h-4 w-4 rounded-full bg-[#00B4D8]/20 text-[#00B4D8] flex items-center justify-center text-[10px]">P</span>
                         Plan Terapéutico (Tratamiento aplicado y tareas)
                       </label>
                       <textarea
@@ -435,7 +435,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                         value={soapP}
                         onChange={(e) => setSoapP(e.target.value)}
                         placeholder="Terapia manual, descarga, ejercicios de control motor, 3 series x 10 rep..."
-                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#09C82C] outline-none resize-none"
+                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#00B4D8] outline-none resize-none"
                       />
                     </div>
                   </div>
@@ -465,7 +465,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2.5 rounded-lg bg-[#09C82C] text-[#010A01] text-sm font-bold hover:bg-[#09C82C]/90"
+                      className="px-6 py-2.5 rounded-lg bg-[#00B4D8] text-[#021826] text-sm font-bold hover:bg-[#00B4D8]/90"
                     >
                       Guardar en Ficha Clínica
                     </button>
@@ -479,7 +479,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                   </div>
                   <button
                     onClick={() => setShowSoapForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#09C82C] text-[#010A01] rounded-lg font-bold text-sm hover:bg-[#09C82C]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#00B4D8] text-[#021826] rounded-lg font-bold text-sm hover:bg-[#00B4D8]/90 transition-colors"
                   >
                     <PlusCircle className="w-4 h-4" />
                     Nueva Atención
@@ -494,7 +494,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                     <div key={evalItem.id || index} className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4 hover:border-white/20 transition-colors">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-xl bg-[#09C82C]/20 border border-[#09C82C]/30 flex items-center justify-center text-[#09C82C] font-bold">
+                          <div className="h-10 w-10 rounded-xl bg-[#00B4D8]/20 border border-[#00B4D8]/30 flex items-center justify-center text-[#00B4D8] font-bold">
                             #{member.clinicalHistory!.length - index}
                           </div>
                           <div>
@@ -516,19 +516,19 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                       {/* SOAP Details Grid */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                         <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                          <span className="font-bold text-[#09C82C] block mb-1">S (Subjetivo):</span>
+                          <span className="font-bold text-[#00B4D8] block mb-1">S (Subjetivo):</span>
                           <p className="text-white/80">{evalItem.soap.subjective}</p>
                         </div>
                         <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                          <span className="font-bold text-[#09C82C] block mb-1">O (Objetivo):</span>
+                          <span className="font-bold text-[#00B4D8] block mb-1">O (Objetivo):</span>
                           <p className="text-white/80">{evalItem.soap.objective}</p>
                         </div>
                         <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                          <span className="font-bold text-[#09C82C] block mb-1">A (Evaluación):</span>
+                          <span className="font-bold text-[#00B4D8] block mb-1">A (Evaluación):</span>
                           <p className="text-white/80">{evalItem.soap.assessment}</p>
                         </div>
                         <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                          <span className="font-bold text-[#09C82C] block mb-1">P (Plan Terapéutico):</span>
+                          <span className="font-bold text-[#00B4D8] block mb-1">P (Plan Terapéutico):</span>
                           <p className="text-white/80">{evalItem.soap.plan}</p>
                         </div>
                       </div>
@@ -543,7 +543,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                   ))
                 ) : (
                   <div className="text-center py-10 bg-white/[0.02] rounded-xl border border-white/10 text-white/50">
-                    <Stethoscope className="w-12 h-12 mx-auto mb-2 opacity-30 text-[#09C82C]" />
+                    <Stethoscope className="w-12 h-12 mx-auto mb-2 opacity-30 text-[#00B4D8]" />
                     <p className="font-medium">No hay evaluaciones kinésicas registradas todavía.</p>
                     <p className="text-xs text-white/40 mt-1">Presiona "Nueva Atención SOAP" para ingresar la primera evaluación.</p>
                   </div>
@@ -573,7 +573,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
               </div>
               <div>
                 <label className="text-sm text-white/60 mb-1 block">Paquete Activo</label>
-                <p className="font-medium text-[#09C82C]">{member.packName || `Pack ${member.plan}`}</p>
+                <p className="font-medium text-[#00B4D8]">{member.packName || `Pack ${member.plan}`}</p>
               </div>
               <div>
                 <label className="text-sm text-white/60 mb-1 block">Próximo vencimiento / renovación</label>
@@ -585,9 +585,9 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
           {/* TAB 3: SALDO */}
           {activeTab === 'balance' && (
             <div className="space-y-6">
-              <div className="bg-[#09C82C]/10 border border-[#09C82C]/20 rounded-lg p-4">
+              <div className="bg-[#00B4D8]/10 border border-[#00B4D8]/20 rounded-lg p-4">
                 <p className="text-sm text-white/60 mb-1">Saldo actual en cuenta</p>
-                <p className={`text-3xl font-bold ${member.balance < 0 ? 'text-red-400' : 'text-[#09C82C]'}`}>
+                <p className={`text-3xl font-bold ${member.balance < 0 ? 'text-red-400' : 'text-[#00B4D8]'}`}>
                   {formatCLP(Math.abs(member.balance) * 1000)}
                   {member.balance < 0 && ' (Deuda pendiente)'}
                   {member.balance > 0 && ' (Saldo a favor)'}
@@ -605,7 +605,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-white/70">{new Date(payment.date).toLocaleDateString('es-CL')}</p>
-                        <span className="text-xs px-2 py-1 bg-[#09C82C]/20 text-[#09C82C] rounded">
+                        <span className="text-xs px-2 py-1 bg-[#00B4D8]/20 text-[#00B4D8] rounded font-bold">
                           {payment.status}
                         </span>
                       </div>
@@ -632,7 +632,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                   </div>
                   <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
                     <span className="text-white/60">Sesiones restantes: <strong className="text-white">{member.remainingSessions ?? 5}</strong> de {member.totalSessions ?? 8}</span>
-                    <button onClick={handleRenew} className="text-[#09C82C] font-semibold hover:underline">Acreditar más sesiones</button>
+                    <button onClick={handleRenew} className="text-[#00B4D8] font-semibold hover:underline">Acreditar más sesiones</button>
                   </div>
                 </div>
               ))}
@@ -646,10 +646,10 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
                 <textarea
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
-                  className="w-full h-32 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-[#09C82C] resize-none"
+                  className="w-full h-32 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-[#00B4D8] resize-none"
                   placeholder="Escribe notas u observaciones privadas del administrador o recepcionista..."
                 />
-                <button type="submit" className="px-4 py-2 bg-[#09C82C] text-[#010A01] rounded-lg hover:bg-[#09C82C]/90 transition-colors font-medium">
+                <button type="submit" className="px-4 py-2 bg-[#00B4D8] text-[#021826] rounded-lg hover:bg-[#00B4D8]/90 transition-colors font-bold text-sm">
                   Guardar nota
                 </button>
               </form>

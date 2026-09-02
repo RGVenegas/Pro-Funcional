@@ -438,7 +438,7 @@ export interface UserBookingRecord {
   createdAt: string;
 }
 
-const scheduleStorageKey = 'profuncional-schedule-v2';
+const scheduleStorageKey = 'profuncional-schedule-v3';
 const scheduleChangeEvent = 'profuncional-schedule-changed';
 const bookingsStorageKey = 'profuncional-user-bookings-v1';
 const bookingsChangeEvent = 'profuncional-user-bookings-changed';
@@ -559,6 +559,42 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
     instructor: 'Prof. Carlos Vega',
     type: 'functional',
     capacity: 10,
+    isActive: true,
+    students: [],
+  },
+  {
+    id: 'block-10',
+    dayOfWeek: 'Saturday',
+    startTime: '09:00',
+    endTime: '10:00',
+    title: 'Evaluación & Readaptación Sabatina',
+    instructor: 'Klgo. Andrés Morales',
+    type: 'kine',
+    capacity: 1,
+    isActive: true,
+    students: [],
+  },
+  {
+    id: 'block-11',
+    dayOfWeek: 'Saturday',
+    startTime: '10:30',
+    endTime: '11:30',
+    title: 'Entrenamiento Funcional Fin de Semana',
+    instructor: 'Prof. Mike R.',
+    type: 'functional',
+    capacity: 10,
+    isActive: true,
+    students: [],
+  },
+  {
+    id: 'block-12',
+    dayOfWeek: 'Sunday',
+    startTime: '10:00',
+    endTime: '11:00',
+    title: 'Box Kinésico Fin de Semana',
+    instructor: 'Klga. Valeria Reyes',
+    type: 'kine',
+    capacity: 1,
     isActive: true,
     students: [],
   },

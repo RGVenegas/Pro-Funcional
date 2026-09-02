@@ -11,13 +11,13 @@ interface KPICardProps {
 
 export function KPICard({ title, value, change, trend, icon: Icon }: KPICardProps) {
   const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown;
-  const trendColor = trend === 'up' ? 'text-[#09C82C]' : 'text-red-400';
+  const trendColor = trend === 'up' ? 'text-[#00B4D8]' : 'text-red-400';
 
   return (
     <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all">
       <div className="flex items-start justify-between mb-4">
-        <div className="w-12 h-12 bg-[#09C82C]/20 rounded-lg flex items-center justify-center">
-          <Icon className="w-6 h-6 text-[#09C82C]" />
+        <div className="w-12 h-12 bg-[#00B4D8]/20 rounded-lg flex items-center justify-center">
+          <Icon className="w-6 h-6 text-[#00B4D8]" />
         </div>
         {change && trend && (
           <div className={`flex items-center gap-1 text-sm font-medium ${trendColor}`}>

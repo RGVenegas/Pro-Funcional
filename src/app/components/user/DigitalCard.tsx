@@ -31,7 +31,7 @@ export function DigitalCard({ user: account }: DigitalCardProps) {
       </div>
 
       {feedback && (
-        <div className="rounded-xl border border-[#09C82C]/40 bg-[#09C82C]/15 p-4 text-[#09C82C] flex items-center justify-center gap-2">
+        <div className="rounded-xl border border-[#00B4D8]/40 bg-[#00B4D8]/15 p-4 text-[#00B4D8] flex items-center justify-center gap-2">
           <Check className="h-5 w-5" />
           <span className="text-sm font-medium">{feedback}</span>
         </div>
@@ -40,21 +40,21 @@ export function DigitalCard({ user: account }: DigitalCardProps) {
       {/* Digital Card */}
       <div className="relative">
         {/* Card Glow Effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#09C82C]/20 to-[#09C82C]/5 blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#00B4D8]/20 to-[#00B4D8]/5 blur-3xl" />
         
         {/* Main Card */}
-        <div className="relative bg-gradient-to-br from-[#09C82C]/10 to-transparent rounded-2xl p-8 backdrop-blur-sm border border-[#09C82C]/20 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[#00B4D8]/10 to-transparent rounded-2xl p-8 backdrop-blur-sm border border-[#00B4D8]/20 overflow-hidden">
           {/* Background Pattern */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#09C82C]/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#09C82C]/5 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#00B4D8]/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#00B4D8]/5 rounded-full blur-3xl" />
           
           <div className="relative z-10">
             {/* Header */}
             <div className="flex items-start justify-between mb-8">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-6 h-6 text-[#09C82C]" />
-                  <h2 className="text-2xl font-bold tracking-[-0.04em] text-white">PRO<span className="text-[#09C82C]">FUNCIONAL</span></h2>
+                  <Sparkles className="w-6 h-6 text-[#00B4D8]" />
+                  <h2 className="text-2xl font-bold tracking-[-0.04em] text-white">PRO<span className="text-[#00B4D8]">FUNCIONAL</span></h2>
                 </div>
                 <p className="text-sm text-white/60">Centro Kinésico-Deportivo</p>
               </div>
@@ -67,14 +67,14 @@ export function DigitalCard({ user: account }: DigitalCardProps) {
             {/* Member Info */}
             <div className="mb-8">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-20 h-20 bg-[#09C82C]/20 rounded-full flex items-center justify-center border-2 border-[#09C82C]">
-                  <span className="text-3xl font-bold text-[#09C82C]">
+                <div className="w-20 h-20 bg-[#00B4D8]/20 rounded-full flex items-center justify-center border-2 border-[#00B4D8]">
+                  <span className="text-3xl font-bold text-[#00B4D8]">
                     {user.name.split(' ').map(n => n[0]).join('')}
                   </span>
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold mb-1 text-[#F7F7F7]">{user.name}</h3>
-                  <p className="text-[#09C82C] font-semibold">Miembro {user.plan}</p>
+                  <p className="text-[#00B4D8] font-semibold">Miembro {user.plan}</p>
                 </div>
               </div>
               
@@ -97,14 +97,14 @@ export function DigitalCard({ user: account }: DigitalCardProps) {
                 size={200}
                 level="H"
                 includeMargin={true}
-                fgColor="#010A01"
+                fgColor="#021826"
               />
-              <p className="text-[#010A01] text-sm font-semibold mt-4">Escanea en el tótem de entrada</p>
+              <p className="text-[#021826] text-sm font-semibold mt-4">Escanea en el tótem de entrada</p>
             </div>
 
             {/* Status Badge */}
             <div className="mt-6 text-center">
-              <span className="inline-block px-4 py-2 bg-[#09C82C]/20 text-[#09C82C] rounded-full text-sm font-semibold border border-[#09C82C]/30">
+              <span className="inline-block px-4 py-2 bg-[#00B4D8]/20 text-[#00B4D8] rounded-full text-sm font-semibold border border-[#00B4D8]/30">
                 Membresía activa
               </span>
             </div>
@@ -117,19 +117,19 @@ export function DigitalCard({ user: account }: DigitalCardProps) {
         <h3 className="font-semibold mb-3 text-[#F7F7F7]">Instrucciones de uso</h3>
         <ul className="space-y-2 text-sm text-white/80">
           <li className="flex items-start gap-2">
-            <span className="text-[#09C82C] font-bold mt-0.5">1.</span>
+            <span className="text-[#00B4D8] font-bold mt-0.5">1.</span>
             <span>Presenta este código QR en el lector de la entrada del gimnasio</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-[#09C82C] font-bold mt-0.5">2.</span>
+            <span className="text-[#00B4D8] font-bold mt-0.5">2.</span>
             <span>Espera la confirmación con el pitido y check verde en pantalla</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-[#09C82C] font-bold mt-0.5">3.</span>
+            <span className="text-[#00B4D8] font-bold mt-0.5">3.</span>
             <span>Tu ingreso y racha quedarán registrados automáticamente</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-[#09C82C] font-bold mt-0.5">4.</span>
+            <span className="text-[#00B4D8] font-bold mt-0.5">4.</span>
             <span>Mantén el brillo del teléfono alto para una lectura inmediata</span>
           </li>
         </ul>

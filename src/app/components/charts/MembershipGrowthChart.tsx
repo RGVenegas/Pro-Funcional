@@ -27,8 +27,8 @@ export function MembershipGrowthChart() {
         />
         <Tooltip
           contentStyle={{
-            backgroundColor: 'rgba(1, 10, 1, 0.95)',
-            border: '1px solid rgba(9, 200, 44, 0.3)',
+            backgroundColor: 'rgba(11, 23, 38, 0.95)',
+            border: '1px solid rgba(0, 180, 216, 0.3)',
             borderRadius: '8px',
             color: '#fff',
           }}
@@ -36,9 +36,9 @@ export function MembershipGrowthChart() {
         <Line 
           type="monotone" 
           dataKey="members" 
-          stroke="#09C82C" 
+          stroke="#00B4D8" 
           strokeWidth={3}
-          dot={{ fill: '#09C82C', r: 4 }}
+          dot={{ fill: '#00B4D8', r: 4 }}
           activeDot={{ r: 6 }}
         />
       </LineChart>

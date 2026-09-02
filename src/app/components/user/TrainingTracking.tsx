@@ -62,9 +62,9 @@ export function TrainingTracking() {
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-white/60">Movilidad (ROM)</span>
-            <ArrowUpRight className="w-4 h-4 text-[#09C82C]" />
+            <ArrowUpRight className="w-4 h-4 text-[#00B4D8]" />
           </div>
-          <p className="text-2xl font-bold text-[#09C82C]">130°</p>
+          <p className="text-2xl font-bold text-[#00B4D8]">130°</p>
           <p className="text-[11px] text-white/50">+45° ganados</p>
         </div>
 
@@ -99,7 +99,7 @@ export function TrainingTracking() {
             <button
               onClick={() => setActiveChart('pain')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                activeChart === 'pain' ? 'bg-emerald-500 text-black' : 'text-white/60 hover:text-white'
+                activeChart === 'pain' ? 'bg-[#00B4D8] text-[#021826]' : 'text-white/60 hover:text-white'
               }`}
             >
               Dolor (Escala EVA 1-10)
@@ -107,7 +107,7 @@ export function TrainingTracking() {
             <button
               onClick={() => setActiveChart('rom')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                activeChart === 'rom' ? 'bg-[#09C82C] text-black' : 'text-white/60 hover:text-white'
+                activeChart === 'rom' ? 'bg-[#00B4D8] text-[#021826]' : 'text-white/60 hover:text-white'
               }`}
             >
               Movilidad Articular (ROM °)
@@ -122,37 +122,37 @@ export function TrainingTracking() {
               <AreaChart data={clinicalProgressData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="painGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#00B4D8" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#00B4D8" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
                 <XAxis dataKey="date" stroke="#ffffff60" fontSize={12} />
                 <YAxis domain={[0, 10]} stroke="#ffffff60" fontSize={12} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#101a14', borderColor: '#ffffff20', borderRadius: '0.75rem', color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#0b1726', borderColor: '#ffffff20', borderRadius: '0.75rem', color: '#fff' }}
                   formatter={(value: any) => [`${value} / 10`, 'Nivel de Dolor (EVA)']}
                   labelFormatter={(label) => `Fecha: ${label}`}
                 />
-                <Area type="monotone" dataKey="evaPain" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#painGradient)" />
+                <Area type="monotone" dataKey="evaPain" stroke="#00B4D8" strokeWidth={3} fillOpacity={1} fill="url(#painGradient)" />
               </AreaChart>
             ) : (
               <AreaChart data={clinicalProgressData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="romGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#09C82C" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#09C82C" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#00B4D8" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#00B4D8" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
                 <XAxis dataKey="date" stroke="#ffffff60" fontSize={12} />
                 <YAxis domain={[60, 150]} stroke="#ffffff60" fontSize={12} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#101a14', borderColor: '#ffffff20', borderRadius: '0.75rem', color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#0b1726', borderColor: '#ffffff20', borderRadius: '0.75rem', color: '#fff' }}
                   formatter={(value: any) => [`${value}°`, 'Movilidad Articular (ROM)']}
                   labelFormatter={(label) => `Fecha: ${label}`}
                 />
-                <Area type="monotone" dataKey="romDegrees" stroke="#09C82C" strokeWidth={3} fillOpacity={1} fill="url(#romGradient)" />
+                <Area type="monotone" dataKey="romDegrees" stroke="#00B4D8" strokeWidth={3} fillOpacity={1} fill="url(#romGradient)" />
               </AreaChart>
             )}
           </ResponsiveContainer>
@@ -175,7 +175,7 @@ export function TrainingTracking() {
                   <h4 className="font-bold text-white text-sm">{session.name}</h4>
                   <p className="text-xs text-white/60">{session.type} · {session.instructor}</p>
                 </div>
-                <span className="text-xs text-[#09C82C] font-semibold bg-[#09C82C]/10 border border-[#09C82C]/20 px-2.5 py-1 rounded-lg">
+                <span className="text-xs text-[#00B4D8] font-semibold bg-[#00B4D8]/10 border border-[#00B4D8]/20 px-2.5 py-1 rounded-lg">
                   {session.duration} min
                 </span>
               </div>
