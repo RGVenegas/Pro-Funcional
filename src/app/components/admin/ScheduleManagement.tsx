@@ -1,11 +1,12 @@
+import { weekDate } from '../../data/dates';
+import { studentsForSlot, subscribeToBookings } from '../../data/gymStore';
+import { addCentralScheduleBlock, deleteCentralScheduleBlock, recordAttendance } from '../../data/operations';
 import React, { useEffect, useState, FormEvent } from 'react';
 import { Bell, ChevronLeft, ChevronRight, Users, User, AlertTriangle, CheckCircle, XCircle, Stethoscope, Dumbbell, Clock, Plus, Trash2, PlusCircle } from 'lucide-react';
 import {
   addActivity,
   getCentralScheduleBlocks,
-  addCentralScheduleBlock,
   updateCentralScheduleBlock,
-  deleteCentralScheduleBlock,
   subscribeToSchedule,
   CentralScheduleBlock,
   EnrolledStudent
@@ -20,13 +21,14 @@ interface CancellationNotification {
   time: string;
   instructor: string;
   createdAt: string;
+  isRefunded?: boolean;
 }
 
 export function ScheduleManagement() {
   const [mode, setMode] = useState<ScheduleMode>('classes');
   const [currentWeek, setCurrentWeek] = useState(0);
   const [selectedBlock, setSelectedBlock] = useState<CentralScheduleBlock | null>(null);
-  const [blocks, setBlocks] = useState<CentralScheduleBlock[]>(() => getCentralScheduleBlocks());
+  const [blocks, setBlocks] = useState<CentralScheduleBlock[]>(() => getCentralScheduleBlocks().map(b => ({ ...b, students: studentsForSlot(b.id, weekDate(currentWeek, ( ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].indexOf(b.dayOfWeek)))) })));
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<CancellationNotification[]>(() =>
@@ -34,11 +36,14 @@ export function ScheduleManagement() {
   );
 
   useEffect(() => {
-    const unsub = subscribeToSchedule(() => {
+    const update = () => {
       setBlocks(getCentralScheduleBlocks());
-    });
-    return unsub;
-  }, []);
+    };
+    update();
+    const unsub = subscribeToSchedule(update);
+    const bookings = subscribeToBookings(update);
+    return () => { unsub(); bookings(); };
+  }, [currentWeek]);
 
   useEffect(() => {
     const handleCancellation = (event: Event) => {
@@ -59,7 +64,7 @@ export function ScheduleManagement() {
   };
 
   const getWeekRangeLabel = (weekOffset: number) => {
-    const baseMonday = new Date(2025, 0, 20);
+    const baseMonday = new Date(weekDate() + 'T12:00:00');
     const start = new Date(baseMonday);
     start.setDate(baseMonday.getDate() + weekOffset * 7);
     const end = new Date(start);
@@ -84,7 +89,7 @@ export function ScheduleManagement() {
     return 'bg-[#00B4D8]/15 text-[#00B4D8] border-[#00B4D8]/30';
   };
 
-  const handleCreateBlock = (e: FormEvent<HTMLFormElement>) => {
+  const handleCreateBlock = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const dayOfWeek = String(formData.get('dayOfWeek')) as CentralScheduleBlock['dayOfWeek'];
@@ -95,7 +100,7 @@ export function ScheduleManagement() {
     const type = String(formData.get('type')) as 'kine' | 'functional';
     const capacity = Number(formData.get('capacity'));
 
-    addCentralScheduleBlock({
+    try { await addCentralScheduleBlock({
       dayOfWeek,
       title,
       instructor,
@@ -105,12 +110,13 @@ export function ScheduleManagement() {
       capacity,
     });
 
+    } catch (e) { showToast((e as Error).message); return; }
     setIsAddModalOpen(false);
     showToast(`¡Bloque "${title}" (${dayLabels[dayOfWeek]} ${startTime} hrs) creado y publicado en tiempo real!`);
   };
 
-  const handleDeleteBlock = (blockId: string, title: string) => {
-    const res = deleteCentralScheduleBlock(blockId);
+  const handleDeleteBlock = async (blockId: string, title: string) => {
+    const res = await deleteCentralScheduleBlock(blockId);
     if (res.success) {
       if (selectedBlock?.id === blockId) setSelectedBlock(null);
       showToast(res.message);
@@ -119,26 +125,11 @@ export function ScheduleManagement() {
     }
   };
 
-  const toggleAttendance = (blockId: string, studentId: string, newStatus: 'attended' | 'no-show' | 'pending') => {
-    const targetBlock = blocks.find((b) => b.id === blockId);
-    if (!targetBlock) return;
-
-    const updatedStudents = targetBlock.students.map((student) => {
-      if (student.id !== studentId) return student;
-      const status = student.status === newStatus ? 'pending' : newStatus;
-      if (status === 'attended') {
-        addActivity({ name: student.name, action: `asistió a la sesión de ${targetBlock.title}` });
-      } else if (status === 'no-show') {
-        addActivity({ name: student.name, action: `registró inasistencia (No-Show) en ${targetBlock.title}` });
-      }
-      return { ...student, status };
-    });
-
-    updateCentralScheduleBlock(blockId, { students: updatedStudents });
-
-    if (selectedBlock && selectedBlock.id === blockId) {
-      setSelectedBlock((prev) => prev ? { ...prev, students: updatedStudents } : null);
-    }
+  useEffect(() => { if (selectedBlock) setSelectedBlock(blocks.find(b => b.id === selectedBlock.id) || null); }, [blocks]);
+  const toggleAttendance = async (blockId: string, studentId: string, newStatus: 'attended' | 'no-show' | 'pending') => {
+    const student = blocks.find(b => b.id === blockId)?.students.find(s => s.id === studentId);
+    if (!student?.bookingId) return;
+    try { await recordAttendance(student.bookingId, student.status === newStatus ? 'pending' : newStatus); showToast('Asistencia actualizada.'); } catch (e) { showToast((e as Error).message); }
   };
 
   return (
@@ -198,7 +189,7 @@ export function ScheduleManagement() {
           <div className="space-y-2">
             {notifications.slice(0, 3).map((notification) => (
               <div key={notification.id} className="flex flex-col gap-1 border-b border-amber-500/10 pb-2 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between text-xs">
-                <p className="text-white/90"><strong>{notification.member}</strong> canceló su sesión de <strong>{notification.className}</strong> (sesión reembolsada a saldo).</p>
+                <p className="text-white/90"><strong>{notification.member}</strong> canceló su sesión de <strong>{notification.className}</strong> ({notification.isRefunded ? 'sesión devuelta al saldo' : 'sin devolución de sesión'}).</p>
                 <p className="text-white/50">{notification.instructor} · {notification.time}</p>
               </div>
             ))}
@@ -442,7 +433,7 @@ export function ScheduleManagement() {
                             : 'bg-white/10 text-white/70'
                         }`}
                       >
-                        {student.status === 'attended' ? '✓ Asistencia confirmada' : student.status === 'no-show' ? '✗ Inasistencia (No-Show)' : 'Pendiente de inicio'}
+                        {student.status === 'attended' ? '✓ Asistencia confirmada' : student.status === 'no-show' ? '✗ Inasistencia (No-Show)' : student.confirmedAt ? 'Confirmó que asistirá' : 'Pendiente de confirmación'}
                       </span>
                     </div>
 

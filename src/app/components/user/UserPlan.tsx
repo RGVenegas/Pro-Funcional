@@ -1,3 +1,7 @@
+import { getMembers } from '../../data/gymStore';
+import { careAction } from '../../data/careStore';
+import { CarePanel } from '../shared/CarePanel';
+import { formatDate } from '../../data/dates';
 import React, { useState } from 'react';
 import { Check, Sparkles, Clock, Calendar, Stethoscope, Activity, ArrowRight } from 'lucide-react';
 import { addActivity, getMemberByEmail, updateMember } from '../../data/gymStore';
@@ -9,6 +13,7 @@ interface UserPlanProps {
 }
 
 export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdatePlan }: UserPlanProps) {
+  const member = getMembers().find(m => m.name === memberName);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const formatCLP = (amount: number) =>
@@ -37,7 +42,7 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
         '6 Sesiones kinésicas de descarga y readaptación',
         '2 Clases de entrenamiento funcional adaptado',
         'Control de restricciones físicas sincronizado con entrenadores',
-        'Reagendamiento y cancelación sin pérdida de sesión',
+        'Reagendamiento y cancelación con al menos 24 horas',
       ],
     },
     Premium: {
@@ -62,19 +67,12 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
     setTimeout(() => setFeedback(null), 3500);
   };
 
-  const handleRenew = () => {
-    addActivity({ name: memberName, action: `renovó ${currentConfig.name}` });
-    showFeedback(`¡${currentConfig.name} renovado con éxito! Se acreditaron ${currentConfig.sessions} sesiones.`);
+  const requestPack = async (name: string) => {
+    if (!member) return;
+    try { await careAction(member.id, 'message', { text: 'Quiero renovar o adquirir: ' + name }, false, member.name); showFeedback('Solicitud enviada al centro. El equipo confirmará el pago y acreditará las sesiones.'); } catch (e) { showFeedback((e as Error).message); }
   };
-
-  const handleSelectPack = (planKey: 'Basic' | 'Standard' | 'Premium') => {
-    if (onUpdatePlan) {
-      onUpdatePlan(planKey);
-    }
-    const chosen = packsConfig[planKey];
-    addActivity({ name: memberName, action: `adquirió ${chosen.name}` });
-    showFeedback(`Has activado ${chosen.name} (${chosen.sessions} sesiones) con éxito.`);
-  };
+  const handleRenew = () => requestPack(currentConfig.name);
+  const handleSelectPack = (key: 'Basic' | 'Standard' | 'Premium') => requestPack(packsConfig[key].name);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -116,15 +114,15 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
           <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3.5 border border-white/10">
             <Calendar className="w-5 h-5 text-[#00B4D8]" />
             <div>
-              <p className="text-xs text-white/50">Fecha de Activación</p>
-              <p className="font-bold text-white text-sm">15 Ene, 2025</p>
+              <p className="text-xs text-white/50">Fecha de ingreso</p>
+              <p className="font-bold text-white text-sm">{formatDate(member?.joinDate)}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3.5 border border-white/10">
             <Clock className="w-5 h-5 text-[#00B4D8]" />
             <div>
               <p className="text-xs text-white/50">Vigencia del Paquete</p>
-              <p className="font-bold text-white text-sm">60 días hábiles</p>
+              <p className="font-bold text-white text-sm">{formatDate(member?.nextBilling)}</p>
             </div>
           </div>
         </div>
@@ -148,7 +146,7 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
             onClick={handleRenew}
             className="w-full sm:w-auto px-6 py-3 bg-[#00B4D8] text-[#021826] rounded-xl hover:bg-[#00B4D8]/90 transition-transform hover:scale-105 font-bold text-sm shadow-lg shadow-[#00B4D8]/20"
           >
-            Renovar / Acreditar Paquete
+            Solicitar renovación
           </button>
         </div>
       </div>
@@ -212,6 +210,7 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
           })}
         </div>
       </div>
+      {member && <><CarePanel memberId={member.id} section="payments" /><CarePanel memberId={member.id} section="rewards" /></>}
     </div>
   );
 }

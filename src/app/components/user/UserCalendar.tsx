@@ -1,3 +1,6 @@
+import { weekDate, today, appointmentTime } from '../../data/dates';
+import { bookingsForSlot } from '../../data/gymStore';
+import { createBookingTransaction, cancelBookingWith24hRule, rescheduleBookingTransaction, confirmBooking } from '../../data/operations';
 import React, { FormEvent, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Users, User, Stethoscope, Dumbbell, AlertCircle, CheckCircle, Calendar as CalendarIcon, RefreshCw, XCircle } from 'lucide-react';
 import {
@@ -7,9 +10,6 @@ import {
   subscribeToSchedule,
   getUserBookings,
   subscribeToBookings,
-  createBookingTransaction,
-  cancelBookingWith24hRule,
-  rescheduleBookingTransaction,
   CentralScheduleBlock,
   UserBookingRecord,
   GymMember
@@ -38,7 +38,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   });
 
   const [scheduleBlocks, setScheduleBlocks] = useState<CentralScheduleBlock[]>(() => getCentralScheduleBlocks());
-  const [userBookings, setUserBookings] = useState<UserBookingRecord[]>(() => getUserBookings(memberName));
+  const [userBookings, setUserBookings] = useState<UserBookingRecord[]>(() => getUserBookings(memberName).filter(b => b.status !== 'cancelled'));
 
   useEffect(() => {
     const unsubMembers = subscribeToMembers(() => {
@@ -52,7 +52,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
     });
 
     const unsubBookings = subscribeToBookings(() => {
-      setUserBookings(getUserBookings(memberName));
+      setUserBookings(getUserBookings(memberName).filter(b => b.status !== 'cancelled'));
     });
 
     return () => {
@@ -71,7 +71,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   };
 
   const getWeekDateInfo = (weekOffset: number, dayIndex: number) => {
-    const baseMonday = new Date(2025, 0, 20); // Jan 20, 2025 (Monday)
+    const baseMonday = new Date(weekDate() + 'T12:00:00');
     const target = new Date(baseMonday);
     target.setDate(baseMonday.getDate() + (weekOffset * 7) + dayIndex);
 
@@ -97,7 +97,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
 
   const handleOpenReschedule = (booking: UserBookingRecord) => {
     setReschedulingBooking(booking);
-    const available = scheduleBlocks.filter((b) => b.isActive && b.students.length < b.capacity);
+    const available = scheduleBlocks.filter((b) => b.isActive && bookingsForSlot(b.id, getDateForDayOfWeek(b.dayOfWeek)).length < b.capacity);
     const initialBlock = available.find((b) => b.id === booking.blockId) || available[0];
     if (initialBlock) {
       setSelectedRescheduleBlockId(initialBlock.id);
@@ -135,14 +135,14 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   };
 
   // HU-03: Realizar Reserva
-  const handleBookingSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleBookingSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!bookingBlock) return;
 
     const formData = new FormData(e.currentTarget);
     const bookingDate = String(formData.get('bookingDate'));
 
-    const result = createBookingTransaction(memberName, bookingBlock.block.id, bookingDate);
+    const result = await createBookingTransaction(memberName, bookingBlock.block.id, bookingDate);
     if (result.success) {
       showToast(result.message, 'success');
       setBookingBlock(null);
@@ -152,8 +152,8 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   };
 
   // HU-04: Cancelación con Regla de 24h
-  const handleCancel = (bookingId: string) => {
-    const result = cancelBookingWith24hRule(bookingId, memberName);
+  const handleCancel = async (bookingId: string) => {
+    const result = await cancelBookingWith24hRule(bookingId, memberName);
     if (result.success) {
       showToast(result.message, result.isRefunded ? 'success' : 'warning');
     } else {
@@ -162,7 +162,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   };
 
   // HU-04: Reagendamiento
-  const handleRescheduleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleRescheduleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!reschedulingBooking) return;
 
@@ -170,7 +170,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
     const newBlockId = String(formData.get('newBlockId'));
     const newDate = String(formData.get('newDate'));
 
-    const result = rescheduleBookingTransaction(reschedulingBooking.id, memberName, newBlockId, newDate);
+    const result = await rescheduleBookingTransaction(reschedulingBooking.id, memberName, newBlockId, newDate);
     if (result.success) {
       showToast(result.message, 'success');
       setReschedulingBooking(null);
@@ -192,7 +192,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-1 text-[#F7F7F7]">Calendario & Agendamiento</h1>
-          <p className="text-white/60 text-sm">Reserva en línea (HU-03), reagenda sin costo y cancela con regla de 24h (HU-04)</p>
+          <p className="text-white/60 text-sm">Cancela o reagenda con al menos 24 horas. Una cancelación tardía o inasistencia consume la sesión reservada.</p>
         </div>
 
         {/* Saldo de Paquete Card */}
@@ -306,7 +306,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                 <div className="space-y-2.5">
                   {activeTab === 'gym-schedule' &&
                     dayBlocks.map((block) => {
-                      const booked = block.students.length;
+                      const booked = bookingsForSlot(block.id, getDateForDayOfWeek(block.dayOfWeek)).length;
                       const isUserEnrolled = block.students.some((st) => st.name.toLowerCase() === memberName.toLowerCase());
 
                       return (
@@ -368,7 +368,8 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
 
                         {/* Botones de Acción */}
                         <div className="flex flex-col gap-1.5 pt-2 border-t border-white/10 w-full">
-                          <button
+                          <button disabled={Boolean(booking.confirmedAt) || booking.status === 'attended' || booking.status === 'no-show' || appointmentTime(booking.date, booking.time.split(' - ')[0]) <= Date.now()} onClick={async () => { try { await confirmBooking(booking.id, memberName); showToast('Tu intención de asistir quedó confirmada.', 'success'); } catch (e) { showToast((e as Error).message, 'error'); } }} className="px-3 py-2 rounded-lg bg-white/5 text-[#00B4D8] text-xs disabled:opacity-50">{booking.confirmedAt ? 'Asistencia prevista confirmada' : 'Confirmo que asistiré'}</button>
+<button
                             type="button"
                             onClick={() => handleOpenReschedule(booking)}
                             className="w-full py-1.5 px-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold text-white flex items-center justify-center gap-1 transition-colors"
@@ -379,7 +380,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
 
                           <button
                             type="button"
-                            onClick={() => handleCancel(booking.id)}
+                            onClick={() => { if (window.confirm('¿Cancelar esta clase? Con menos de 24 horas, se libera el cupo sin devolver la sesión.')) void handleCancel(booking.id); }}
                             className="w-full py-1.5 px-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-semibold text-rose-300 flex items-center justify-center gap-1 transition-colors"
                           >
                             Cancelar
@@ -417,7 +418,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
             <div className="bg-white/5 p-4 rounded-xl space-y-2 border border-white/10 text-xs">
               <p className="text-white/70"><strong>Profesional:</strong> {bookingBlock.block.instructor}</p>
               <p className="text-white/70"><strong>Horario:</strong> {bookingBlock.block.startTime} - {bookingBlock.block.endTime} hrs</p>
-              <p className="text-white/70"><strong>Cupos disponibles:</strong> {bookingBlock.block.capacity - bookingBlock.block.students.length} de {bookingBlock.block.capacity}</p>
+              <p className="text-white/70"><strong>Cupos disponibles:</strong> {bookingBlock.block.capacity - bookingsForSlot(bookingBlock.block.id, bookingBlock.targetDate).length} de {bookingBlock.block.capacity}</p>
               <div className="pt-2 flex justify-between font-bold text-sm text-[#00B4D8]">
                 <span>Mi Saldo Actual:</span>
                 <span>{member?.remainingSessions ?? 5} sesiones de paquete</span>
@@ -468,7 +469,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                 onChange={(e) => handleBlockSelectChange(e.target.value)}
                 className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]"
               >
-                {scheduleBlocks.filter((b) => b.isActive && b.students.length < b.capacity).map((b) => (
+                {scheduleBlocks.filter((b) => b.isActive && bookingsForSlot(b.id, getDateForDayOfWeek(b.dayOfWeek)).length < b.capacity).map((b) => (
                   <option key={b.id} value={b.id}>
                     {dayLabels[b.dayOfWeek]} {b.startTime} hrs - {b.title} ({b.instructor})
                   </option>

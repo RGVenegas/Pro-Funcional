@@ -1,3 +1,4 @@
+import { getMemberByEmail } from '../../data/gymStore';
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Sparkles, Check } from 'lucide-react';
@@ -14,8 +15,8 @@ export function DigitalCard({ user: account }: DigitalCardProps) {
     id: 'PF-2025-001234',
     name: account.name,
     plan: account.plan ?? 'Premium',
-    memberSince: '2024-01-15',
-    expirationDate: '2025-02-15',
+    memberSince: getMemberByEmail(account.email)?.joinDate || '',
+    expirationDate: getMemberByEmail(account.email)?.nextBilling || '',
   };
 
   const showFeedback = (msg: string) => {

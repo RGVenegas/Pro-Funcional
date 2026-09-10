@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { serial } from '../common/transaction';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { UpdateMemberDto } from './dto/update-member.dto';
@@ -63,9 +64,11 @@ export class MembersService {
   async update(id: string, dto: UpdateMemberDto, authorName = 'Staff') {
     await this.findOne(id);
 
-    const updated = await this.prisma.user.update({
-      where: { id },
-      data: dto,
+    const updated = await serial(this.prisma, async tx => {
+      const current = await tx.user.findUnique({ where: { id } });
+      const care: any = structuredClone(current.care || {});
+      if (dto.physicalRestrictions !== undefined && care.routine) { care.routine.status = 'draft'; delete care.routine.approvedAt; delete care.routine.approvedBy; }
+      return tx.user.update({ where: { id }, data: { ...dto, care } });
     });
 
     await this.prisma.activityLog.create({

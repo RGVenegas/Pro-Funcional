@@ -43,6 +43,11 @@ export class BookingsController {
     return this.bookingsService.cancel(id, user);
   }
 
+  @Patch(':id/confirm')
+  confirm(@Param('id') id: string, @GetUser() user: any) {
+    return this.bookingsService.confirm(id, user);
+  }
+
   @Patch(':id/reschedule')
   @ApiOperation({ summary: 'Reagendar una cita a otro bloque sin costo adicional (HU-04)' })
   reschedule(

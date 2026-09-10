@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import { getMemberByEmail, getUserBookings, subscribeToMembers, subscribeToBookings } from '../../data/gymStore';
+import { CarePanel } from '../shared/CarePanel';
+import { formatDate } from '../../data/dates';
+import React, { useState, useEffect } from 'react';
 import { Calendar, TrendingUp, Dumbbell, Zap, Stethoscope, Activity, AlertTriangle, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Area, AreaChart } from 'recharts';
 
@@ -10,24 +13,20 @@ interface ClinicalSessionRecord {
   professional: string;
 }
 
-export function TrainingTracking() {
+export function TrainingTracking({ email }: { email: string }) {
+    const [, refresh] = useState(0);
+    useEffect(() => { const update = () => refresh(n => n + 1); const a = subscribeToMembers(update); const b = subscribeToBookings(update); return () => { a(); b(); }; }, []);
+    const member = getMemberByEmail(email);
+    const history = [...(member?.clinicalHistory || [])].sort((a, b) => a.date.localeCompare(b.date));
+    const [area, setArea] = useState('');
+    const selectedArea = area || history.at(-1)?.jointOrArea;
+    const records = history.filter(e => e.jointOrArea === selectedArea);
+    const latest = records.at(-1);
+    const first = records[0];
   const [activeChart, setActiveChart] = useState<'pain' | 'rom'>('pain');
 
-  // Evolution data over time
-  const clinicalProgressData = [
-    { session: 'Sesión 1', date: '05 Ene', evaPain: 8, romDegrees: 85, note: 'Inicio tto. Dolor agudo' },
-    { session: 'Sesión 2', date: '10 Ene', evaPain: 7, romDegrees: 95, note: 'Terapia manual y descarga' },
-    { session: 'Sesión 3', date: '15 Ene', evaPain: 5, romDegrees: 110, note: 'Ejercicios isométricos' },
-    { session: 'Sesión 4', date: '19 Ene', evaPain: 4, romDegrees: 120, note: 'Readaptación neuromuscular' },
-    { session: 'Sesión 5', date: '22 Ene', evaPain: 3, romDegrees: 130, note: 'Transición a funcional' },
-  ];
-
-  const sessions = [
-    { id: '1', name: 'Sesión Kinesiología & Terapia Manual', date: '2025-01-22', duration: 50, type: 'Box Clínico', instructor: 'Klgo. Andrés Morales' },
-    { id: '2', name: 'Entrenamiento Funcional Adaptado', date: '2025-01-21', duration: 45, type: 'Gimnasio', instructor: 'Prof. Mike R.' },
-    { id: '3', name: 'Sesión Kinesiología (Control ROM)', date: '2025-01-19', duration: 50, type: 'Box Clínico', instructor: 'Klga. Valeria Reyes' },
-    { id: '4', name: 'Readaptación Funcional y Core', date: '2025-01-17', duration: 60, type: 'Gimnasio', instructor: 'Prof. Mike R.' },
-  ];
+  const clinicalProgressData = records.map((e, i) => ({ session: 'Sesión ' + (i + 1), date: formatDate(e.date), evaPain: e.evaPain, romDegrees: e.romDegrees }));
+  const sessions = getUserBookings(member?.name).filter(b => b.status === 'attended').map(b => ({ id: b.id, name: b.title, date: b.date, duration: Math.round((Date.parse(b.date + 'T' + b.time.split(' - ')[1]) - Date.parse(b.date + 'T' + b.time.split(' - ')[0])) / 60000), type: b.type === 'kine' ? 'Box Clínico' : 'Gimnasio', instructor: b.instructor }));
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -42,9 +41,9 @@ export function TrainingTracking() {
         <div>
           <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400">Pauta Médica y Restricciones Activas para el Gimnasio</h3>
           <p className="text-sm font-medium text-white/90 mt-1">
-            "Evitar sentadillas profundas &gt;90° y saltos de impacto alto por recuperación de tendinopatía / post-op."
+            {member?.physicalRestrictions || 'Sin restricciones registradas por el profesional.'}
           </p>
-          <span className="text-xs text-amber-300/70 mt-1 block">Prescrito por Klgo. Andrés Morales · Vigente</span>
+          <span className="text-xs text-amber-300/70 mt-1 block">{latest ? `Evaluación de ${latest.professional} · ${formatDate(latest.date)}` : 'Evaluación pendiente'}</span>
         </div>
       </div>
 
@@ -55,8 +54,8 @@ export function TrainingTracking() {
             <span className="text-xs text-white/60">Dolor Actual (EVA)</span>
             <ArrowDownRight className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-2xl font-bold text-emerald-400">3 <span className="text-xs text-white/50">/ 10</span></p>
-          <p className="text-[11px] text-white/50">-62% desde inicio</p>
+          <p className="text-2xl font-bold text-emerald-400">{latest?.evaPain ?? '—'} <span className="text-xs text-white/50">/ 10</span></p>
+          <p className="text-[11px] text-white/50">{latest && first ? `${latest.evaPain - first.evaPain} puntos desde inicio` : 'Sin evaluaciones'}</p>
         </div>
 
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
@@ -64,8 +63,8 @@ export function TrainingTracking() {
             <span className="text-xs text-white/60">Movilidad (ROM)</span>
             <ArrowUpRight className="w-4 h-4 text-[#00B4D8]" />
           </div>
-          <p className="text-2xl font-bold text-[#00B4D8]">130°</p>
-          <p className="text-[11px] text-white/50">+45° ganados</p>
+          <p className="text-2xl font-bold text-[#00B4D8]">{latest ? `${latest.romDegrees}°` : '—'}</p>
+          <p className="text-[11px] text-white/50">{latest && first ? `${latest.romDegrees - first.romDegrees}° desde inicio` : 'Sin evaluaciones'}</p>
         </div>
 
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
@@ -73,17 +72,17 @@ export function TrainingTracking() {
             <span className="text-xs text-white/60">Sesiones Hechas</span>
             <Stethoscope className="w-4 h-4 text-white/60" />
           </div>
-          <p className="text-2xl font-bold text-white">5</p>
-          <p className="text-[11px] text-white/50">de 8 en paquete</p>
+          <p className="text-2xl font-bold text-white">{sessions.length}</p>
+          <p className="text-[11px] text-white/50">Asistencias registradas</p>
         </div>
 
         <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-white/60">Días Constantes</span>
+            <span className="text-xs text-white/60">Días con asistencia</span>
             <Zap className="w-4 h-4 text-amber-400" />
           </div>
-          <p className="text-2xl font-bold text-amber-300">12</p>
-          <p className="text-[11px] text-white/50">Racha activa</p>
+          <p className="text-2xl font-bold text-amber-300">{new Set(sessions.map(s => s.date)).size}</p>
+          <p className="text-[11px] text-white/50">Historial personal</p>
         </div>
       </div>
 
@@ -115,7 +114,8 @@ export function TrainingTracking() {
           </div>
         </div>
 
-        {/* Gráfico Recharts */}
+        <label className="block text-sm text-white/60">Zona evaluada<select aria-label="Zona evaluada" value={selectedArea || ''} onChange={e => setArea(e.target.value)} className="ml-2 bg-[#010A01] rounded-lg border border-white/10 p-2">{[...new Set(history.map(e => e.jointOrArea))].map(a => <option key={a}>{a}</option>)}</select></label>
+{!records.length && <p className="text-sm text-white/60">Aún no hay evaluaciones registradas.</p>}
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             {activeChart === 'pain' ? (
@@ -146,7 +146,7 @@ export function TrainingTracking() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
                 <XAxis dataKey="date" stroke="#ffffff60" fontSize={12} />
-                <YAxis domain={[60, 150]} stroke="#ffffff60" fontSize={12} />
+                <YAxis domain={['auto', 'auto']} stroke="#ffffff60" fontSize={12} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#0b1726', borderColor: '#ffffff20', borderRadius: '0.75rem', color: '#fff' }}
                   formatter={(value: any) => [`${value}°`, 'Movilidad Articular (ROM)']}
@@ -159,7 +159,7 @@ export function TrainingTracking() {
         </div>
 
         <div className="flex justify-between items-center text-xs text-white/50 pt-2 border-t border-white/5 font-mono">
-          <span>{activeChart === 'pain' ? '📉 Meta: Dolor ≤ 2/10 para alta kinésica' : '📈 Meta: ROM completo ≥ 135°'}</span>
+          <span>{member?.care?.goals || 'Objetivos pendientes de definir con tu profesional'}</span>
           <span>Actualizado tras última atención</span>
         </div>
       </div>
@@ -184,6 +184,7 @@ export function TrainingTracking() {
           ))}
         </div>
       </div>
+      {member && <><CarePanel memberId={member.id} section="routine" /><CarePanel memberId={member.id} section="messages" author={member.name} /></>}
     </div>
   );
 }

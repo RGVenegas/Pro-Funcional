@@ -41,6 +41,7 @@ enum BookingStatus {
 }
 
 model User {
+  care                 Json                   @default("{}")
   id                   String                 @id @default(uuid())
   email                String                 @unique
   password             String
@@ -97,6 +98,8 @@ model ScheduleBlock {
 }
 
 model Booking {
+  packageId       String?
+  confirmedAt     DateTime?
   id              String        @id @default(uuid())
   scheduleBlockId String
   scheduleBlock   ScheduleBlock @relation(fields: [scheduleBlockId], references: [id], onDelete: Cascade)
@@ -143,4 +146,24 @@ model ActivityLog {
   createdAt DateTime @default(now())
 
   @@map("activity_logs")
+}
+
+model RewardCatalog {
+  id    String @id @default("main")
+  data  Json   @default("{\"rewards\":[],\"redemptions\":[]}")
+}
+
+model PushDevice {
+  endpoint     String @id
+  userId       String
+  subscription Json
+  deliveries   PushDelivery[]
+}
+
+model PushDelivery {
+  id         String @id
+  endpoint   String
+  device     PushDevice @relation(fields: [endpoint], references: [endpoint], onDelete: Cascade)
+  sentAt     DateTime?
+  claimedAt  DateTime @default(now())
 }

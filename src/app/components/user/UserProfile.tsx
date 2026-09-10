@@ -1,3 +1,6 @@
+import { getMemberByEmail } from '../../data/gymStore';
+import { formatDate } from '../../data/dates';
+import { CarePanel } from '../shared/CarePanel';
 import React from 'react';
 import { Calendar, Check, Mail, ShieldCheck, UserRound } from 'lucide-react';
 import { AuthUser } from '../auth/Login';
@@ -7,13 +10,14 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ user: account }: UserProfileProps) {
+  const member = getMemberByEmail(account.email);
   const user = {
     name: account.name,
     email: account.email,
     plan: account.plan ?? 'Premium',
-    status: 'Activa',
-    memberSince: '2024-01-15',
-    expirationDate: '2025-02-15',
+    status: member?.status === 'active' ? 'Activa' : member?.status === 'suspended' ? 'Suspendida' : 'Vencida',
+    memberSince: member?.joinDate,
+    expirationDate: member?.nextBilling,
   };
 
   return (
@@ -46,10 +50,11 @@ export function UserProfile({ user: account }: UserProfileProps) {
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="flex items-center gap-3 rounded-lg bg-white/5 p-4"><Calendar className="h-5 w-5 text-[#00B4D8]" /><div><p className="text-xs text-white/50">Miembro desde</p><p className="font-medium">{new Date(user.memberSince).toLocaleDateString('es-CL')}</p></div></div>
-          <div className="flex items-center gap-3 rounded-lg bg-white/5 p-4"><Calendar className="h-5 w-5 text-[#00B4D8]" /><div><p className="text-xs text-white/50">Vigente hasta</p><p className="font-medium">{new Date(user.expirationDate).toLocaleDateString('es-CL')}</p></div></div>
+          <div className="flex items-center gap-3 rounded-lg bg-white/5 p-4"><Calendar className="h-5 w-5 text-[#00B4D8]" /><div><p className="text-xs text-white/50">Miembro desde</p><p className="font-medium">{formatDate(user.memberSince)}</p></div></div>
+          <div className="flex items-center gap-3 rounded-lg bg-white/5 p-4"><Calendar className="h-5 w-5 text-[#00B4D8]" /><div><p className="text-xs text-white/50">Vigente hasta</p><p className="font-medium">{formatDate(user.expirationDate)}</p></div></div>
         </div>
       </div>
+      {member && <CarePanel memberId={member.id} section="profile" author={member.name} />}
     </div>
   );
 }

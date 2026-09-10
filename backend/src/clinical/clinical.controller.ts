@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { ForbiddenException, Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ClinicalService } from './clinical.service';
 import { CreateClinicalEvaluationDto } from './dto/clinical-evaluation.dto';
@@ -30,7 +30,8 @@ export class ClinicalController {
 
   @Get('history/:patientId')
   @ApiOperation({ summary: 'Obtener historial clínico y curvas de progreso (HU-06)' })
-  getPatientHistory(@Param('patientId') patientId: string) {
+  getPatientHistory(@Param('patientId') patientId: string, @GetUser() user: any) {
+    if (user.id !== patientId && ![Role.ADMIN, Role.KINESIOLOGO].includes(user.role)) throw new ForbiddenException('No tienes acceso a esta ficha.');
     return this.clinicalService.getPatientHistory(patientId);
   }
 

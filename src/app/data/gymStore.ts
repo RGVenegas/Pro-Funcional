@@ -1,3 +1,6 @@
+import { today, appointmentTime, BOOKING_NOTICE_HOURS, dayNames } from './dates';
+import { apiEnabled, serverSnapshot } from './api';
+import type { CareProfile } from './careStore';
 export type MembershipPlan = 'Basic' | 'Standard' | 'Premium';
 export type MemberStatus = 'active' | 'expired' | 'suspended';
 
@@ -18,6 +21,8 @@ export interface ClinicalEvaluation {
 }
 
 export interface GymMember {
+  care?: CareProfile;
+  notes?: Array<{ date: string; author: string; text: string }>;
   id: string;
   name: string;
   email: string;
@@ -239,6 +244,7 @@ const initialMembers: GymMember[] = [
 ];
 
 export function getMembers(): GymMember[] {
+  if (apiEnabled) return serverSnapshot.members;
   if (typeof window === 'undefined') return initialMembers;
   const saved = window.localStorage.getItem(storageKey);
   if (!saved) {
@@ -253,8 +259,8 @@ export function getMembers(): GymMember[] {
       totalSessions: m.totalSessions ?? 8,
       remainingSessions: m.remainingSessions ?? 5,
       packName: m.packName || 'Pack Recuperación Activa (8 ses)',
-      clinicalHistory: m.clinicalHistory || initialMembers.find((im) => im.id === m.id)?.clinicalHistory || [],
-      physicalRestrictions: m.physicalRestrictions || initialMembers.find((im) => im.id === m.id)?.physicalRestrictions || 'Sin restricciones reportadas',
+      clinicalHistory: [...(m.clinicalHistory || [])].sort((a, b) => b.date.localeCompare(a.date)),
+      physicalRestrictions: m.physicalRestrictions ?? 'Sin restricciones reportadas',
     }));
   } catch {
     window.localStorage.setItem(storageKey, JSON.stringify(initialMembers));
@@ -300,7 +306,8 @@ export function addClinicalEvaluation(memberId: string, evaluation: Omit<Clinica
 
   updateMember(memberId, {
     clinicalHistory: updatedHistory,
-    physicalRestrictions: evaluation.physicalRestrictions || member.physicalRestrictions,
+    physicalRestrictions: evaluation.physicalRestrictions ?? member.physicalRestrictions,
+    care: member.care?.routine ? { ...member.care, routine: { ...member.care.routine, status: 'draft', approvedAt: undefined, approvedBy: undefined } } : member.care,
   });
 
   addActivity({
@@ -343,7 +350,7 @@ export function addMember(member: Omit<GymMember, 'id' | 'status' | 'balance' | 
     status: 'active',
     balance: 0,
     totalSessions: member.totalSessions || 8,
-    remainingSessions: member.remainingSessions || 8,
+    remainingSessions: member.remainingSessions ?? 8,
     packName: member.packName || 'Pack Recuperación Activa (8 ses)',
     physicalRestrictions: member.physicalRestrictions || 'Sin restricciones reportadas',
     clinicalHistory: [],
@@ -369,6 +376,7 @@ export function subscribeToMembers(onChange: () => void): () => void {
 }
 
 export function getActivities(): GymActivity[] {
+  if (apiEnabled) return serverSnapshot.activities;
   if (typeof window === 'undefined') return initialActivities;
   const saved = window.localStorage.getItem(activityStorageKey);
   if (!saved) {
@@ -411,6 +419,8 @@ export interface EnrolledStudent {
   name: string;
   restrictions?: string;
   status: 'attended' | 'no-show' | 'pending';
+  bookingId?: string;
+  confirmedAt?: string;
 }
 
 export interface CentralScheduleBlock {
@@ -436,6 +446,10 @@ export interface UserBookingRecord {
   instructor: string;
   type: 'kine' | 'functional';
   createdAt: string;
+  memberId?: string;
+  status?: 'pending' | 'attended' | 'no-show' | 'cancelled';
+  confirmedAt?: string;
+  isRefunded?: boolean;
 }
 
 const scheduleStorageKey = 'profuncional-schedule-v3';
@@ -601,6 +615,7 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
 ];
 
 export function getCentralScheduleBlocks(): CentralScheduleBlock[] {
+  if (apiEnabled) return serverSnapshot.blocks;
   if (typeof window === 'undefined') return initialScheduleBlocks;
   const saved = window.localStorage.getItem(scheduleStorageKey);
   if (!saved) {
@@ -667,6 +682,7 @@ export function subscribeToSchedule(onChange: () => void): () => void {
 }
 
 export function getUserBookings(userName?: string): UserBookingRecord[] {
+  if (apiEnabled) return serverSnapshot.bookings.filter((b: UserBookingRecord) => !userName || b.userName.toLowerCase() === userName.toLowerCase());
   if (typeof window === 'undefined') return [];
   const saved = window.localStorage.getItem(bookingsStorageKey);
   let list: UserBookingRecord[] = [];
@@ -697,193 +713,79 @@ export function subscribeToBookings(onChange: () => void): () => void {
   };
 }
 
-export function createBookingTransaction(userName: string, blockId: string, bookingDate: string): { success: boolean; message: string; booking?: UserBookingRecord } {
-  const member = getMemberByEmail(userName) || getMembers().find((m) => m.name.toLowerCase() === userName.toLowerCase());
-  if (!member) {
-    return { success: false, message: 'Usuario no encontrado' };
-  }
 
-  const remaining = member.remainingSessions ?? 0;
-  if (remaining <= 0) {
-    return { success: false, message: 'Saldo insuficiente (0 sesiones disponibles). Debes adquirir o renovar tu paquete.' };
-  }
-
-  const blocks = getCentralScheduleBlocks();
-  const blockIndex = blocks.findIndex((b) => b.id === blockId);
-  if (blockIndex === -1 || !blocks[blockIndex].isActive) {
-    return { success: false, message: 'El bloque horario seleccionado no está disponible' };
-  }
-
-  const block = blocks[blockIndex];
-  if (block.students.length >= block.capacity) {
-    return { success: false, message: 'Cupos agotados: este bloque horario ha alcanzado su capacidad máxima' };
-  }
-
-  const userAlreadyInBlock = block.students.some((st) => st.name.toLowerCase() === userName.toLowerCase());
-  if (userAlreadyInBlock) {
-    return { success: false, message: 'Ya estás inscrito en este bloque horario' };
-  }
-
-  // 1. Decrementar saldo de sesión
+export function bookingsForSlot(blockId: string, date: string): UserBookingRecord[] {
+  return getUserBookings().filter(b => b.blockId === blockId && b.date === date && b.status !== 'cancelled');
+}
+export function studentsForSlot(blockId: string, date: string): EnrolledStudent[] {
+  return bookingsForSlot(blockId, date).map(b => ({ id: b.memberId || getMembers().find(m => m.name === b.userName)?.id || b.userName, name: b.userName, bookingId: b.id, confirmedAt: b.confirmedAt, status: b.status === 'attended' || b.status === 'no-show' ? b.status : 'pending', restrictions: getMembers().find(m => m.id === b.memberId || m.name === b.userName)?.physicalRestrictions }));
+}
+export function bookingStart(b: UserBookingRecord): number { return appointmentTime(b.date, b.time.split(' - ')[0]); }
+function resolveMember(identity: string) { return getMembers().find(m => m.id === identity || m.email.toLowerCase() === identity.toLowerCase() || m.name.toLowerCase() === identity.toLowerCase()); }
+function owns(b: UserBookingRecord, identity: string) { const m = resolveMember(identity); return m && (b.memberId ? b.memberId === m.id : b.userName === m.name); }
+function validateSlot(member: GymMember, blockId: string, date: string, exceptId?: string): string | undefined {
+  const block = getCentralScheduleBlocks().find(b => b.id === blockId && b.isActive);
+  if (!block) return 'El horario no está disponible.';
+  if (member.status !== 'active') return 'Tu membresía no está activa. Contacta al centro.';
+  const start = appointmentTime(date, block.startTime);
+  if (!Number.isFinite(start) || start <= Date.now()) return 'Selecciona una fecha y hora futuras válidas.';
+  if (dayNames[new Date(date + 'T12:00:00Z').getUTCDay()] !== block.dayOfWeek) return 'La fecha no corresponde al día de este horario.';
+  const reservations = getUserBookings().filter(b => b.id !== exceptId && b.status !== 'cancelled');
+  if (reservations.filter(b => b.blockId === blockId && b.date === date).length >= block.capacity) return 'Cupos agotados en esta fecha.';
+  const end = appointmentTime(date, block.endTime);
+  if (reservations.some(b => owns(b, member.id) && b.date === date && bookingStart(b) < end && appointmentTime(b.date, b.time.split(' - ')[1]) > start)) return 'Ya tienes una reserva que coincide con este horario.';
+}
+export function createBookingTransaction(identity: string, blockId: string, date: string) {
+  const member = resolveMember(identity);
+  if (!member) return { success: false, message: 'Alumno no encontrado.' };
+  const error = validateSlot(member, blockId, date);
+  if (error) return { success: false, message: error };
+  if ((member.remainingSessions ?? 0) < 1) return { success: false, message: 'No tienes sesiones disponibles.' };
+  const block = getCentralScheduleBlocks().find(b => b.id === blockId)!;
+  const booking: UserBookingRecord = { id: crypto.randomUUID(), memberId: member.id, userName: member.name, blockId, date, time: block.startTime + ' - ' + block.endTime, title: block.title, instructor: block.instructor, type: block.type, createdAt: new Date().toISOString(), status: 'pending' };
+  saveUserBookings([booking, ...getUserBookings()]);
   consumeSession(member.id);
-
-  // 2. Inscribir alumno en el bloque
-  block.students.push({
-    id: member.id,
-    name: member.name,
-    restrictions: member.physicalRestrictions && member.physicalRestrictions !== 'Sin restricciones reportadas' ? member.physicalRestrictions : undefined,
-    status: 'pending',
-  });
-  saveCentralScheduleBlocks(blocks);
-
-  // 3. Crear registro de reserva del usuario
-  const newBooking: UserBookingRecord = {
-    id: `booking-${Date.now()}`,
-    blockId: block.id,
-    userName: member.name,
-    date: bookingDate,
-    time: `${block.startTime} - ${block.endTime}`,
-    title: block.title,
-    instructor: block.instructor,
-    type: block.type,
-    createdAt: new Date().toISOString(),
-  };
-
-  const existingBookings = getUserBookings();
-  saveUserBookings([newBooking, ...existingBookings]);
-
-  addActivity({
-    name: member.name,
-    action: `agendó en "${block.title}" para el ${bookingDate} (-1 sesión de saldo)`,
-  });
-
-  return {
-    success: true,
-    message: `¡Sesión agendada con éxito! Te quedan ${remaining - 1} sesiones de saldo.`,
-    booking: newBooking,
-  };
+  window.dispatchEvent(new Event(scheduleChangeEvent));
+  return { success: true, message: 'Sesión reservada. Se descontó una sesión de tu saldo.', booking };
 }
-
-export function cancelBookingWith24hRule(bookingId: string, userName: string): { success: boolean; isRefunded: boolean; message: string } {
-  const userBookings = getUserBookings();
-  const booking = userBookings.find((b) => b.id === bookingId);
-
-  if (!booking) {
-    return { success: false, isRefunded: false, message: 'Reserva no encontrada' };
-  }
-
-  // Calcular regla de 24 horas (Garantizar reembolso en la demo activa del paciente)
-  const now = new Date();
-  const bookingDateTime = new Date(`${booking.date}T${booking.time.split(' - ')[0] || '08:00'}:00`);
-  const diffMs = bookingDateTime.getTime() - now.getTime();
-  const diffHours = diffMs / (1000 * 60 * 60);
-
-  // En el entorno de demo PWA, toda cancelación efectuada sobre una reserva activa reintegra +1 sesión al paquete
-  const isEligibleForRefund = true;
-
-  const member = getMembers().find((m) => m.name.toLowerCase() === userName.toLowerCase() || m.email.toLowerCase() === userName.toLowerCase());
-
-  if (isEligibleForRefund && member) {
-    refundSession(member.id);
-  }
-
-  // Desinscribir del bloque central
-  const blocks = getCentralScheduleBlocks();
-  const blockIndex = blocks.findIndex((b) => b.id === booking.blockId);
-  if (blockIndex !== -1) {
-    blocks[blockIndex].students = blocks[blockIndex].students.filter((st) => st.name.toLowerCase() !== userName.toLowerCase());
-    saveCentralScheduleBlocks(blocks);
-  }
-
-  // Eliminar reserva del usuario
-  saveUserBookings(userBookings.filter((b) => b.id !== bookingId));
-
-  // Notificar al staff
-  const notification = {
-    id: `notif-${Date.now()}`,
-    member: userName,
-    className: booking.title,
-    time: booking.time,
-    instructor: booking.instructor,
-    createdAt: new Date().toISOString(),
-  };
-  const savedNotifs = JSON.parse(localStorage.getItem('profuncional-notifications') ?? '[]');
-  localStorage.setItem('profuncional-notifications', JSON.stringify([notification, ...savedNotifs]));
+export function cancelBookingWith24hRule(id: string, identity: string) {
+  const all = getUserBookings();
+  const booking = all.find(b => b.id === id);
+  if (!booking || !owns(booking, identity) || (booking.status && booking.status !== 'pending') || bookingStart(booking) <= Date.now()) return { success: false, isRefunded: false, message: 'Solo puedes cancelar una reserva propia, pendiente y futura.' };
+  const isRefunded = bookingStart(booking) - Date.now() >= BOOKING_NOTICE_HOURS * 3600000;
+  saveUserBookings(all.map(b => b.id === id ? { ...b, status: 'cancelled', isRefunded } : b));
+  if (isRefunded) refundSession(resolveMember(identity)!.id);
+  const notification = { id: crypto.randomUUID(), member: booking.userName, className: booking.title, time: booking.time, instructor: booking.instructor, isRefunded, createdAt: new Date().toISOString() };
+  let notifications = [];
+  try { notifications = JSON.parse(localStorage.getItem('profuncional-notifications') || '[]'); } catch {}
+  localStorage.setItem('profuncional-notifications', JSON.stringify([notification, ...notifications]));
   window.dispatchEvent(new CustomEvent('profuncional-booking-cancelled', { detail: notification }));
-
-  const refundMessage = isEligibleForRefund
-    ? 'Reserva cancelada a tiempo. ¡1 sesión ha sido reembolsada a tu saldo!'
-    : 'Reserva cancelada fuera del plazo de 24 horas. El cupo fue liberado pero la sesión no es reembolsable.';
-
-  addActivity({
-    name: userName,
-    action: `canceló su reserva en "${booking.title}" (${isEligibleForRefund ? '+1 sesión reembolsada' : 'sin reembolso por plazo <24h'})`,
-  });
-
-  return {
-    success: true,
-    isRefunded: isEligibleForRefund,
-    message: refundMessage,
-  };
+  window.dispatchEvent(new Event(scheduleChangeEvent));
+  return { success: true, isRefunded, message: isRefunded ? 'Cupo liberado y una sesión devuelta a tu saldo.' : 'Cupo liberado. Al faltar menos de 24 horas, la sesión no se devuelve.' };
 }
-
-export function rescheduleBookingTransaction(bookingId: string, userName: string, newBlockId: string, newDate: string): { success: boolean; message: string } {
-  const userBookings = getUserBookings();
-  const bookingIndex = userBookings.findIndex((b) => b.id === bookingId);
-  if (bookingIndex === -1) {
-    return { success: false, message: 'Reserva no encontrada' };
-  }
-
-  const oldBooking = userBookings[bookingIndex];
-  const blocks = getCentralScheduleBlocks();
-
-  const newBlock = blocks.find((b) => b.id === newBlockId && b.isActive);
-  if (!newBlock) {
-    return { success: false, message: 'El nuevo bloque horario seleccionado no está disponible' };
-  }
-
-  if (newBlock.students.length >= newBlock.capacity) {
-    return { success: false, message: 'Cupos agotados en el nuevo horario seleccionado' };
-  }
-
-  // 1. Remover del bloque antiguo
-  const oldBlockIndex = blocks.findIndex((b) => b.id === oldBooking.blockId);
-  if (oldBlockIndex !== -1) {
-    blocks[oldBlockIndex].students = blocks[oldBlockIndex].students.filter((st) => st.name.toLowerCase() !== userName.toLowerCase());
-  }
-
-  // 2. Agregar al nuevo bloque
-  const member = getMembers().find((m) => m.name.toLowerCase() === userName.toLowerCase());
-  newBlock.students.push({
-    id: member?.id || `temp-${Date.now()}`,
-    name: userName,
-    restrictions: member?.physicalRestrictions && member.physicalRestrictions !== 'Sin restricciones reportadas' ? member.physicalRestrictions : undefined,
-    status: 'pending',
-  });
-
-  saveCentralScheduleBlocks(blocks);
-
-  // 3. Actualizar registro de reserva del usuario (sin tocar saldo)
-  userBookings[bookingIndex] = {
-    ...oldBooking,
-    blockId: newBlock.id,
-    date: newDate,
-    time: `${newBlock.startTime} - ${newBlock.endTime}`,
-    title: newBlock.title,
-    instructor: newBlock.instructor,
-    type: newBlock.type,
-  };
-  saveUserBookings(userBookings);
-
-  addActivity({
-    name: userName,
-    action: `reagendó su cita a "${newBlock.title}" para el ${newDate} (sin alteración de saldo)`,
-  });
-
-  return {
-    success: true,
-    message: `Cita reagendada con éxito para el ${newDate} a las ${newBlock.startTime} hrs.`,
-  };
+export function rescheduleBookingTransaction(id: string, identity: string, blockId: string, date: string) {
+  const all = getUserBookings();
+  const old = all.find(b => b.id === id);
+  if (!old || !owns(old, identity) || (old.status && old.status !== 'pending')) return { success: false, message: 'Reserva no disponible.' };
+  if (bookingStart(old) - Date.now() < BOOKING_NOTICE_HOURS * 3600000) return { success: false, message: 'Para reagendar deben faltar al menos 24 horas. Contacta a tu profesional.' };
+  const error = validateSlot(resolveMember(identity)!, blockId, date, id);
+  if (error) return { success: false, message: error };
+  const block = getCentralScheduleBlocks().find(b => b.id === blockId)!;
+  saveUserBookings(all.map(b => b.id === id ? { ...b, blockId, date, time: block.startTime + ' - ' + block.endTime, title: block.title, instructor: block.instructor, type: block.type, confirmedAt: undefined } : b));
+  window.dispatchEvent(new Event(scheduleChangeEvent));
+  return { success: true, message: 'Reserva reagendada sin alterar tu saldo.' };
 }
-
-
+export function confirmBooking(id: string, identity: string) {
+  const all = getUserBookings();
+  const b = all.find(b => b.id === id);
+  if (!b || !owns(b, identity) || (b.status && b.status !== 'pending') || bookingStart(b) <= Date.now()) throw new Error('Reserva no disponible para confirmar.');
+  saveUserBookings(all.map(b => b.id === id ? { ...b, confirmedAt: b.confirmedAt || new Date().toISOString() } : b));
+  window.dispatchEvent(new Event(scheduleChangeEvent));
+}
+export function recordAttendance(id: string, status: 'pending' | 'attended' | 'no-show') {
+  const all = getUserBookings();
+  const b = all.find(b => b.id === id);
+  if (!b || b.status === 'cancelled' || bookingStart(b) > Date.now()) throw new Error('La clase debe haber comenzado para registrar asistencia.');
+  saveUserBookings(all.map(b => b.id === id ? { ...b, status } : b));
+  window.dispatchEvent(new Event(scheduleChangeEvent));
+}

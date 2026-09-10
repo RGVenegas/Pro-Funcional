@@ -18,10 +18,6 @@ export class UpdateMemberDto {
   @IsEnum(MemberStatus)
   status?: MemberStatus;
 
-  @ApiPropertyOptional({ enum: Role })
-  @IsOptional()
-  @IsEnum(Role)
-  role?: Role;
 
   @ApiPropertyOptional({ example: 0 })
   @IsOptional()

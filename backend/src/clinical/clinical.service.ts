@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { serial } from '../common/transaction';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClinicalEvaluationDto } from './dto/clinical-evaluation.dto';
 
@@ -20,7 +21,7 @@ export class ClinicalService {
       throw new NotFoundException('Paciente no encontrado');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    return serial(this.prisma, async (tx) => {
       // 1. Crear registro clínico
       const evalRecord = await tx.clinicalEvaluation.create({
         data: {
@@ -38,6 +39,9 @@ export class ClinicalService {
         },
       });
 
+      const current = await tx.user.findUnique({ where: { id: patientId } });
+      const care: any = structuredClone(current.care || {});
+      if (care.routine) { care.routine.status = 'draft'; delete care.routine.approvedAt; delete care.routine.approvedBy; await tx.user.update({ where: { id: patientId }, data: { care } }); }
       // 2. Actualizar restricciones globales del paciente si se especifican
       if (dto.physicalRestrictions !== undefined) {
         await tx.user.update({

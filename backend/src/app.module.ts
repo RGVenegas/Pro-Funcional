@@ -1,3 +1,4 @@
+import { WorkspaceModule } from './workspace/workspace.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
@@ -20,6 +21,7 @@ import { ClinicalModule } from './clinical/clinical.module';
     BookingsModule,
     PackagesModule,
     ClinicalModule,
+    WorkspaceModule,
   ],
 })
 export class AppModule {}

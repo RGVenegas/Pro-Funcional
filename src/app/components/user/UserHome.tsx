@@ -1,3 +1,6 @@
+import { getUserBookings, subscribeToBookings, bookingStart } from '../../data/gymStore';
+import { formatDate } from '../../data/dates';
+import { ReminderPanel } from '../shared/ReminderPanel';
 import React, { useEffect, useState } from 'react';
 import { Calendar, Dumbbell, QrCode, TrendingUp, Stethoscope, AlertTriangle, Activity, ArrowRight } from 'lucide-react';
 import { AuthUser } from '../auth/Login';
@@ -19,13 +22,11 @@ export function UserHome({ user: account, onNavigate }: UserHomeProps) {
     return unsub;
   }, [account.email]);
 
-  const selectedClasses = account.selectedClasses ?? [];
-  const nextSession = {
-    name: selectedClasses[0] || 'Kinesiología & Readaptación',
-    time: 'Hoy a las 18:00',
-    instructor: 'Klgo. Andrés Morales',
-    type: 'Box Clínico',
-  };
+  const [, tick] = useState(0);
+  useEffect(() => subscribeToBookings(() => tick(n => n + 1)), []);
+  const bookings = getUserBookings(account.name);
+  const upcoming = bookings.filter(b => (!b.status || b.status === 'pending') && bookingStart(b) > Date.now()).sort((a, b) => bookingStart(a) - bookingStart(b))[0];
+  const nextSession = { name: upcoming?.title || 'Sin clases agendadas', time: upcoming ? formatDate(upcoming.date) + ' · ' + upcoming.time : 'Elige un horario disponible', instructor: upcoming?.instructor || 'Por asignar', type: upcoming?.type === 'kine' ? 'Box Clínico' : 'Entrenamiento' };
 
   const remainingSessions = memberData?.remainingSessions ?? 5;
   const totalSessions = memberData?.totalSessions ?? 8;
@@ -34,8 +35,8 @@ export function UserHome({ user: account, onNavigate }: UserHomeProps) {
 
   const quickStats = [
     { label: 'Sesiones disponibles', value: `${remainingSessions}/${totalSessions}`, icon: Stethoscope },
-    { label: 'Evaluación de dolor (EVA)', value: memberData?.clinicalHistory?.[0] ? `${memberData.clinicalHistory[0].evaPain}/10` : '3/10', icon: Activity },
-    { label: 'Racha de constancia', value: '12 días', icon: TrendingUp },
+    { label: 'Evaluación de dolor (EVA)', value: memberData?.clinicalHistory?.[0] ? `${memberData.clinicalHistory[0].evaPain}/10` : 'Sin registro', icon: Activity },
+    { label: 'Clases asistidas', value: String(bookings.filter(b => b.status === 'attended').length), icon: TrendingUp },
   ];
 
   return (
@@ -124,6 +125,7 @@ export function UserHome({ user: account, onNavigate }: UserHomeProps) {
         </div>
       </div>
 
+      {memberData && <ReminderPanel memberId={memberData.id} />}
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickStats.map((stat, index) => {

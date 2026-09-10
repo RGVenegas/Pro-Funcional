@@ -1,22 +1,27 @@
+import { addClinicalEvaluation, updateMember } from '../../data/operations';
+import { careAction } from '../../data/careStore';
+import { CarePanel } from '../shared/CarePanel';
+import { getUserBookings } from '../../data/gymStore';
+import { today } from '../../data/dates';
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Mail, Phone, Calendar, Ban, RefreshCw, Flame, Dumbbell, Check, Activity, AlertTriangle, Stethoscope, ChevronDown, PlusCircle } from 'lucide-react';
 import { StatusBadge } from '../shared/StatusBadge';
-import { addActivity, addClinicalEvaluation, ClinicalEvaluation, getMemberById, getMembers, GymMember, subscribeToMembers, updateMember } from '../../data/gymStore';
+import { addActivity, ClinicalEvaluation, getMemberById, getMembers, GymMember, subscribeToMembers } from '../../data/gymStore';
 
 interface MemberDetailProps {
   memberId: string;
   onBack: () => void;
+  author?: string;
+  canEdit?: boolean;
 }
 
 type Tab = 'info' | 'clinical' | 'balance' | 'subscriptions' | 'notes';
 
-export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
+export function MemberDetail({ memberId, onBack, author = 'Profesional del centro', canEdit = true }: MemberDetailProps) {
   const [activeTab, setActiveTab] = useState<Tab>('clinical');
   const [member, setMember] = useState<GymMember>(() => getMemberById(memberId) ?? getMembers()[0]);
   const [noteText, setNoteText] = useState('');
-  const [notes, setNotes] = useState<Array<{ date: string; author: string; text: string }>>([
-    { date: '10 Ene, 2025', author: 'Administrador', text: 'El miembro solicitó extensión de horario por motivos laborales.' },
-  ]);
+  const notes = member.notes || [];
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [showSoapForm, setShowSoapForm] = useState(false);
 
@@ -72,11 +77,11 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
     setTimeout(() => setActionMessage(null), 3500);
   };
 
-  const handleRenew = () => {
+  const handleRenew = async () => {
     const nextDate = new Date();
     nextDate.setDate(nextDate.getDate() + 30);
     const total = member.totalSessions || 8;
-    const updated = updateMember(member.id, {
+    const updated = await updateMember(member.id, {
       status: 'active',
       remainingSessions: total,
       nextBilling: nextDate.toISOString().slice(0, 10),
@@ -88,9 +93,9 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
     }
   };
 
-  const handleSuspend = () => {
+  const handleSuspend = async () => {
     const newStatus = member.status === 'suspended' ? 'active' : 'suspended';
-    const updated = updateMember(member.id, { status: newStatus });
+    const updated = await updateMember(member.id, { status: newStatus });
     if (updated) {
       setMember(updated);
       addActivity({ name: member.name, action: `${newStatus === 'suspended' ? 'fue suspendido' : 'fue reactivado'}` });
@@ -98,26 +103,26 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
     }
   };
 
-  const handleSaveEvaluation = (e: React.FormEvent) => {
+  const handleSaveEvaluation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!soapS && !soapO && !soapA && !soapP) {
       showFeedback('Por favor ingresa al menos una sección de la nota SOAP.');
       return;
     }
 
-    const newEval = addClinicalEvaluation(member.id, {
-      date: new Date().toISOString().slice(0, 10),
-      professional: 'Klgo. Andrés Morales',
+    const newEval = await addClinicalEvaluation(member.id, {
+      date: today(),
+      professional: author,
       evaPain,
       romDegrees,
       jointOrArea,
       soap: {
-        subjective: soapS || 'Sin observaciones subjetivas reportadas.',
-        objective: soapO || `ROM articular evaluado en ${romDegrees}°.`,
-        assessment: soapA || 'Evolución clínica dentro de los parámetros esperados.',
-        plan: soapP || 'Continuar pauta de kinesiología y readaptación funcional.',
+        subjective: soapS.trim(),
+        objective: soapO.trim(),
+        assessment: soapA.trim(),
+        plan: soapP.trim(),
       },
-      physicalRestrictions: physicalRestrictions.trim() || undefined,
+      physicalRestrictions: physicalRestrictions.trim(),
     });
 
     if (newEval) {
@@ -130,7 +135,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
     }
   };
 
-  const handleSaveNote = (e: React.FormEvent) => {
+  const handleSaveNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!noteText.trim()) return;
     const newNote = {
@@ -138,7 +143,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
       author: 'Administrador',
       text: noteText.trim(),
     };
-    setNotes((prev) => [newNote, ...prev]);
+    try { await careAction(member.id, 'note', { text: noteText }, true, author); } catch (e) { showFeedback((e as Error).message); return; }
     setNoteText('');
     showFeedback('Nota guardada correctamente.');
   };
@@ -168,7 +173,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
         </div>
 
         <button
-          onClick={() => { setActiveTab('clinical'); setShowSoapForm(true); }}
+          disabled={!canEdit} onClick={() => { setActiveTab('clinical'); setShowSoapForm(true); }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00B4D8] text-[#021826] font-bold hover:bg-[#00B4D8]/90 transition-transform hover:scale-105 shadow-lg shadow-[#00B4D8]/20"
         >
           <PlusCircle className="w-5 h-5" />
@@ -267,14 +272,14 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
 
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={handleRenew}
+              disabled={!canEdit} onClick={handleRenew}
               className="px-4 py-2 bg-[#00B4D8] text-[#021826] font-bold hover:bg-[#00B4D8]/90 rounded-lg transition-colors flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Acreditar / Renovar Pack</span>
             </button>
             <button
-              onClick={handleSuspend}
+              disabled={!canEdit} onClick={handleSuspend}
               className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
                 member.status === 'suspended'
                   ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300'
@@ -308,7 +313,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
 
         <div className="p-6">
           {/* TAB 1: FICHA KINÉSICA (SOAP & EVA & ROM) */}
-          {activeTab === 'clinical' && (
+          {activeTab === 'clinical' && canEdit && (
             <div className="space-y-6">
               {showSoapForm ? (
                 <form onSubmit={handleSaveEvaluation} className="rounded-xl border border-[#00B4D8]/40 bg-[#00B4D8]/5 p-6 space-y-6">
@@ -640,7 +645,7 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
           )}
 
           {/* TAB 5: NOTAS PRIVADAS */}
-          {activeTab === 'notes' && (
+          {activeTab === 'notes' && canEdit && (
             <div className="space-y-4">
               <form onSubmit={handleSaveNote} className="space-y-3">
                 <textarea
@@ -667,6 +672,10 @@ export function MemberDetail({ memberId, onBack }: MemberDetailProps) {
           )}
         </div>
       </div>
+      {canEdit && activeTab === 'clinical' && <><CarePanel memberId={member.id} section="profile" staff author={author} /><CarePanel memberId={member.id} section="routine" staff author={author} /></>}
+      {!canEdit && <CarePanel memberId={member.id} section="routine" />}
+      {canEdit && activeTab === 'notes' && <CarePanel memberId={member.id} section="messages" staff author={author} />}
+      {canEdit && activeTab === 'balance' && <><CarePanel memberId={member.id} section="payments" staff author={author} /><CarePanel memberId={member.id} section="rewards" staff author={author} /></>}
     </div>
   );
 }

@@ -39,7 +39,7 @@ export class AuthService {
         password: hashedPassword,
         name: dto.name,
         phone: dto.phone,
-        role: dto.role || Role.PATIENT,
+        role: Role.PATIENT,
         packages: {
           create: {
             plan: plan,

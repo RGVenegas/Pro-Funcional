@@ -17,7 +17,7 @@ export class MembersController {
 
   @Get()
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.KINESIOLOGO, Role.COACH)
+  @Roles(Role.ADMIN, Role.KINESIOLOGO)
   @ApiOperation({ summary: 'Listar todos los pacientes y miembros (Staff)' })
   @ApiQuery({ name: 'search', required: false, example: 'Camila' })
   @ApiQuery({ name: 'status', required: false, example: 'ACTIVE' })
@@ -35,7 +35,7 @@ export class MembersController {
 
   @Get(':id')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.KINESIOLOGO, Role.COACH)
+  @Roles(Role.ADMIN, Role.KINESIOLOGO)
   @ApiOperation({ summary: 'Obtener detalle completo de un miembro con historial clínico (Solo Staff)' })
   findOne(@Param('id') id: string) {
     return this.membersService.findOne(id);
