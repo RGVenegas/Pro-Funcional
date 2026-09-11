@@ -28,9 +28,10 @@ export function RevenueChart({ monthlyRevenue }: RevenueChartProps) {
           tickFormatter={(value) => `${formatCLP(value).replace(',00', '')}`}
         />
         <Tooltip
+          cursor={{ fill: 'rgba(0, 230, 118, 0.1)' }}
           contentStyle={{
             backgroundColor: 'rgba(11, 23, 38, 0.95)',
-            border: '1px solid rgba(0, 180, 216, 0.3)',
+            border: '1px solid rgba(0, 230, 118, 0.4)',
             borderRadius: '8px',
             color: '#fff',
           }}
@@ -38,7 +39,7 @@ export function RevenueChart({ monthlyRevenue }: RevenueChartProps) {
         />
         <Bar 
           dataKey="revenue" 
-          fill="#00B4D8"
+          fill="#00E676"
           radius={[8, 8, 0, 0]}
         />
       </BarChart>

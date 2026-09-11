@@ -5,7 +5,7 @@ import { formatDate, today } from '../../data/dates';
 
 const card = 'bg-white/5 rounded-xl p-5 border border-white/10 space-y-3';
 const input = 'w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm';
-const button = 'px-4 py-2 bg-[#00B4D8] text-[#021826] rounded-lg font-bold text-sm disabled:opacity-50';
+const button = 'px-4 py-2 bg-[#00E676] text-[#021826] rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-[#00E676]/90 transition-colors';
 export function CarePanel({ memberId, section, staff = false, author = 'Alumno' }: { memberId: string; section: 'profile' | 'routine' | 'messages' | 'payments' | 'rewards'; staff?: boolean; author?: string }) {
   const [, render] = useState(0);
   const [feedback, setFeedback] = useState('');
@@ -30,7 +30,7 @@ export function CarePanel({ memberId, section, staff = false, author = 'Alumno' 
   const routine = care.routine;
   const rewardData = getRewards();
   return <div className={card}>
-    {feedback && <p role="status" className="text-sm text-[#00B4D8]">{feedback}</p>}
+    {feedback && <p role="status" className="text-sm text-[#00E676]">{feedback}</p>}
     {section === 'profile' && <>
       <h3 className="font-bold">Mi acompañamiento</h3>
       <p className="text-sm text-white/60">Profesional responsable: {care.professional || 'Pendiente de asignación'}</p>
@@ -110,6 +110,6 @@ export function RewardManagement() {
     <label className="block text-sm">Clases por premio<input required name="classes" type="number" min="1" step="1" className={input} /></label>
     <label className="block text-sm">Cantidad disponible<input required name="stock" type="number" min="1" step="1" className={input} /></label>
     <label className="block text-sm">Válido hasta<input required name="expires" type="date" min={today()} className={input} /></label>
-    <button disabled={busy} className={button}>Publicar beneficio</button><p role="status" className="text-sm text-[#00B4D8]">{message}</p>
+    <button disabled={busy} className={button}>Publicar beneficio</button><p role="status" className="text-sm text-[#00E676]">{message}</p>
   </form></div>;
 }

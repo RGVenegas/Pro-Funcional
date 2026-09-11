@@ -29,11 +29,11 @@ export function ReminderPanel({ memberId }: { memberId: string }) {
   };
   return <div className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-3">
     <h3 className="font-bold">Tus recordatorios</h3>
-    {next.map(b => <div key={b.id} className="text-sm flex flex-wrap items-center justify-between gap-2"><p>{b.title} · {formatDate(b.date)} · {b.time}</p><button disabled={Boolean(b.confirmedAt)} className="text-[#00B4D8] disabled:text-white/50" onClick={async () => { try { await confirmBooking(b.id, member.name); setFeedback('Confirmación guardada.'); } catch (e) { setFeedback((e as Error).message); } }}>{b.confirmedAt ? 'Confirmaste que asistirás' : 'Confirmo que asistiré'}</button></div>)}
+    {next.map(b => <div key={b.id} className="text-sm flex flex-wrap items-center justify-between gap-2"><p>{b.title} · {formatDate(b.date)} · {b.time}</p><button disabled={Boolean(b.confirmedAt)} className="text-[#00E676] disabled:text-white/50 font-semibold" onClick={async () => { try { await confirmBooking(b.id, member.name); setFeedback('Confirmación guardada.'); } catch (e) { setFeedback((e as Error).message); } }}>{b.confirmedAt ? 'Confirmaste que asistirás' : 'Confirmo que asistiré'}</button></div>)}
     {invoices.map(i => <p key={i.id} className="text-sm text-amber-200">{i.description} · {i.amount.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })} · Vencimiento: {formatDate(i.dueDate)}</p>)}
     {!next.length && !invoices.length && <p className="text-sm text-white/60">No tienes recordatorios pendientes.</p>}
-    <button onClick={notifications} className="text-sm text-[#00B4D8]">Activar avisos en este dispositivo</button>
+    <button onClick={notifications} className="text-sm text-[#00E676] font-semibold">Activar avisos en este dispositivo</button>
     <button onClick={async () => { try { const registration = await navigator.serviceWorker?.getRegistration(); const sub = await registration?.pushManager.getSubscription(); if (sub) { if (apiEnabled) await request('/workspace/push', 'DELETE', { endpoint: sub.endpoint }); await sub.unsubscribe(); } setFeedback('Avisos desactivados en este dispositivo.'); } catch (e) { setFeedback((e as Error).message); } }} className="ml-3 text-sm text-white/60">Desactivar avisos</button>
-    {feedback && <p role="status" className="text-sm text-[#00B4D8]">{feedback}</p>}
+    {feedback && <p role="status" className="text-sm text-[#00E676]">{feedback}</p>}
   </div>;
 }

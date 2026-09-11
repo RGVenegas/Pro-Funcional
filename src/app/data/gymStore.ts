@@ -125,8 +125,8 @@ const initialMembers: GymMember[] = [
   },
   {
     id: '2',
-    name: 'Camila Gonzalez',
-    email: 'camila.gonzalez@gmail.com',
+    name: 'Camila Fernández',
+    email: 'camila.fernandez@gmail.com',
     password: 'password123',
     phone: '+56 9 7654 3210',
     plan: 'Standard',
@@ -172,6 +172,23 @@ const initialMembers: GymMember[] = [
     ],
   },
   {
+    id: '2-alias',
+    name: 'Camila Fernández',
+    email: 'camila.gonzalez@gmail.com',
+    password: 'password123',
+    phone: '+56 9 7654 3210',
+    plan: 'Standard',
+    packName: 'Pack Recuperación Activa (8 ses)',
+    totalSessions: 8,
+    remainingSessions: 5,
+    status: 'active',
+    balance: -50,
+    joinDate: '2024-02-20',
+    nextBilling: '2025-02-20',
+    physicalRestrictions: 'Evitar rotaciones forzadas y flexión >90° por post-op LCA',
+    clinicalHistory: [],
+  },
+  {
     id: '3',
     name: 'Matias Rojas',
     email: 'matias.rojas@gmail.com',
@@ -180,11 +197,11 @@ const initialMembers: GymMember[] = [
     plan: 'Basic',
     packName: 'Pack Básico Kinesiológico (4 ses)',
     totalSessions: 4,
-    remainingSessions: 0,
-    status: 'expired',
+    remainingSessions: 2,
+    status: 'active',
     balance: 0,
-    joinDate: '2023-11-10',
-    nextBilling: '2025-01-10',
+    joinDate: '2024-01-15',
+    nextBilling: '2025-02-15',
     physicalRestrictions: 'Hombro doloroso: evitar press militar sobre cabeza',
     clinicalHistory: [
       {
@@ -247,25 +264,48 @@ export function getMembers(): GymMember[] {
   if (apiEnabled) return serverSnapshot.members;
   if (typeof window === 'undefined') return initialMembers;
   const saved = window.localStorage.getItem(storageKey);
+  let list: GymMember[] = [];
   if (!saved) {
-    window.localStorage.setItem(storageKey, JSON.stringify(initialMembers));
-    return initialMembers;
+    list = initialMembers;
+  } else {
+    try {
+      list = JSON.parse(saved) as GymMember[];
+    } catch {
+      list = initialMembers;
+    }
   }
-  try {
-    const list = JSON.parse(saved) as GymMember[];
-    return list.map((m) => ({
-      ...m,
-      password: m.password || 'password123',
-      totalSessions: m.totalSessions ?? 8,
-      remainingSessions: m.remainingSessions ?? 5,
-      packName: m.packName || 'Pack Recuperación Activa (8 ses)',
-      clinicalHistory: [...(m.clinicalHistory || [])].sort((a, b) => b.date.localeCompare(a.date)),
-      physicalRestrictions: m.physicalRestrictions ?? 'Sin restricciones reportadas',
-    }));
-  } catch {
-    window.localStorage.setItem(storageKey, JSON.stringify(initialMembers));
-    return initialMembers;
+
+  // Ensure camila.fernandez@gmail.com is present in list
+  if (!list.some((m) => m.email.toLowerCase() === 'camila.fernandez@gmail.com')) {
+    const camilaFernandez: GymMember = {
+      id: '2',
+      name: 'Camila Fernández',
+      email: 'camila.fernandez@gmail.com',
+      password: 'password123',
+      phone: '+56 9 7654 3210',
+      plan: 'Standard',
+      packName: 'Pack Recuperación Activa (8 ses)',
+      totalSessions: 8,
+      remainingSessions: 5,
+      status: 'active',
+      balance: -50,
+      joinDate: '2024-02-20',
+      nextBilling: '2025-02-20',
+      physicalRestrictions: 'Evitar rotaciones forzadas y flexión >90° por post-op LCA',
+      clinicalHistory: [],
+    };
+    list = [camilaFernandez, ...list];
   }
+
+  return list.map((m) => ({
+    ...m,
+    password: m.password || 'password123',
+    totalSessions: m.totalSessions ?? 8,
+    remainingSessions: m.remainingSessions ?? 5,
+    packName: m.packName || 'Pack Recuperación Activa (8 ses)',
+    clinicalHistory: [...(m.clinicalHistory || [])].sort((a, b) => b.date.localeCompare(a.date)),
+    physicalRestrictions: m.physicalRestrictions ?? 'Sin restricciones reportadas',
+  }));
 }
 
 export function getMemberById(id: string): GymMember | undefined {
@@ -316,6 +356,42 @@ export function addClinicalEvaluation(memberId: string, evaluation: Omit<Clinica
   });
 
   return newEval;
+}
+
+export function updateClinicalEvaluation(
+  memberId: string,
+  evalId: string,
+  updates: Partial<Omit<ClinicalEvaluation, 'id'>>
+): ClinicalEvaluation | null {
+  const member = getMemberById(memberId);
+  if (!member || !member.clinicalHistory) return null;
+
+  const index = member.clinicalHistory.findIndex((e) => e.id === evalId);
+  if (index === -1) return null;
+
+  const currentEval = member.clinicalHistory[index];
+  const updatedEval: ClinicalEvaluation = {
+    ...currentEval,
+    ...updates,
+    soap: updates.soap
+      ? { ...currentEval.soap, ...updates.soap }
+      : currentEval.soap,
+  };
+
+  const updatedHistory = [...member.clinicalHistory];
+  updatedHistory[index] = updatedEval;
+
+  updateMember(memberId, {
+    clinicalHistory: updatedHistory,
+    physicalRestrictions: updates.physicalRestrictions !== undefined ? updates.physicalRestrictions : member.physicalRestrictions,
+  });
+
+  addActivity({
+    name: member.name,
+    action: `actualizó evaluación kinésica de ${updatedEval.jointOrArea} (EVA: ${updatedEval.evaPain}/10 - ROM: ${updatedEval.romDegrees}°)`,
+  });
+
+  return updatedEval;
 }
 
 export function consumeSession(memberId: string): boolean {
@@ -452,12 +528,13 @@ export interface UserBookingRecord {
   isRefunded?: boolean;
 }
 
-const scheduleStorageKey = 'profuncional-schedule-v3';
+const scheduleStorageKey = 'profuncional-schedule-v5';
 const scheduleChangeEvent = 'profuncional-schedule-changed';
 const bookingsStorageKey = 'profuncional-user-bookings-v1';
 const bookingsChangeEvent = 'profuncional-user-bookings-changed';
 
 const initialScheduleBlocks: CentralScheduleBlock[] = [
+  // LUNES (2 bloques)
   {
     id: 'block-1',
     dayOfWeek: 'Monday',
@@ -473,8 +550,8 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
   {
     id: 'block-2',
     dayOfWeek: 'Monday',
-    startTime: '09:00',
-    endTime: '10:00',
+    startTime: '18:00',
+    endTime: '19:00',
     title: 'Entrenamiento Funcional HIIT',
     instructor: 'Prof. Mike R.',
     type: 'functional',
@@ -483,50 +560,23 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
     students: [
       { id: '2', name: 'Camila Gonzalez', restrictions: 'Evitar rotaciones forzadas y flexión >90° por post-op LCA', status: 'pending' },
       { id: '4', name: 'Antonia Silva', restrictions: undefined, status: 'attended' },
-      { id: '6', name: 'Valentina Soto', restrictions: undefined, status: 'pending' },
     ],
   },
+  // MARTES (2 bloques)
   {
     id: 'block-3',
-    dayOfWeek: 'Monday',
-    startTime: '11:00',
-    endTime: '12:00',
-    title: 'Box Clínico Kinesiología 2',
-    instructor: 'Klga. Valeria Reyes',
-    type: 'kine',
-    capacity: 1,
-    isActive: true,
-    students: [{ id: '3', name: 'Matias Rojas', restrictions: 'Hombro doloroso: evitar press militar sobre cabeza', status: 'pending' }],
-  },
-  {
-    id: 'block-4',
-    dayOfWeek: 'Monday',
-    startTime: '18:00',
-    endTime: '19:00',
-    title: 'Readaptación Funcional Grupal',
-    instructor: 'Prof. Carlos Vega',
-    type: 'functional',
-    capacity: 10,
-    isActive: true,
-    students: [
-      { id: '5', name: 'Diego Morales', restrictions: 'Lumbalgia: evitar cargas axiales', status: 'pending' },
-      { id: '7', name: 'Nicolas Fuentes', restrictions: 'Epicondilalgia: uso de banda compresiva', status: 'attended' },
-    ],
-  },
-  {
-    id: 'block-5',
     dayOfWeek: 'Tuesday',
     startTime: '09:00',
     endTime: '10:00',
     title: 'Kinesiología & Terapia Manual',
-    instructor: 'Klgo. Andrés Morales',
+    instructor: 'Klga. Valeria Reyes',
     type: 'kine',
     capacity: 1,
     isActive: true,
     students: [{ id: '8', name: 'Fernanda Contreras', restrictions: undefined, status: 'pending' }],
   },
   {
-    id: 'block-6',
+    id: 'block-4',
     dayOfWeek: 'Tuesday',
     startTime: '18:00',
     endTime: '19:00',
@@ -537,11 +587,11 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
     isActive: true,
     students: [
       { id: '1', name: 'Juan Perez', restrictions: 'Evitar impacto alto en salto', status: 'pending' },
-      { id: '9', name: 'Sebastian Araya', restrictions: 'Cervicalgia postural', status: 'pending' },
     ],
   },
+  // MIÉRCOLES (2 bloques)
   {
-    id: 'block-7',
+    id: 'block-5',
     dayOfWeek: 'Wednesday',
     startTime: '09:00',
     endTime: '10:00',
@@ -553,7 +603,20 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
     students: [{ id: '2', name: 'Camila Gonzalez', restrictions: 'Evitar flexión >90° por LCA', status: 'pending' }],
   },
   {
-    id: 'block-8',
+    id: 'block-6',
+    dayOfWeek: 'Wednesday',
+    startTime: '18:00',
+    endTime: '19:00',
+    title: 'Funcional & Control Motor',
+    instructor: 'Prof. Carlos Vega',
+    type: 'functional',
+    capacity: 10,
+    isActive: true,
+    students: [],
+  },
+  // JUEVES (2 bloques)
+  {
+    id: 'block-7',
     dayOfWeek: 'Thursday',
     startTime: '10:00',
     endTime: '11:00',
@@ -565,7 +628,32 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
     students: [],
   },
   {
+    id: 'block-8',
+    dayOfWeek: 'Thursday',
+    startTime: '18:00',
+    endTime: '19:00',
+    title: 'Entrenamiento Funcional Carga Progresiva',
+    instructor: 'Prof. Mike R.',
+    type: 'functional',
+    capacity: 12,
+    isActive: true,
+    students: [],
+  },
+  // VIERNES (2 bloques)
+  {
     id: 'block-9',
+    dayOfWeek: 'Friday',
+    startTime: '08:00',
+    endTime: '09:00',
+    title: 'Kinesiología Preventiva',
+    instructor: 'Klga. Valeria Reyes',
+    type: 'kine',
+    capacity: 1,
+    isActive: true,
+    students: [],
+  },
+  {
+    id: 'block-10',
     dayOfWeek: 'Friday',
     startTime: '17:00',
     endTime: '18:00',
@@ -576,8 +664,9 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
     isActive: true,
     students: [],
   },
+  // SÁBADO (2 bloques: 08:00 - 14:00)
   {
-    id: 'block-10',
+    id: 'block-11',
     dayOfWeek: 'Saturday',
     startTime: '09:00',
     endTime: '10:00',
@@ -589,7 +678,7 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
     students: [],
   },
   {
-    id: 'block-11',
+    id: 'block-12',
     dayOfWeek: 'Saturday',
     startTime: '10:30',
     endTime: '11:30',
@@ -600,15 +689,28 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
     isActive: true,
     students: [],
   },
+  // DOMINGO (2 bloques: 09:00 - 13:00)
   {
-    id: 'block-12',
+    id: 'block-13',
     dayOfWeek: 'Sunday',
-    startTime: '10:00',
-    endTime: '11:00',
-    title: 'Box Kinésico Fin de Semana',
-    instructor: 'Klga. Valeria Reyes',
+    startTime: '09:30',
+    endTime: '10:30',
+    title: 'Box Kinésico Matinal Dominical',
+    instructor: 'Klgo. Andrés Morales',
     type: 'kine',
     capacity: 1,
+    isActive: true,
+    students: [],
+  },
+  {
+    id: 'block-14',
+    dayOfWeek: 'Sunday',
+    startTime: '10:30',
+    endTime: '11:30',
+    title: 'Movilidad & Recuperación Guiada',
+    instructor: 'Prof. Mike R.',
+    type: 'functional',
+    capacity: 10,
     isActive: true,
     students: [],
   },

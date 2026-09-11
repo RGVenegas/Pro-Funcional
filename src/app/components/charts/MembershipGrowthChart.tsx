@@ -26,9 +26,10 @@ export function MembershipGrowthChart() {
           style={{ fontSize: '12px' }}
         />
         <Tooltip
+          cursor={{ stroke: 'rgba(0, 230, 118, 0.3)', strokeWidth: 1 }}
           contentStyle={{
             backgroundColor: 'rgba(11, 23, 38, 0.95)',
-            border: '1px solid rgba(0, 180, 216, 0.3)',
+            border: '1px solid rgba(0, 230, 118, 0.4)',
             borderRadius: '8px',
             color: '#fff',
           }}
@@ -36,9 +37,9 @@ export function MembershipGrowthChart() {
         <Line 
           type="monotone" 
           dataKey="members" 
-          stroke="#00B4D8" 
+          stroke="#00E676" 
           strokeWidth={3}
-          dot={{ fill: '#00B4D8', r: 4 }}
+          dot={{ fill: '#00E676', r: 4 }}
           activeDot={{ r: 6 }}
         />
       </LineChart>

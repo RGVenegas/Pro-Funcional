@@ -1,41 +1,80 @@
 # ProFuncional — Sistema de Gestión Kinésico-Deportiva
 
-Ecosistema digital compuesto por un **Programa de Escritorio/PC** para la administración, kinesiólogos y entrenadores del centro, y una **App Web Móvil** para pacientes y alumnos. Conecta la kinesiología y la rehabilitación con el entrenamiento funcional, gestionando citas, fichas clínicas evolutivas (SOAP, EVA, ROM) y control de saldo de paquetes.
+Ecosistema digital compuesto por un **Programa de Escritorio/PC** para la administración, kinesiólogos y entrenadores del centro, y una **App Móvil Nativa (iOS & Android)** para pacientes y alumnos. Conecta la kinesiología y la rehabilitación con el entrenamiento funcional, gestionando citas, fichas clínicas evolutivas (SOAP, EVA, ROM), reglas de 24h de límite de tiempo, avisos de asistencia in-app y control de saldo de paquetes.
 
 ---
 
-## 🛠️ Tecnologías y Stack
+## 🛠️ Arquitectura y Tecnologías
 
-- **Frontend**: React 18 + TypeScript
+### 💻 Frontend (Programa PC & App Móvil)
+- **Framework & Lenguaje**: React 18 + TypeScript
 - **Bundler & Tooling**: Vite 6
-- **Estilos**: Tailwind CSS v4 + Radix UI + Lucide Icons
-- **Gráficos & Métricas**: Recharts (Curvas de dolor EVA y ROM) + Motion (Framer Motion)
-- **Utilidades**: QRCode.react, Sonner, Canvas Confetti, Date-fns, React Hook Form
-- **Almacenamiento**: Persistencia reactiva en `localStorage` con emisión de eventos en tiempo real
+- **Estilos & Branding**: Tailwind CSS v4 (Identidad Verde Limón `#00E676` / `#00B4D8`) + Radix UI + Lucide Icons
+- **Gráficos & Métricas**: Recharts (Curvas de dolor EVA 1-10 y movilidad ROM °) + Motion (Framer Motion)
+- **Componentes**: React Hook Form, Date-fns, Sonner, QRCode.react, Canvas Confetti
+
+### ⚙️ Backend (API REST & Servidor)
+- **Framework**: NestJS (Node.js / TypeScript)
+- **Base de Datos & Auth**: PostgreSQL administrado vía **Supabase** (Supabase Auth / Prisma ORM)
+- **Pasarela de Pagos**: Webpay Plus (Transbank) / MercadoPago API
+- **Arquitectura de Negocio**: Transacciones serializadas anti-concurrencia para reserva y descuento atómico de sesiones.
 
 ---
 
-## 🚀 Ejecución del Proyecto
+## 🚀 Guía de Instalación y Ejecución
 
-### 1. Instalar dependencias
+### 1. Iniciar la Aplicación Frontend (Programa PC & App Móvil UI)
 
 ```bash
+# 1. Instalar dependencias del frontend
 npm install
-```
 
-### 2. Iniciar servidor de desarrollo
-
-```bash
+# 2. Iniciar servidor de desarrollo (Vite)
 npm run dev
-```
 
-> **Nota:** Abre la URL indicada por Vite (normalmente [http://localhost:5173](http://localhost:5173)).
-
-### 3. Compilar para producción
-
-```bash
+# 3. Compilar bundle de producción
 npm run build
 ```
+
+---
+
+### 3. Cómo Probar la App Móvil (Vista Celular)
+
+La aplicación cuenta con una interfaz **Mobile-First 100% Responsiva**. Puedes probar la experiencia móvil de 2 formas:
+
+#### Opción A: Modo Celular en el Navegador PC (Emulación Rápida)
+1. Abre **http://localhost:5173** en Chrome o Edge.
+2. Presiona **`F12`** (o Clic Derecho $\rightarrow$ *Inspeccionar*).
+3. Presiona **`Ctrl + Shift + M`** (o haz clic en el icono de celular/tablet en las Herramientas de Desarrollador).
+4. Selecciona un dispositivo como **iPhone 14/15 Pro** o **Samsung Galaxy**.
+
+#### Opción B: Probar desde un Celular Real (Vía Red Wi-Fi Local)
+1. En la terminal del proyecto, inicia Vite permitiendo conexiones en la red local:
+   ```bash
+   npm run dev -- --host
+   ```
+2. Vite te entregará la IP local de tu computador (ejemplo: `Network: http://192.168.1.15:5173`).
+3. En tu teléfono celular (conectado al mismo Wi-Fi que tu PC), abre Chrome o Safari e ingresa a esa dirección URL.
+
+---
+
+### 2. Iniciar el Servidor Backend API (NestJS)
+
+```bash
+# 1. Ingresar a la carpeta backend
+cd backend
+
+# 2. Instalar dependencias del backend
+npm install
+
+# 3. Iniciar el servidor NestJS en desarrollo
+npx nest start --watch
+
+# 4. Compilar producción NestJS
+npx nest build
+```
+
+> **Nota:** El servidor API NestJS correrá localmente en **http://localhost:3000** con documentación Swagger interactiva disponible en **http://localhost:3000/api**.
 
 ---
 
@@ -52,21 +91,22 @@ El sistema cuenta con validación estricta de credenciales y perfiles preconfigu
 
 ---
 
-## 🗺️ Módulos e Historias de Usuario Implementadas
+## 🗺️ Módulos e Historias de Usuario Implementadas (Sprint 1 & Sprint 2)
 
 ### 💻 Programa PC (Staff / Kinesiólogos / Entrenadores / Admin)
 
-- **HU-01 · Configuración de Disponibilidad Horaria**: Modal interactivo para que el Staff configure nuevos bloques horarios (Día, Hora inicio/fin, Título, Profesional, Tipo de atención y Capacidad máxima de cupos) publicados en tiempo real.
-- **HU-02 · Parrilla de Citas y Asistencia**: Visualización diaria de boxes kinésicos y clases funcionales con botones para marcar **"Asistió"** o **"No-Show"** (Inasistencia).
-- **HU-05 · Ficha Clínica Evolutiva (SOAP, EVA, ROM)**: Formulario interactivo con escala de dolor **EVA (1 a 10)**, movilidad articular **ROM en grados (°)**, notas **SOAP** (Subjetivo, Objetivo, Análisis, Plan) y prescripción de restricciones para el gimnasio.
-- **HU-07 · Alertas de Restricciones para Entrenadores**: Identificación visible de restricciones médicas de alumnos inscritos en cada clase (ej. *"⚠️ Evitar flexión >90° por LCA"*).
-- **HU-08 · Dashboard de Métricas y Control de Ausentismo**: Control de ocupación, balance de sesiones kinésicas y cálculo de **Tasa de No-Show**.
+- **HU-01 · Configuración de Disponibilidad Horaria**: Modal interactivo para definir bloques horarios (Día, Hora inicio/fin, Título, Profesional, Tipo de atención y Capacidad máxima de cupos) publicados en tiempo real.
+- **HU-02 · Parrilla de Citas y Marcado de Asistencia**: Visualización diaria de boxes kinésicos y clases funcionales con marcado de **"Asistió"** o **"No-Show"** (Inasistencia).
+- **HU-05 · Ficha Clínica Evolutiva (SOAP, EVA, ROM)**: Formulario de atención kinésica con notas **SOAP** (Subjetivo, Objetivo, Análisis, Plan Terapéutico), slider cuantitativo de dolor en escala **EVA (1 a 10)** y movilidad articular **ROM en grados (°)**.
+- **HU-07 · Alertas de Restricciones para Entrenadores**: Pautas médicas de kinesiólogos desplegadas automáticamente en el panel de los entrenadores (ej. *"⚠️ Evitar flexión >90° por LCA"*).
+- **HU-10 · Dashboard de Métricas y Control de Ausentismo**: Control de ocupación, balance de sesiones kinésicas y cálculo de **Tasa de No-Show**.
 
-### 📱 App Web Móvil (Pacientes / Alumnos)
+### 📱 App Móvil Nativa (Pacientes / Alumnos)
 
-- **HU-03 · Agendamiento Autónomo en Línea**: Reserva ágil de sesiones en box kinésico o clases funcionales con pre-poblado automático de horario y descuento inmediato de 1 sesión de saldo.
-- **HU-04 · Cancelación (Regla 24h), Reagendamiento y Saldo**:
-  - Modal interactivo de **Reagendamiento** a otro bloque disponible sin costo ni alteración de saldo.
-  - Cancelación con **regla de 24 horas**: Reembolso automático de +1 sesión al paquete si falta $\ge 24\text{h}$, o liberación del cupo sin reembolso si la cancelación es tardía ($< 24\text{h}$).
-- **HU-06 · Gráficos de Evolución Física**: Curva interactiva de descenso del dolor en escala **EVA (1-10)** y aumento del rango de movimiento **ROM (grados °)** mediante gráficos Recharts.
+- **HU-03 / HU-03.b · Agendamiento Autónomo & Branding Verde Limón**: Interfaz intuitiva con identidad visual Verde Limón para consultar catálogo de horas, reservar en 1 clic y verificar el saldo de paquetes.
+- **HU-04 / HU-04.b · Cancelación (Regla 24h), Reagendamiento y Saldo**:
+  - Reagendamiento a otro bloque disponible sin costo ni alteración de saldo.
+  - Cancelación con **regla de 24 horas**: Reembolso automático de +1 sesión al paquete si la solicitud es con $\ge 24\text{h}$, o liberación del cupo sin reembolso si la cancelación es tardía ($< 24\text{h}$).
+- **HU-06 · Gráficos de Evolución Física**: Curvas interactivas de descenso del dolor en escala **EVA (1-10)** e incremento del rango de movimiento **ROM (grados °)** mediante gráficos Recharts.
+- **HU-11 · Recordatorio In-App de Confirmación de Asistencia**: Banner interactivo en la vista principal (*"¿Vas a asistir a la sesión de hoy?"*) que permite al paciente confirmar de forma activa su asistencia antes de la clase.
 - **Credencial Digital QR**: Pase digital dinámico con código QR (`PROFUNCIONAL:ID`) para acceso a torniquetes o recepción.

@@ -31,6 +31,11 @@ export async function addClinicalEvaluation(id: string, evaluation: Omit<local.C
   const { soap, date, professional, ...values } = evaluation;
   return mutation(`/clinical/evaluations/${id}`, 'POST', { ...values, ...soap });
 }
+export async function updateClinicalEvaluation(id: string, evalId: string, evaluation: Partial<Omit<local.ClinicalEvaluation, 'id'>>) {
+  if (!apiEnabled) return local.updateClinicalEvaluation(id, evalId, evaluation);
+  const { soap, date, professional, ...values } = evaluation;
+  return mutation(`/clinical/evaluations/${id}/${evalId}`, 'PATCH', { ...values, ...(soap || {}) });
+}
 export async function updateMember(id: string, updates: Partial<local.GymMember>) {
   if (!apiEnabled) return local.updateMember(id, updates);
   if (updates.remainingSessions !== undefined) await mutation(`/packages/renew/${id}`, 'POST');

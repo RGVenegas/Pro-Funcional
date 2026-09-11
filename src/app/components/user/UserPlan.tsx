@@ -82,44 +82,44 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
       </div>
 
       {feedback && (
-        <div className="rounded-xl border border-[#00B4D8]/40 bg-[#00B4D8]/15 p-4 text-[#00B4D8] flex items-center gap-2">
+        <div className="rounded-xl border border-[#00E676]/40 bg-[#00E676]/15 p-4 text-[#00E676] flex items-center gap-2">
           <Check className="h-5 w-5" />
           <span className="text-sm font-medium">{feedback}</span>
         </div>
       )}
 
       {/* Current Pack Card */}
-      <div className="bg-gradient-to-br from-[#00B4D8]/20 to-[#00B4D8]/5 rounded-2xl p-6 backdrop-blur-sm border border-[#00B4D8]/20 space-y-6">
+      <div className="bg-gradient-to-br from-[#00E676]/20 to-[#00E676]/5 rounded-2xl p-6 backdrop-blur-sm border border-[#00E676]/20 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h2 className="text-2xl sm:text-3xl font-bold text-[#F7F7F7]">{currentConfig.name}</h2>
-              <span className="px-3 py-1 bg-[#00B4D8]/30 text-[#00B4D8] rounded-full text-xs font-bold">
+              <span className="px-3 py-1 bg-[#00E676]/30 text-[#00E676] rounded-full text-xs font-bold">
                 Activo
               </span>
             </div>
-            <p className="text-2xl font-black text-[#00B4D8]">{formatCLP(currentConfig.price)} <span className="text-xs font-normal text-white/60">/ paquete completo</span></p>
+            <p className="text-2xl font-black text-[#00E676]">{formatCLP(currentConfig.price)} <span className="text-xs font-normal text-white/60">/ paquete completo</span></p>
           </div>
-          <Sparkles className="w-8 h-8 text-[#00B4D8] hidden sm:block" />
+          <Sparkles className="w-8 h-8 text-[#00E676] hidden sm:block" />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3.5 border border-white/10">
-            <Stethoscope className="w-5 h-5 text-[#00B4D8]" />
+            <Stethoscope className="w-5 h-5 text-[#00E676]" />
             <div>
               <p className="text-xs text-white/50">Total de Sesiones</p>
               <p className="font-bold text-white text-sm">{currentConfig.sessions} sesiones</p>
             </div>
           </div>
           <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3.5 border border-white/10">
-            <Calendar className="w-5 h-5 text-[#00B4D8]" />
+            <Calendar className="w-5 h-5 text-[#00E676]" />
             <div>
               <p className="text-xs text-white/50">Fecha de ingreso</p>
               <p className="font-bold text-white text-sm">{formatDate(member?.joinDate)}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3.5 border border-white/10">
-            <Clock className="w-5 h-5 text-[#00B4D8]" />
+            <Clock className="w-5 h-5 text-[#00E676]" />
             <div>
               <p className="text-xs text-white/50">Vigencia del Paquete</p>
               <p className="font-bold text-white text-sm">{formatDate(member?.nextBilling)}</p>
@@ -132,8 +132,8 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {currentConfig.features.map((benefit, index) => (
               <div key={index} className="flex items-center gap-2.5">
-                <div className="w-5 h-5 bg-[#00B4D8]/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Check className="w-3 h-3 text-[#00B4D8]" />
+                <div className="w-5 h-5 bg-[#00E676]/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Check className="w-3 h-3 text-[#00E676]" />
                 </div>
                 <span className="text-xs sm:text-sm text-white/90">{benefit}</span>
               </div>
@@ -144,7 +144,7 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
         <div className="pt-2">
           <button
             onClick={handleRenew}
-            className="w-full sm:w-auto px-6 py-3 bg-[#00B4D8] text-[#021826] rounded-xl hover:bg-[#00B4D8]/90 transition-transform hover:scale-105 font-bold text-sm shadow-lg shadow-[#00B4D8]/20"
+            className="w-full sm:w-auto px-6 py-3 bg-[#00E676] text-[#021826] rounded-xl hover:bg-[#00E676]/90 transition-transform hover:scale-105 font-bold text-sm shadow-lg shadow-[#00E676]/20"
           >
             Solicitar renovación
           </button>
@@ -164,13 +164,13 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
                 key={planKey}
                 className={`rounded-2xl p-6 backdrop-blur-sm border transition-all flex flex-col justify-between ${
                   isCurrent
-                    ? 'bg-[#00B4D8]/10 border-[#00B4D8] shadow-lg shadow-[#00B4D8]/10'
+                    ? 'bg-[#00E676]/10 border-[#00E676] shadow-lg shadow-[#00E676]/10'
                     : 'bg-white/5 border-white/10 hover:border-white/20'
                 }`}
               >
                 <div>
                   {isCurrent && (
-                    <span className="inline-block px-3 py-1 bg-[#00B4D8] text-[#021826] rounded-full text-xs font-bold mb-3">
+                    <span className="inline-block px-3 py-1 bg-[#00E676] text-[#021826] rounded-full text-xs font-bold mb-3">
                       Paquete actual
                     </span>
                   )}
@@ -178,7 +178,7 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
                   <p className="text-white/60 text-xs mb-4 min-h-[32px]">{pack.description}</p>
                   
                   <div className="mb-5 pb-5 border-b border-white/10">
-                    <p className="text-3xl font-black text-[#00B4D8]">
+                    <p className="text-3xl font-black text-[#00E676]">
                       {formatCLP(pack.price)}
                     </p>
                     <span className="text-xs text-white/50">{pack.sessions} sesiones incluidas</span>
@@ -187,7 +187,7 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
                   <ul className="space-y-2.5 mb-6">
                     {pack.features.map((feature, index) => (
                       <li key={index} className="flex items-start gap-2 text-xs text-white/80">
-                        <Check className="w-3.5 h-3.5 text-[#00B4D8] mt-0.5 flex-shrink-0" />
+                        <Check className="w-3.5 h-3.5 text-[#00E676] mt-0.5 flex-shrink-0" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -200,7 +200,7 @@ export function UserPlan({ plan: selectedPlan = 'Premium', memberName, onUpdateP
                   className={`w-full py-3 rounded-xl font-bold text-xs transition-colors ${
                     isCurrent
                       ? 'bg-white/5 text-white/40 cursor-not-allowed'
-                      : 'bg-[#00B4D8] text-[#021826] hover:bg-[#00B4D8]/90'
+                      : 'bg-[#00E676] text-[#021826] hover:bg-[#00E676]/90'
                   }`}
                 >
                   {isCurrent ? 'Paquete en uso' : 'Adquirir este paquete'}

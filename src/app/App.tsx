@@ -99,7 +99,7 @@ export default function App() {
               />
             )}
             {userView === 'calendar' && currentUser && <UserCalendar memberName={currentUser.name} selectedClasses={currentUser.selectedClasses} />}
-            {userView === 'training' && <TrainingTracking />}
+            {userView === 'training' && currentUser && <TrainingTracking email={currentUser.email} user={currentUser} />}
             {userView === 'card' && currentUser && <DigitalCard user={currentUser} />}
             {userView === 'profile' && currentUser && <UserProfile user={currentUser} />}
           </main>

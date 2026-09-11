@@ -86,7 +86,7 @@ export function ScheduleManagement() {
     const percentage = (booked / capacity) * 100;
     if (percentage >= 90) return 'bg-red-500/20 text-red-300 border-red-500/30';
     if (percentage >= 60) return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-    return 'bg-[#00B4D8]/15 text-[#00B4D8] border-[#00B4D8]/30';
+    return 'bg-[#00E676]/15 text-[#00E676] border-[#00E676]/30';
   };
 
   const handleCreateBlock = async (e: FormEvent<HTMLFormElement>) => {
@@ -99,6 +99,24 @@ export function ScheduleManagement() {
     const endTime = String(formData.get('endTime'));
     const type = String(formData.get('type')) as 'kine' | 'functional';
     const capacity = Number(formData.get('capacity'));
+
+    // Check operating hours: Mon-Fri 07:00-21:00, Sat 08:00-14:00, Sun 09:00-13:00
+    const startHour = parseInt(startTime.split(':')[0], 10);
+    const endHour = parseInt(endTime.split(':')[0], 10);
+    let outOfBounds = false;
+    if (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(dayOfWeek)) {
+      if (startHour < 7 || endHour > 21 || (endHour === 21 && parseInt(endTime.split(':')[1], 10) > 0)) outOfBounds = true;
+    } else if (dayOfWeek === 'Saturday') {
+      if (startHour < 8 || endHour > 14 || (endHour === 14 && parseInt(endTime.split(':')[1], 10) > 0)) outOfBounds = true;
+    } else if (dayOfWeek === 'Sunday') {
+      if (startHour < 9 || endHour > 13 || (endHour === 13 && parseInt(endTime.split(':')[1], 10) > 0)) outOfBounds = true;
+    }
+
+    if (outOfBounds) {
+      if (!window.confirm('⚠️ El horario ingresado (' + startTime + ' - ' + endTime + ') está fuera del rango oficial de atención del gimnasio. ¿Deseas configurarlo de todas formas?')) {
+        return;
+      }
+    }
 
     try { await addCentralScheduleBlock({
       dayOfWeek,
@@ -144,7 +162,7 @@ export function ScheduleManagement() {
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#00B4D8] text-[#021826] text-xs font-bold hover:bg-[#00B4D8]/90 transition-transform hover:scale-105 flex items-center gap-2 shadow-lg shadow-[#00B4D8]/20"
+            className="px-4 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 transition-transform hover:scale-105 flex items-center gap-2 shadow-lg shadow-[#00E676]/20"
           >
             <PlusCircle className="w-4 h-4" />
             + Configurar Nuevo Bloque
@@ -154,7 +172,7 @@ export function ScheduleManagement() {
             <button
               onClick={() => setMode('classes')}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-                mode === 'classes' ? 'bg-[#00B4D8] text-[#021826]' : 'text-white/70 hover:text-white'
+                mode === 'classes' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
               }`}
             >
               <Dumbbell className="w-4 h-4" />
@@ -163,7 +181,7 @@ export function ScheduleManagement() {
             <button
               onClick={() => setMode('kine-boxes')}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-                mode === 'kine-boxes' ? 'bg-[#00B4D8] text-[#021826]' : 'text-white/70 hover:text-white'
+                mode === 'kine-boxes' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
               }`}
             >
               <Stethoscope className="w-4 h-4" />
@@ -173,8 +191,22 @@ export function ScheduleManagement() {
         </div>
       </div>
 
+      {/* Operating Hours Banner (Rangos de atención del gimnasio) */}
+      <div className="rounded-xl border border-[#00E676]/30 bg-[#00E676]/10 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#00E676]">
+        <div className="flex items-center gap-2.5">
+          <Clock className="w-5 h-5 flex-shrink-0 text-[#00E676]" />
+          <div>
+            <span className="font-bold block text-[#00E676] uppercase tracking-wider">Rangos de Atención Oficial del Gimnasio & Centro Kinésico</span>
+            <span className="text-white/80">Lun - Vie: 07:00 a 21:00 hrs · Sábados: 08:00 a 14:00 hrs · Domingos: 09:00 a 13:00 hrs</span>
+          </div>
+        </div>
+        <span className="px-2.5 py-1 bg-[#00E676]/20 border border-[#00E676]/40 rounded-full font-bold text-[11px] whitespace-nowrap text-[#00E676]">
+          Horarios Vigentes
+        </span>
+      </div>
+
       {toastMessage && (
-        <div className="rounded-xl border border-[#00B4D8]/40 bg-[#00B4D8]/15 p-4 text-[#00B4D8] flex items-center gap-2">
+        <div className="rounded-xl border border-[#00E676]/40 bg-[#00E676]/15 p-4 text-[#00E676] flex items-center gap-2">
           <CheckCircle className="h-5 w-5 flex-shrink-0" />
           <span className="text-sm font-medium">{toastMessage}</span>
         </div>
@@ -246,7 +278,7 @@ export function ScheduleManagement() {
                         {/* Top bar: Hora + Eliminar */}
                         <div className="flex items-center justify-between gap-1 mb-2">
                           <span className="text-[11px] font-mono font-bold bg-black/60 px-2 py-0.5 rounded-md text-white flex items-center gap-1 whitespace-nowrap border border-white/10">
-                            <Clock className="w-3 h-3 text-[#00B4D8] flex-shrink-0" />
+                            <Clock className="w-3 h-3 text-[#00E676] flex-shrink-0" />
                             {slot.startTime} - {slot.endTime}
                           </span>
                           <button
@@ -311,7 +343,7 @@ export function ScheduleManagement() {
                         {/* Footer */}
                         <div onClick={() => setSelectedBlock(slot)} className="mt-auto flex items-center justify-between text-[11px] text-white/60 pt-2 border-t border-white/10 cursor-pointer">
                           <span className="flex items-center gap-1 whitespace-nowrap"><Users className="w-3 h-3 flex-shrink-0" /> {bookedCount}/{slot.capacity}</span>
-                          <span className="text-[#00B4D8] font-semibold text-[10px] sm:text-[11px] whitespace-nowrap">Ver detalle →</span>
+                          <span className="text-[#00E676] font-semibold text-[10px] sm:text-[11px] whitespace-nowrap">Ver detalle →</span>
                         </div>
                       </div>
                     );
@@ -333,7 +365,7 @@ export function ScheduleManagement() {
           <form onSubmit={handleCreateBlock} className="bg-[#0b1726] border border-white/15 rounded-2xl p-6 w-full max-w-lg space-y-4 shadow-2xl text-white">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div>
-                <span className="text-xs font-bold uppercase text-[#00B4D8]">HU-01 · Programa PC</span>
+                <span className="text-xs font-bold uppercase text-[#00E676]">HU-01 · Programa PC</span>
                 <h3 className="text-xl font-bold mt-0.5">Configurar Nuevo Bloque Horario</h3>
               </div>
               <button type="button" onClick={() => setIsAddModalOpen(false)} className="text-white/50 hover:text-white text-sm bg-white/5 p-2 rounded-lg">✕</button>
@@ -342,7 +374,7 @@ export function ScheduleManagement() {
             <div className="grid grid-cols-2 gap-4">
               <label className="text-xs text-white/70 col-span-2">
                 Día de la Semana
-                <select name="dayOfWeek" required className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]">
+                <select name="dayOfWeek" required className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]">
                   <option value="Monday">Lunes</option>
                   <option value="Tuesday">Martes</option>
                   <option value="Wednesday">Miércoles</option>
@@ -355,27 +387,27 @@ export function ScheduleManagement() {
 
               <label className="text-xs text-white/70 col-span-2">
                 Nombre de la Clase / Box Clínico
-                <input required name="title" placeholder="Ej. Box Clínico Kinesiología 3 / HIIT Funcional" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]" />
+                <input required name="title" placeholder="Ej. Box Clínico Kinesiología 3 / HIIT Funcional" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]" />
               </label>
 
               <label className="text-xs text-white/70 col-span-2">
                 Profesional / Kinesiólogo / Entrenador
-                <input required name="instructor" defaultValue="Klgo. Andrés Morales" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]" />
+                <input required name="instructor" defaultValue="Klgo. Andrés Morales" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]" />
               </label>
 
               <label className="text-xs text-white/70">
                 Hora Inicio
-                <input required name="startTime" type="time" defaultValue="08:00" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]" />
+                <input required name="startTime" type="time" defaultValue="08:00" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]" />
               </label>
 
               <label className="text-xs text-white/70">
                 Hora Fin
-                <input required name="endTime" type="time" defaultValue="09:00" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]" />
+                <input required name="endTime" type="time" defaultValue="09:00" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]" />
               </label>
 
               <label className="text-xs text-white/70">
                 Tipo de Atención
-                <select name="type" required className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]">
+                <select name="type" required className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]">
                   <option value="kine">Box Kinésico (Individual)</option>
                   <option value="functional">Clase Funcional (Grupal)</option>
                 </select>
@@ -383,13 +415,13 @@ export function ScheduleManagement() {
 
               <label className="text-xs text-white/70">
                 Capacidad Máxima (Cupos)
-                <input required name="capacity" type="number" min="1" max="30" defaultValue="1" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00B4D8]" />
+                <input required name="capacity" type="number" min="1" max="30" defaultValue="1" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]" />
               </label>
             </div>
 
             <div className="pt-3 flex justify-end gap-3 border-t border-white/10">
               <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2.5 rounded-xl bg-white/10 text-white text-xs font-bold hover:bg-white/20">Cancelar</button>
-              <button type="submit" className="px-5 py-2.5 rounded-xl bg-[#00B4D8] text-[#021826] text-xs font-bold hover:bg-[#00B4D8]/90">Guardar Bloque Horario</button>
+              <button type="submit" className="px-5 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90">Guardar Bloque Horario</button>
             </div>
           </form>
         </div>
@@ -401,7 +433,7 @@ export function ScheduleManagement() {
           <div className="bg-[#0b1726] border border-white/15 rounded-2xl p-6 w-full max-w-xl space-y-5 shadow-2xl text-white">
             <div className="flex items-start justify-between border-b border-white/10 pb-4">
               <div>
-                <span className="text-xs font-bold uppercase text-[#00B4D8] tracking-wider">{selectedBlock.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
+                <span className="text-xs font-bold uppercase text-[#00E676] tracking-wider">{selectedBlock.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
                 <h3 className="text-xl font-bold mt-1">{selectedBlock.title}</h3>
                 <p className="text-xs text-white/60">{selectedBlock.instructor} · {selectedBlock.startTime} - {selectedBlock.endTime} hrs ({dayLabels[selectedBlock.dayOfWeek]})</p>
               </div>
@@ -415,7 +447,7 @@ export function ScheduleManagement() {
 
             <div>
               <h4 className="font-bold text-sm mb-3 text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#00B4D8]" />
+                <Users className="w-4 h-4 text-[#00E676]" />
                 Lista de Alumnos Inscritos y Control de Asistencia
               </h4>
 
@@ -487,7 +519,7 @@ export function ScheduleManagement() {
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setSelectedBlock(null)}
-                className="px-5 py-2.5 rounded-xl bg-[#00B4D8] text-[#021826] text-xs font-bold hover:bg-[#00B4D8]/90"
+                className="px-5 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90"
               >
                 Listo
               </button>

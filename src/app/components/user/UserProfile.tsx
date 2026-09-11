@@ -29,8 +29,8 @@ export function UserProfile({ user: account }: UserProfileProps) {
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm sm:p-8">
         <div className="flex flex-col items-start gap-5 border-b border-white/10 pb-6 sm:flex-row sm:items-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-[#00B4D8] bg-[#00B4D8]/20">
-            <UserRound className="h-9 w-9 text-[#00B4D8]" />
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-[#00E676] bg-[#00E676]/20">
+            <UserRound className="h-9 w-9 text-[#00E676]" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-[#F7F7F7]">{user.name}</h2>
@@ -38,20 +38,20 @@ export function UserProfile({ user: account }: UserProfileProps) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-xl border border-[#00B4D8]/30 bg-gradient-to-br from-[#00B4D8]/20 to-transparent p-5">
+        <div className="mt-6 rounded-xl border border-[#00E676]/30 bg-gradient-to-br from-[#00E676]/20 to-transparent p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-white/60">Nivel de membresia</p>
-              <p className="mt-1 text-3xl font-bold text-[#00B4D8]">{user.plan}</p>
+              <p className="mt-1 text-3xl font-bold text-[#00E676]">{user.plan}</p>
             </div>
-            <ShieldCheck className="h-8 w-8 text-[#00B4D8]" />
+            <ShieldCheck className="h-8 w-8 text-[#00E676]" />
           </div>
-          <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#00B4D8]/20 px-3 py-1 text-sm font-medium text-[#00B4D8]"><Check className="h-4 w-4" />{user.status}</span>
+          <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#00E676]/20 px-3 py-1 text-sm font-medium text-[#00E676]"><Check className="h-4 w-4" />{user.status}</span>
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="flex items-center gap-3 rounded-lg bg-white/5 p-4"><Calendar className="h-5 w-5 text-[#00B4D8]" /><div><p className="text-xs text-white/50">Miembro desde</p><p className="font-medium">{formatDate(user.memberSince)}</p></div></div>
-          <div className="flex items-center gap-3 rounded-lg bg-white/5 p-4"><Calendar className="h-5 w-5 text-[#00B4D8]" /><div><p className="text-xs text-white/50">Vigente hasta</p><p className="font-medium">{formatDate(user.expirationDate)}</p></div></div>
+          <div className="flex items-center gap-3 rounded-lg bg-white/5 p-4"><Calendar className="h-5 w-5 text-[#00E676]" /><div><p className="text-xs text-white/50">Miembro desde</p><p className="font-medium">{formatDate(user.memberSince)}</p></div></div>
+          <div className="flex items-center gap-3 rounded-lg bg-white/5 p-4"><Calendar className="h-5 w-5 text-[#00E676]" /><div><p className="text-xs text-white/50">Vigente hasta</p><p className="font-medium">{formatDate(user.expirationDate)}</p></div></div>
         </div>
       </div>
       {member && <CarePanel memberId={member.id} section="profile" author={member.name} />}
