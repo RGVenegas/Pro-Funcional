@@ -13,6 +13,7 @@ import { DigitalCard } from './components/user/DigitalCard';
 import { UserProfile } from './components/user/UserProfile';
 import { AdminSidebar } from './components/navigation/AdminSidebar';
 import { UserBottomNav } from './components/navigation/UserBottomNav';
+import { OfflineStatusBanner } from './components/OfflineStatusBanner';
 
 type Role = 'admin' | 'user';
 type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule';
@@ -44,11 +45,18 @@ export default function App() {
   };
 
   if (!role) {
-    return <Login onAuthenticated={(nextRole, user) => { setRole(nextRole); setCurrentUser(user); }} />;
+    return (
+      <div className="min-h-screen bg-[#010A01] text-white flex flex-col">
+        <OfflineStatusBanner />
+        <Login onAuthenticated={(nextRole, user) => { setRole(nextRole); setCurrentUser(user); }} />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#010A01] text-white">
+    <div className="min-h-screen bg-[#010A01] text-white flex flex-col">
+      <OfflineStatusBanner />
+
       <button
         onClick={handleLogout}
         aria-label="Cerrar sesion"
