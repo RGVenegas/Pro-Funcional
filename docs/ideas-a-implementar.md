@@ -60,5 +60,12 @@ npx cap open ios       # Compilación en Xcode (macOS)
 
 ---
 
-## 📋 Estado del Documento
-* **Estado:** 💡 *Pendiente de discusión y aprobación final en reunión de equipo.*
+## 📋 Estado del Documento y de las Implementaciones
+
+* **Idea 1 — Arquitectura Offline-First y Sincronización Automática:**
+  - **Estado:** ✅ **IMPLEMENTADO EN EL CÓDIGO** — *Pendiente de revisión y pruebas finales por parte del equipo.*
+  - **Archivos creados/modificados:** `src/app/data/offlineQueue.ts`, `src/app/data/api.ts`, `src/app/data/operations.ts`, `src/app/components/OfflineStatusBanner.tsx`, `src/app/App.tsx`.
+
+* **Idea 2 — Aplicación Móvil Nativa (iOS & Android) con Capacitor:**
+  - **Estado:** 💡 *Propuesta técnica documentada — Pendiente de compilación para tiendas.*
+
