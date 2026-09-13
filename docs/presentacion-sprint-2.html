@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presentación Sprint 2 — ProFuncional</title>
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-dark: #0a0f1d;
+      --bg-card: rgba(18, 26, 44, 0.75);
+      --bg-card-hover: rgba(28, 39, 64, 0.85);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --border-accent: rgba(0, 230, 118, 0.3);
+      --accent-green: #00E676;
+      --accent-green-glow: rgba(0, 230, 118, 0.25);
+      --accent-cyan: #00B4D8;
+      --accent-cyan-glow: rgba(0, 180, 216, 0.25);
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --done-bg: rgba(0, 230, 118, 0.15);
+      --done-text: #00E676;
+      --done-border: rgba(0, 230, 118, 0.4);
+      --pending-bg: rgba(148, 163, 184, 0.15);
+      --pending-text: #94A3B8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(0, 230, 118, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 180, 216, 0.08) 0%, transparent 40%);
+    }
+
+    /* Top Navigation Bar */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: rgba(10, 15, 29, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: -0.5px;
+    }
+
+    .brand span {
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-indicator {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .nav-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: var(--accent-green);
+      color: #0a0f1d;
+      border-color: var(--accent-green);
+      box-shadow: 0 0 15px var(--accent-green-glow);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Main Container & Presentation Slides */
+    main {
+      margin-top: 64px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .slide-container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 5rem 2rem;
+      flex: 1;
+      display: none;
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    .slide-container.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Typography & Headers */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 1rem;
+    }
+
+    .badge-green {
+      background: var(--done-bg);
+      color: var(--accent-green);
+      border: 1px solid var(--done-border);
+    }
+
+    .badge-cyan {
+      background: rgba(0, 180, 216, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 180, 216, 0.4);
+    }
+
+    h1 {
+      font-family: var(--font-heading);
+      font-size: 2.75rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #FFFFFF 30%, #94A3B8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h2 {
+      font-family: var(--font-heading);
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #FFFFFF;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      max-width: 850px;
+    }
+
+    /* Cards Layout */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.75rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-green);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Notion Board Table Styling */
+    .notion-wrapper {
+      background: #191919;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .notion-header {
+      padding: 1rem 1.5rem;
+      background: #202020;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .notion-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #E6E6E6;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 0.4rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.25rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: none;
+      color: #888;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn.active {
+      background: #333;
+      color: #FFF;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .filter-btn:hover:not(.active) {
+      color: #CCC;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      max-height: 520px;
+    }
+
+    table.notion-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    table.notion-table th {
+      background: #222222;
+      color: #9B9B9B;
+      font-weight: 500;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    table.notion-table td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #D3D3D3;
+      vertical-align: middle;
+    }
+
+    table.notion-table tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    table.notion-table tr.sprint-highlight td {
+      background: rgba(0, 230, 118, 0.04);
+    }
+
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-done {
+      background: rgba(46, 117, 89, 0.4);
+      color: #57D9A3;
+      border: 1px solid rgba(87, 217, 163, 0.3);
+    }
+
+    .status-not-started {
+      background: rgba(90, 90, 90, 0.4);
+      color: #A5A5A5;
+      border: 1px solid rgba(165, 165, 165, 0.3);
+    }
+
+    .person-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: rgba(255, 255, 255, 0.07);
+      padding: 0.15rem 0.45rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      margin: 0.1rem;
+    }
+
+    .sprint-pill {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 22px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .sprint-1 { background: #8F4841; color: #FFC0B8; }
+    .sprint-2 { background: #694C8A; color: #E3CEF6; }
+    .sprint-3 { background: #3C5A85; color: #C2DCFF; }
+    .sprint-4 { background: #406852; color: #C3F0D4; }
+    .sprint-5 { background: #856E3C; color: #FFE9B8; }
+
+    /* Progress & Metrics */
+    .metric-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .metric-value {
+      font-family: var(--font-heading);
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--accent-green);
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Checklist */
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+    }
+
+    .check-icon {
+      color: var(--accent-green);
+      margin-top: 0.15rem;
+    }
+
+    /* Bottom Progress Bar & Navigation */
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: #070a14;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      padding: 0 2rem;
+      z-index: 100;
+    }
+
+    .progress-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-right: 1.5rem;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+      width: 14.28%;
+      transition: width 0.3s ease;
+    }
+
+    .keyboard-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-color);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: #FFF;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header>
+    <div class="brand">
+      <i data-lucide="activity" style="color: var(--accent-green);"></i>
+      <span>ProFuncional</span>
+    </div>
+    <div class="slide-indicator" id="slideIndicator">Diapositiva 1 de 7</div>
+    <div class="nav-controls">
+      <button class="nav-btn" id="prevBtn" onclick="prevSlide()" disabled title="Anterior (Flecha Izquierda)">
+        <i data-lucide="chevron-left"></i>
+      </button>
+      <button class="nav-btn" id="nextBtn" onclick="nextSlide()" title="Siguiente (Flecha Derecha)">
+        <i data-lucide="chevron-right"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Slides Area -->
+  <main>
+
+    <!-- SLIDE 1: Portada & Definición de Producto -->
+    <div class="slide-container active" id="slide-1">
+      <div class="badge badge-green">
+        <i data-lucide="zap" size="14"></i> Presentación de Avance — Sprint 2
+      </div>
+      <h1>Gestión Kinésico-Deportiva e Integración del Ecosistema</h1>
+      <p class="subtitle">
+        ProFuncional conecta la kinesiología, la rehabilitación física y el entrenamiento adaptado mediante un <strong>Programa de PC para Staff</strong> y una <strong>Experiencia Móvil Adaptativa para Pacientes</strong>.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-icon">
+            <i data-lucide="monitor"></i>
+          </div>
+          <h3 style="color:#FFF;">💻 Programa PC (Staff Kinésico & Staff)</h3>
+          <p>
+            Permite la creación de disponibilidad horaria, vista en grilla diaria de boxes/clases, marcado de asistencia, formulación de fichas clínicas <strong>SOAP</strong> (Subjetivo, Objetivo, Análisis, Plan), curvas de dolor <strong>EVA</strong>, movilidad <strong>ROM</strong> y alertas automáticas de restricciones médicas para entrenadores.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="color: var(--accent-cyan);">
+            <i data-lucide="smartphone"></i>
+          </div>
+          <h3 style="color:#FFF;">📱 Vista Móvil (Pacientes & Alumnos)</h3>
+          <p>
+            Adaptación responsiva para previsualizar la experiencia de los usuarios: agendamiento autónomo en 1 clic, reagendamiento y políticas de cancelación con regla de 24h, banner interactivo de confirmación in-app de asistencia y credencial digital QR.
+          </p>
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h4 style="color: #FFF; font-family: var(--font-heading); margin-bottom: 0.35rem;">👥 Equipo de Desarrollo</h4>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Venegas Tapia Rodrigo G. • Soto Durán Kevin M. • Loncon Rebolledo Pablo A. • Sebastián López
+          </p>
+        </div>
+        <div class="badge badge-cyan" style="margin-bottom:0;">
+          <i data-lucide="calendar" size="14"></i> Septiembre 2026
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Tablero Notion Completo -->
+    <div class="slide-container" id="slide-2">
+      <div class="badge badge-cyan">
+        <i data-lucide="layout-grid" size="14"></i> Backlog & Planificación
+      </div>
+      <h2>Tablero Oficial de Historias de Usuario (Notion)</h2>
+      <p class="subtitle">
+        Visualización y seguimiento completo del tablero de Historias de Usuario (HU), indicando estados, asignación de responsables, fechas de entrega y horas invertidas por Sprint.
+      </p>
+
+      <div class="notion-wrapper">
+        <div class="notion-header">
+          <div class="notion-title">
+            <i data-lucide="table" size="18"></i> Tablero HU (Notion DB)
+          </div>
+          <div class="filter-tabs">
+            <button class="filter-btn active" onclick="filterNotion('all')">Todas (13 HU)</button>
+            <button class="filter-btn" onclick="filterNotion('done')">Realizadas (Done)</button>
+            <button class="filter-btn" onclick="filterNotion('sprint2')">Solo Sprint 2</button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="notion-table" id="notionTable">
+            <thead>
+              <tr>
+                <th>Historia de Usuario</th>
+                <th>Estado</th>
+                <th>Persona (Responsables)</th>
+                <th>Fecha</th>
+                <th>Horas invertidas</th>
+                <th>Sprint</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Row 1 -->
+              <tr class="row-done row-s1">
+                <td><strong>HU-01</strong> · Agendamiento ultrarrápido...</td>
+                <td><span class="status-tag status-done">● Done</span></td>
+                <td>
+                  <span class="person-chip">VENEGAS TAPIA R.</span>
+                  <span class="person-chip">SOTO DURÁN K.</span>
+                  <span class="person-chip">LONCON REBOLLEDO P.</span>
+                </td>
+                <td>26 de agosto de 2026</td>
+                <td><strong>10 h</strong></td>
+                <td><span class="sprint-pill sprint-1">1</span></td>
+              </tr>
+              <!-- Row 2 -->
+              <tr class="row-pending row-s3">
+                <td><strong>HU-02</strong> · Gestión diaria de citas y ma...</td>
+                <td><span class="status-tag status-not-started">● Not started</span></td>
+                <td>—</td>
+                <td>—</td>
+                <td>0 h</td>
+                <td><span class="sprint-pill sprint-3">3</span></td>
+              </tr>
+              <!-- Row 3 -->
+              <tr class="row-done row-s1">
+                <td><strong>HU-03</strong> · Notificaciones y confirmac...</td>
+                <td><span class="status-tag status-done">● Done</span></td>
+                <td><span class="person-chip">SOTO DURÁN KEVIN M</span></td>
+                <td>26 de agosto de 2026</td>
+                <td><strong>15 h</strong></td>
+                <td><span class="sprint-pill sprint-1">1</span></td>
+              </tr>
+              <!-- Row 4 -->
+              <tr class="row-done row-s2 sprint-highlight">
+                <td><strong>HU-03.b</strong> · Interfaz y Tema Visual Móvil (Verde Limón)...</td>
+                <td><span class="status-tag status-done">● Done</span></td>
+                <td>
+                  <span class="person-chip">SOTO DURÁN KEVIN M</span>
+                  <span class="person-chip">LONCON REBOLLEDO P.</span>
+                </td>
+                <td>10 de septiembre de 2026</td>
+                <td><strong>14 h</strong></td>
+                <td><span class="sprint-pill sprint-2">2</span></td>
+              </tr>
+              <!-- Row 5 -->
+              <tr class="row-done row-s1">
+                <td><strong>HU-04</strong> · Cancelación y reagendami...</td>
+                <td><span class="status-tag status-done">● Done</span></td>
+                <td>
+                  <span class="person-chip">Sebastián López</span>
+                  <span class="person-chip">SOTO DURÁN KEVIN M</span>
+                </td>
+                <td>26 de agosto de 2026</td>
+                <td><strong>7 h</strong></td>
+                <td><span class="sprint-pill sprint-1">1</span></td>
+              </tr>
+              <!-- Row 6 -->
+              <tr class="row-done row-s2 sprint-highlight">
+                <td><strong>HU-04.b</strong> · Reglas de Límite de Tiempo (24h)...</td>
+                <td><span class="status-tag status-done">● Done</span></td>
+                <td>
+                  <span class="person-chip">SOTO DURÁN KEVIN M</span>
+                  <span class="person-chip">Sebastián López</span>
+                </td>
+                <td>10 de septiembre de 2026</td>
+                <td><strong>11 h</strong></td>
+                <td><span class="sprint-pill sprint-2">2</span></td>
+              </tr>
+              <!-- Row 7 -->
+              <tr class="row-done row-s2 sprint-highlight">
+                <td><strong>HU-05</strong> · Ficha Clínica Integral (SOAP, EVA, ROM)...</td>
+                <td><span class="status-tag status-done">● Done</span></td>
+                <td><span class="person-chip">VENEGAS TAPIA RODRIGO G</span></td>
+                <td>10 de septiembre de 2026</td>
+                <td><strong>9 h</strong></td>
+                <td><span class="sprint-pill sprint-2">2</span></td>
+              </tr>
+              <!-- Row 8 -->
+              <tr class="row-pending row-s3">
+                <td><strong>HU-06</strong> · Gráficos interactivos de ev...</td>
+                <td><span class="status-tag status-not-started">● Not started</span></td>
+                <td>—</td>
+                <td>—</td>
+                <td>0 h</td>
+                <td><span class="sprint-pill sprint-3">3</span></td>
+              </tr>
+              <!-- Row 9 -->
+              <tr class="row-done row-s2 sprint-highlight">
+                <td><strong>HU-07</strong> · Alertas de Restricciones Fís...</td>
+                <td><span class="status-tag status-done">● Done</span></td>
+                <td><span class="person-chip">VENEGAS TAPIA RODRIGO G</span></td>
+                <td>10 de septiembre de 2026</td>
+                <td><strong>10 h</strong></td>
+                <td><span class="sprint-pill sprint-2">2</span></td>
+              </tr>
+              <!-- Row 10 -->
+              <tr class="row-pending row-s4">
+                <td><strong>HU-08</strong> · Compra de packs vía Webp...</td>
+                <td><span class="status-tag status-not-started">● Not started</span></td>
+                <td>—</td>
+                <td>—</td>
+                <td>0 h</td>
+                <td><span class="sprint-pill sprint-4">4</span></td>
+              </tr>
+              <!-- Row 11 -->
+              <tr class="row-pending row-s4">
+                <td><strong>HU-09</strong> · Confirmación transacciona...</td>
+                <td><span class="status-tag status-not-started">● Not started</span></td>
+                <td>—</td>
+                <td>—</td>
+                <td>0 h</td>
+                <td><span class="sprint-pill sprint-4">4</span></td>
+              </tr>
+              <!-- Row 12 -->
+              <tr class="row-pending row-s5">
+                <td><strong>HU-10</strong> · Dashboard de ocupación, a...</td>
+                <td><span class="status-tag status-not-started">● Not started</span></td>
+                <td>—</td>
+                <td>—</td>
+                <td>0 h</td>
+                <td><span class="sprint-pill sprint-5">5</span></td>
+              </tr>
+              <!-- Row 13 -->
+              <tr class="row-done row-s2 sprint-highlight">
+                <td><strong>HU-11</strong> · Recordatorio In-App de Asi...</td>
+                <td><span class="status-tag status-done">● Done</span></td>
+                <td>
+                  <span class="person-chip">LONCON REBOLLEDO P.</span>
+                  <span class="person-chip">SOTO DURÁN KEVIN M</span>
+                </td>
+                <td>10 de septiembre de 2026</td>
+                <td><strong>2 h</strong></td>
+                <td><span class="sprint-pill sprint-2">2</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Objetivo del Sprint 2 -->
+    <div class="slide-container" id="slide-3">
+      <div class="badge badge-green">
+        <i data-lucide="target" size="14"></i> 1. Objetivo del Sprint 2
+      </div>
+      <h2>Propósito y Meta Principal del Sprint</h2>
+      
+      <div style="background: linear-gradient(135deg, rgba(0, 230, 118, 0.1), rgba(0, 180, 216, 0.1)); border: 1px solid var(--border-accent); border-radius: 18px; padding: 2.5rem; margin-bottom: 2rem; position: relative;">
+        <i data-lucide="quote" size="48" style="position: absolute; right: 2rem; bottom: 1.5rem; opacity: 0.15; color: var(--accent-green);"></i>
+        <p style="font-family: var(--font-heading); font-size: 1.45rem; font-weight: 700; color: #FFF; line-height: 1.45;">
+          "Consolidar la interfaz y tema visual móvil (Verde Limón), conectar la lógica de fichas clínicas integrales (SOAP/EVA/ROM), implementar alertas de restricciones médicas y establecer las reglas estrictas de límite de tiempo (24h) junto al banner in-app de confirmación de asistencia."
+        </p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-icon"><i data-lucide="smartphone"></i></div>
+          <h3 style="color:#FFF;">Interfaz y Tema Visual Móvil</h3>
+          <p>Adaptación responsiva con identidad Verde Limón (#00E676) para previsualizar la experiencia de los pacientes en dispositivos móviles.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="color: var(--accent-cyan);"><i data-lucide="shield-alert"></i></div>
+          <h3 style="color:#FFF;">Integridad Clínica</h3>
+          <p>Fichas integrales con notas SOAP y alertas automáticas de restricciones para los profesores/entrenadores.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon"><i data-lucide="clock"></i></div>
+          <h3 style="color:#FFF;">Regla de Cancelación 24h</h3>
+          <p>Control automatizado de reembolso atómico de sesiones solicitadas con 24h o más de anticipación (≥ 24h), o retención de cupo en solicitudes con menos de 24h (&lt; 24h).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Alcance & Historias del Sprint 2 -->
+    <div class="slide-container" id="slide-4">
+      <div class="badge badge-cyan">
+        <i data-lucide="layers" size="14"></i> 2. Alcance del Sprint 2
+      </div>
+      <h2>Historias de Usuario Seleccionadas y Entregadas</h2>
+      <p class="subtitle">
+        Detalle del conjunto de historias de usuario completadas durante el Sprint 2 según el backlog del proyecto:
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <span class="status-tag status-done">HU-03.b ● Done</span>
+            <span style="font-weight: 700; color: var(--accent-green);">14 Horas</span>
+          </div>
+          <h3 style="color:#FFF;">Interfaz y Tema Visual Móvil (Verde Limón)</h3>
+          <p>Diseño y pulido de la adaptación responsiva para previsualizar la vista móvil con identidad verde limón, tarjetas de reserva y navegación rápida.</p>
+          <small style="color: var(--text-muted); display: block; margin-top: 0.75rem;">👤 Soto Durán K., Loncon Rebolledo P.</small>
+        </div>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <span class="status-tag status-done">HU-04.b ● Done</span>
+            <span style="font-weight: 700; color: var(--accent-green);">11 Horas</span>
+          </div>
+          <h3 style="color:#FFF;">Reglas de Límite de Tiempo (24h)</h3>
+          <p>Validación de anticipación mínima para cancelación y reagendamiento con devolución automática o pérdida de sesión.</p>
+          <small style="color: var(--text-muted); display: block; margin-top: 0.75rem;">👤 Soto Durán K., Sebastián López</small>
+        </div>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <span class="status-tag status-done">HU-05 ● Done</span>
+            <span style="font-weight: 700; color: var(--accent-green);">9 Horas</span>
+          </div>
+          <h3 style="color:#FFF;">Ficha Clínica Integral (SOAP, EVA, ROM)</h3>
+          <p>Formulario de registro médico con evolución cuantitativa de dolor en escala EVA (1-10) y rango articulación ROM (°).</p>
+          <small style="color: var(--text-muted); display: block; margin-top: 0.75rem;">👤 Venegas Tapia Rodrigo G.</small>
+        </div>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <span class="status-tag status-done">HU-07 ● Done</span>
+            <span style="font-weight: 700; color: var(--accent-green);">10 Horas</span>
+          </div>
+          <h3 style="color:#FFF;">Alertas de Restricciones Médicas</h3>
+          <p>Sistema de avisos en tiempo real para el equipo de profesores al seleccionar alumnos con lesiones o restricciones físicas.</p>
+          <small style="color: var(--text-muted); display: block; margin-top: 0.75rem;">👤 Venegas Tapia Rodrigo G.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Responsables y Estimaciones -->
+    <div class="slide-container" id="slide-5">
+      <div class="badge badge-green">
+        <i data-lucide="users" size="14"></i> 3. Responsables & 4. Estimación
+      </div>
+      <h2>Distribución de Trabajo y Horas Invertidas</h2>
+      <p class="subtitle">
+        Desglose exacto de responsabilidades y horas invertidas por integrante en el Sprint 2 (Total: <strong>46 horas</strong>).
+      </p>
+
+      <div class="grid-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+        <div class="metric-box">
+          <div class="metric-value">46 h</div>
+          <div class="metric-label">Horas Invertidas Sprint 2</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value">5 HU</div>
+          <div class="metric-label">Historias Completadas</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value">100%</div>
+          <div class="metric-label">Cumplimiento de Metas</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value">4</div>
+          <div class="metric-label">Desarrolladores Activos</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="color:#FFF; margin-bottom: 1rem;">Carga de Trabajo por Desarrollador (Sprint 2)</h3>
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.4rem;">
+              <span><strong>Soto Durán Kevin M.</strong> (HU-03.b, HU-04.b, HU-11)</span>
+              <span style="color: var(--accent-green); font-weight:700;">19.5 hrs</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+              <div style="background: var(--accent-green); width: 42.4%; height: 100%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.4rem;">
+              <span><strong>Venegas Tapia Rodrigo G.</strong> (HU-05, HU-07)</span>
+              <span style="color: var(--accent-cyan); font-weight:700;">19.0 hrs</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+              <div style="background: var(--accent-cyan); width: 41.3%; height: 100%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.4rem;">
+              <span><strong>Loncon Rebolledo Pablo A.</strong> (HU-03.b, HU-11)</span>
+              <span style="color: #A5A5A5; font-weight:700;">8.0 hrs</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+              <div style="background: #A5A5A5; width: 17.3%; height: 100%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.4rem;">
+              <span><strong>Sebastián López</strong> (HU-04.b)</span>
+              <span style="color: #E3CEF6; font-weight:700;">5.5 hrs</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+              <div style="background: #E3CEF6; width: 12.0%; height: 100%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Riesgos & Bloqueos -->
+    <div class="slide-container" id="slide-6">
+      <div class="badge badge-cyan">
+        <i data-lucide="alert-triangle" size="14"></i> 5. Riesgos & Bloqueos
+      </div>
+      <h2>Gestión de Riesgos y Mitigaciones</h2>
+      <p class="subtitle">
+        Desafíos técnicos detectados durante el desarrollo del Sprint 2 y sus respectivas soluciones aplicadas:
+      </p>
+
+      <div class="grid-2">
+        <div class="card" style="border-left: 4px solid #FF5252;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: #FF5252; font-weight:700; margin-bottom: 0.75rem;">
+            <i data-lucide="wifi-off"></i> Riesgo 1: Pérdida de Conexión en Terreno
+          </div>
+          <h3 style="color:#FFF;">Desconexión a Supabase / Backend</h3>
+          <p style="margin-bottom: 1rem;">
+            Si el kinesiólogo o paciente está sin internet en la sesión, la app podría fallar al guardar fichas o reservas.
+          </p>
+          <div style="background: rgba(0,230,118,0.1); border: 1px solid var(--done-border); padding: 0.85rem; border-radius: 8px; font-size: 0.85rem; color: var(--accent-green);">
+            <strong>✅ Mitigación Aplicada:</strong> Arquitectura <em>Offline-First</em> con cola de sincronización batch (<code>offlineQueue.ts</code>) e instrucciones <em>UPSERT</em> con UUIDs universales.
+          </div>
+        </div>
+
+        <div class="card" style="border-left: 4px solid #FFAB40;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: #FFAB40; font-weight:700; margin-bottom: 0.75rem;">
+            <i data-lucide="clock"></i> Riesgo 2: Discrepancia de Horarios (Regla 24h)
+          </div>
+          <h3 style="color:#FFF;">Cancelaciones en Bordes de Hora</h3>
+          <p style="margin-bottom: 1rem;">
+            Inconsistencias entre el reloj local del cliente y la zona horaria del servidor al evaluar el límite de 24 horas.
+          </p>
+          <div style="background: rgba(0,180,216,0.1); border: 1px solid rgba(0,180,216,0.4); padding: 0.85rem; border-radius: 8px; font-size: 0.85rem; color: var(--accent-cyan);">
+            <strong>✅ Mitigación Aplicada:</strong> Evaluación atómica del timestamp UTC directamente en las transacciones del backend NestJS.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Criterios de Aceptación -->
+    <div class="slide-container" id="slide-7">
+      <div class="badge badge-green">
+        <i data-lucide="check-circle-2" size="14"></i> 6. Criterios de Aceptación
+      </div>
+      <h2>Verificación de Cumplimiento y Cierre de Sprint</h2>
+      <p class="subtitle">
+        Checklist de criterios probados y validados para dar el Sprint 2 por entregado:
+      </p>
+
+      <div class="checklist">
+        <div class="check-item">
+          <i data-lucide="check-circle" class="check-icon"></i>
+          <div>
+            <strong style="color:#FFF;">Interfaz y Tema Visual Móvil Verde Limón (#00E676)</strong>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.2rem;">
+              La vista adaptativa en dispositivos móviles cuenta con diseño responsivo, tipografías legibles e iconos Lucide.
+            </p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <i data-lucide="check-circle" class="check-icon"></i>
+          <div>
+            <strong style="color:#FFF;">Validación Estricta de Cancelación / Reagendamiento (24h)</strong>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.2rem;">
+              Las solicitudes enviadas con 24 horas o más de anticipación reintegran automáticamente el cupo al paquete; las solicitudes con menos de 24 horas liberan el horario sin reembolso.
+            </p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <i data-lucide="check-circle" class="check-icon"></i>
+          <div>
+            <strong style="color:#FFF;">Ficha Clínica SOAP y Métricas EVA/ROM</strong>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.2rem;">
+              El formulario guarda notas clínicas estructuradas y grafica las tendencias cuantitativas de dolor y movilidad.
+            </p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <i data-lucide="check-circle" class="check-icon"></i>
+          <div>
+            <strong style="color:#FFF;">Alertas de Restricciones Kinésicas en Panel Staff</strong>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.2rem;">
+              Los profesores visualizan banners de advertencia antes de asignar ejercicios a alumnos con contraindicaciones.
+            </p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <i data-lucide="check-circle" class="check-icon"></i>
+          <div>
+            <strong style="color:#FFF;">Compilación y Construcción Sin Errores</strong>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.2rem;">
+              Ejecución de <code>npm run build</code> en frontend y <code>npx nest build</code> en backend con 100% de éxito.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Bar -->
+  <footer>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="keyboard-hint">
+      Navegar con <kbd>←</kbd> <kbd>→</kbd> o botones superiores
+    </div>
+  </footer>
+
+  <script>
+    // Lucide Icons initialization
+    lucide.createIcons();
+
+    let currentSlide = 1;
+    const totalSlides = 7;
+
+    function updateSlide() {
+      // Hide all slides
+      for (let i = 1; i <= totalSlides; i++) {
+        const slide = document.getElementById(`slide-${i}`);
+        if (slide) slide.classList.remove('active');
+      }
+
+      // Show current slide
+      const activeSlide = document.getElementById(`slide-${currentSlide}`);
+      if (activeSlide) activeSlide.classList.add('active');
+
+      // Update Header & Footer
+      document.getElementById('slideIndicator').innerText = `Diapositiva ${currentSlide} de ${totalSlides}`;
+      document.getElementById('progressFill').style.width = `${(currentSlide / totalSlides) * 100}%`;
+
+      // Update Buttons
+      document.getElementById('prevBtn').disabled = (currentSlide === 1);
+      document.getElementById('nextBtn').disabled = (currentSlide === totalSlides);
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function filterNotion(filter) {
+      const rows = document.querySelectorAll('#notionTable tbody tr');
+      const btns = document.querySelectorAll('.filter-btn');
+
+      btns.forEach(btn => btn.classList.remove('active'));
+
+      if (filter === 'all') {
+        btns[0].classList.add('active');
+        rows.forEach(r => r.style.display = '');
+      } else if (filter === 'done') {
+        btns[1].classList.add('active');
+        rows.forEach(r => {
+          if (r.classList.contains('row-done')) {
+            r.style.display = '';
+          } else {
+            r.style.display = 'none';
+          }
+        });
+      } else if (filter === 'sprint2') {
+        btns[2].classList.add('active');
+        rows.forEach(r => {
+          if (r.classList.contains('row-s2')) {
+            r.style.display = '';
+          } else {
+            r.style.display = 'none';
+          }
+        });
+      }
+    }
+
+    // Keyboard Arrow Keys Listener
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>
