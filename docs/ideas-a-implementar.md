@@ -4,13 +4,15 @@ Este documento consolida las propuestas arquitectónicas y de desarrollo pendien
 
 ---
 
-## 📄 Idea 1: Arquitectura Offline-First y Sincronización Automática (Sync Queue)
+## 📄 Idea 1: Arquitectura Offline-First y Sincronización Automática (Sync Queue) (hecho pero falta revisar)
 
 ### 🎯 Objetivo
+
 Garantizar que la aplicación continúe funcionando con total normalidad y sin pérdida de datos ante cortes de internet o fallas temporales de conexión con la base de datos en la nube (**Supabase**).
 
 ### 🛠️ Detalles del Funcionamiento
-1. **Modo Normal (Online):** 
+
+1. **Modo Normal (Online):**
    - Las operaciones (usuarios, reservas, fichas clínicas) se envían directamente al Backend (NestJS) y se persisten en tiempo real en Supabase.
 2. **Modo Offline (Sin Conexión):**
    - La aplicación no arroja errores ni se bloquea.
@@ -20,6 +22,7 @@ Garantizar que la aplicación continúe funcionando con total normalidad y sin p
    - Al restablecer la conexión a internet, un servicio en segundo plano envía las transacciones pendientes en lote (*batch*) a Supabase.
 
 ### 🔒 Integridad de Datos
+
 - **Atomicidad (Todo o Nada):** Si una transacción falla a la mitad, Supabase realiza un *Rollback* automático.
 - **Sin duplicados (UUIDs + UPSERT):** Los registros se identifican por UUIDs únicos universales generados en el cliente. Si una instrucción ya existía en la nube, se ejecuta un *UPSERT* (*Update or Insert*) en lugar de clonar el dato.
 
@@ -28,9 +31,11 @@ Garantizar que la aplicación continúe funcionando con total normalidad y sin p
 ## 📄 Idea 2: Aplicación Móvil Nativa (iOS & Android) Exclusiva para Pacientes
 
 ### 🎯 Objetivo
+
 Empaquetar y distribuir la aplicación responsiva en las tiendas **App Store (Apple iOS)** y **Google Play Store (Android)** como una aplicación nativa descargable, orientada **exclusivamente a Pacientes y Alumnos**.
 
 ### 👥 Separación de Alcance por Perfiles y Dispositivos
+
 - **Programa de Escritorio (PC):** Uso exclusivo para **Staff, Kinesiólogos, Coaches y Administradores** (gestión de bloques, parrilla de citas, marcado de asistencia, formulación de notas SOAP kinésicas en pantalla grande).
 - **App Móvil (Celulares iOS & Android):** Uso exclusivo para **Pacientes y Alumnos**:
   - Registro e inicio de sesión autónomo.
@@ -39,9 +44,10 @@ Empaquetar y distribuir la aplicación responsiva en las tiendas **App Store (Ap
   - Visualización de la evolución física con gráficos interactivos (Dolor EVA 1-10 y Movilidad ROM °).
   - Credencial digital QR in-app.
   - Banner interactivo de confirmación de asistencia.
-  *Nota: Si un usuario con rol de Administrador o Kinesiólogo intenta iniciar sesión en la App Móvil, se le indicará amigablemente que las herramientas administrativas se gestionan desde el programa de escritorio PC.*
+    *Nota: Si un usuario con rol de Administrador o Kinesiólogo intenta iniciar sesión en la App Móvil, se le indicará amigablemente que las herramientas administrativas se gestionan desde el programa de escritorio PC.*
 
 ### ⚙️ Proceso de Compilación Nativa con Capacitor
+
 Al estar el frontend desarrollado en **React 18 + Vite**, se empaquetará nativamente con **Capacitor (Ionic)**:
 
 ```bash
@@ -63,9 +69,9 @@ npx cap open ios       # Compilación en Xcode (macOS)
 ## 📋 Estado del Documento y de las Implementaciones
 
 * **Idea 1 — Arquitectura Offline-First y Sincronización Automática:**
+
   - **Estado:** ✅ **IMPLEMENTADO EN EL CÓDIGO** — *Pendiente de revisión y pruebas finales por parte del equipo.*
   - **Archivos creados/modificados:** `src/app/data/offlineQueue.ts`, `src/app/data/api.ts`, `src/app/data/operations.ts`, `src/app/components/OfflineStatusBanner.tsx`, `src/app/App.tsx`.
-
 * **Idea 2 — Aplicación Móvil Nativa (iOS & Android) con Capacitor:**
-  - **Estado:** 💡 *Propuesta técnica documentada — Pendiente de compilación para tiendas.*
 
+  - **Estado:** 💡 *Propuesta técnica documentada — Pendiente de compilación para tiendas.*
