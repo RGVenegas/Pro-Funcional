@@ -14,7 +14,9 @@ export interface Redemption { id: string; rewardId: string; memberId: string; cl
 export type CareAction = 'preferences' | 'profile' | 'message' | 'routine' | 'approve' | 'invoice' | 'paid' | 'note';
 const rewardKey = 'profuncional-rewards-v1';
 function readRewards(): { rewards: Reward[]; redemptions: Redemption[] } {
-  if (apiEnabled) return { rewards: serverSnapshot.rewards || [], redemptions: serverSnapshot.redemptions || [] };
+  if (apiEnabled && ((serverSnapshot.rewards && serverSnapshot.rewards.length > 0) || (serverSnapshot.redemptions && serverSnapshot.redemptions.length > 0))) {
+    return { rewards: serverSnapshot.rewards || [], redemptions: serverSnapshot.redemptions || [] };
+  }
   try { return JSON.parse(localStorage.getItem(rewardKey) || '{"rewards":[],"redemptions":[]}'); } catch { return { rewards: [], redemptions: [] }; }
 }
 export function getRewards() { return readRewards(); }

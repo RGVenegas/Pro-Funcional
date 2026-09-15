@@ -28,7 +28,29 @@ export function ScheduleManagement() {
   const [mode, setMode] = useState<ScheduleMode>('classes');
   const [currentWeek, setCurrentWeek] = useState(0);
   const [selectedBlock, setSelectedBlock] = useState<CentralScheduleBlock | null>(null);
-  const [blocks, setBlocks] = useState<CentralScheduleBlock[]>(() => getCentralScheduleBlocks().map(b => ({ ...b, students: studentsForSlot(b.id, weekDate(currentWeek, ( ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].indexOf(b.dayOfWeek)))) })));
+  const loadBlocksForWeek = (weekOffset: number) => {
+    const daysOrder: ('Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday')[] = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    ];
+    return getCentralScheduleBlocks().map((b) => {
+      const idx = daysOrder.indexOf(b.dayOfWeek);
+      const slotDate = weekDate(weekOffset, idx >= 0 ? idx : 0);
+      const enrolled = studentsForSlot(b.id, slotDate);
+      const allStudentsMap = new Map<string, EnrolledStudent>();
+      for (const st of b.students || []) {
+        allStudentsMap.set(st.name.toLowerCase(), st);
+      }
+      for (const st of enrolled) {
+        allStudentsMap.set(st.name.toLowerCase(), st);
+      }
+      return {
+        ...b,
+        students: Array.from(allStudentsMap.values()),
+      };
+    });
+  };
+
+  const [blocks, setBlocks] = useState<CentralScheduleBlock[]>(() => loadBlocksForWeek(currentWeek));
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<CancellationNotification[]>(() =>
@@ -37,7 +59,7 @@ export function ScheduleManagement() {
 
   useEffect(() => {
     const update = () => {
-      setBlocks(getCentralScheduleBlocks());
+      setBlocks(loadBlocksForWeek(currentWeek));
     };
     update();
     const unsub = subscribeToSchedule(update);
@@ -214,9 +236,20 @@ export function ScheduleManagement() {
 
       {notifications.length > 0 && (
         <section className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-          <div className="mb-3 flex items-center gap-2 text-amber-300">
-            <Bell className="h-5 w-5" />
-            <h2 className="font-semibold text-sm">Notificaciones de Cancelación a Tiempo (Cupos liberados)</h2>
+          <div className="mb-3 flex items-center justify-between text-amber-300">
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              <h2 className="font-semibold text-sm">Notificaciones de Cancelación a Tiempo (Cupos liberados)</h2>
+            </div>
+            <button
+              onClick={() => {
+                setNotifications([]);
+                localStorage.removeItem('profuncional-notifications');
+              }}
+              className="text-xs text-amber-300/70 hover:text-amber-200 underline"
+            >
+              Limpiar notificaciones
+            </button>
           </div>
           <div className="space-y-2">
             {notifications.slice(0, 3).map((notification) => (

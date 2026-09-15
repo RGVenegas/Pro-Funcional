@@ -40,4 +40,12 @@ export class ClinicalController {
   getMyHistory(@GetUser('id') userId: string) {
     return this.clinicalService.getPatientHistory(userId);
   }
+
+  @Post('evaluations/:patientId/:evalId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.KINESIOLOGO)
+  @ApiOperation({ summary: 'Eliminar una evaluación clínica SOAP' })
+  deleteEvaluation(@Param('patientId') patientId: string, @Param('evalId') evalId: string) {
+    return this.clinicalService.deleteEvaluation(patientId, evalId);
+  }
 }

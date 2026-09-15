@@ -1,10 +1,10 @@
-import { addClinicalEvaluation, updateClinicalEvaluation, updateMember } from '../../data/operations';
+import { addClinicalEvaluation, updateClinicalEvaluation, deleteClinicalEvaluation, updateMember } from '../../data/operations';
 import { careAction } from '../../data/careStore';
 import { CarePanel } from '../shared/CarePanel';
 import { getUserBookings } from '../../data/gymStore';
 import { today } from '../../data/dates';
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Mail, Phone, Calendar, Ban, RefreshCw, Flame, Dumbbell, Check, Activity, AlertTriangle, Stethoscope, ChevronDown, PlusCircle, Edit3, Plus, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, Ban, RefreshCw, Flame, Dumbbell, Check, Activity, AlertTriangle, Stethoscope, ChevronDown, PlusCircle, Edit3, Trash2, Plus, RotateCcw } from 'lucide-react';
 import { StatusBadge } from '../shared/StatusBadge';
 import { addActivity, ClinicalEvaluation, getMemberById, getMembers, GymMember, subscribeToMembers } from '../../data/gymStore';
 
@@ -162,6 +162,16 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
     setSoapP(evalItem.soap?.plan || '');
     setPhysicalRestrictions(evalItem.physicalRestrictions || member.physicalRestrictions || '');
     setShowSoapForm(true);
+  };
+
+  const handleDeleteEvaluation = async (evalId: string) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta atención kinésica/evaluación SOAP? Esta acción no se puede deshacer.')) {
+      return;
+    }
+    await deleteClinicalEvaluation(member.id, evalId);
+    const updated = getMemberById(member.id);
+    if (updated) setMember(updated);
+    showFeedback('Atención kinésica SOAP eliminada con éxito.');
   };
 
   const handleCloseSoapForm = () => {
@@ -697,6 +707,14 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>Editar</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteEvaluation(evalItem.id)}
+                            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-600 hover:text-white transition-colors"
+                            title="Eliminar esta atención SOAP"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Eliminar</span>
                           </button>
                         </div>
                       </div>

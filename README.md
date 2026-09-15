@@ -17,7 +17,7 @@ Ecosistema digital compuesto por un **Programa de Escritorio/PC** para la admini
 - **Framework**: NestJS (Node.js / TypeScript)
 - **Base de Datos & Auth**: PostgreSQL administrado vía **Supabase** (Supabase Auth / Prisma ORM)
 - **Pasarela de Pagos**: Webpay Plus (Transbank) / MercadoPago API
-- **Arquitectura de Negocio**: Transacciones serializadas anti-concurrencia para reserva y descuento atómico de sesiones.
+- **Arquitectura de Negocio**: Transacciones serializadas anti-concurrencia para reserva y descuento unificado de sesiones.
 
 ---
 
@@ -35,26 +35,6 @@ npm run dev
 # 3. Compilar bundle de producción
 npm run build
 ```
-
----
-
-### 3. Cómo Probar la App Móvil (Vista Celular)
-
-La aplicación cuenta con una interfaz **Mobile-First 100% Responsiva**. Puedes probar la experiencia móvil de 2 formas:
-
-#### Opción A: Modo Celular en el Navegador PC (Emulación Rápida)
-1. Abre **http://localhost:5173** en Chrome o Edge.
-2. Presiona **`F12`** (o Clic Derecho $\rightarrow$ *Inspeccionar*).
-3. Presiona **`Ctrl + Shift + M`** (o haz clic en el icono de celular/tablet en las Herramientas de Desarrollador).
-4. Selecciona un dispositivo como **iPhone 14/15 Pro** o **Samsung Galaxy**.
-
-#### Opción B: Probar desde un Celular Real (Vía Red Wi-Fi Local)
-1. En la terminal del proyecto, inicia Vite permitiendo conexiones en la red local:
-   ```bash
-   npm run dev -- --host
-   ```
-2. Vite te entregará la IP local de tu computador (ejemplo: `Network: http://192.168.1.15:5173`).
-3. En tu teléfono celular (conectado al mismo Wi-Fi que tu PC), abre Chrome o Safari e ingresa a esa dirección URL.
 
 ---
 
@@ -78,12 +58,33 @@ npx nest build
 
 ---
 
+### 3. Cómo Probar la App Móvil (Vista Celular)
+
+La aplicación cuenta con una interfaz **Mobile-First 100% Responsiva**. Puedes probar la experiencia móvil de 2 formas:
+
+#### Opción A: Modo Celular en el Navegador PC (Emulación Rápida)
+1. Abre **http://localhost:5173** en Chrome o Edge.
+2. Presiona **`F12`** (o Clic Derecho $\rightarrow$ *Inspeccionar*).
+3. Presiona **`Ctrl + Shift + M`** (o haz clic en el icono de celular/tablet en las Herramientas de Desarrollador).
+4. Selecciona un dispositivo como **iPhone 14/15 Pro** o **Samsung Galaxy**.
+
+#### Opción B: Probar desde un Celular Real (Vía Red Wi-Fi Local)
+1. En la terminal del proyecto, inicia Vite permitiendo conexiones en la red local:
+   ```bash
+   npm run dev -- --host
+   ```
+2. Vite te entregará la IP local de tu computador (ejemplo: `Network: http://192.168.1.15:5173`).
+3. En tu teléfono celular (conectado al mismo Wi-Fi que tu PC), abre Chrome o Safari e ingresa a esa dirección URL.
+
+---
+
 ## 🔐 Credenciales de Acceso y Demostración
 
 El sistema cuenta con validación estricta de credenciales y perfiles preconfigurados con historiales clínicos y paquetes:
 
 | Perfil                                            | Correo de Acceso              | Contraseña Válida                  | Paquete / Rol                       |
 | :------------------------------------------------ | :---------------------------- | :----------------------------------- | :---------------------------------- |
+| **Paciente (Nuevo Registro / Demostración)**      | `pablito.loncon@gmail.com`   | `password123` *(o `12345678`)* | Pack Recuperación Activa (8 ses)   |
 | **Paciente (LCA / Readaptación)**          | `camila.gonzalez@gmail.com` | `password123` *(o `12345678`)* | Pack Recuperación Activa (8 ses)   |
 | **Paciente (Tendinopatía / Funcional)**    | `juan.perez@gmail.com`      | `password123` *(o `12345678`)* | Pack Readaptación Total (12 ses)   |
 | **Paciente (Hombro doloroso)**              | `matias.rojas@gmail.com`    | `password123` *(o `12345678`)* | Pack Básico Kinesiológico (4 ses) |
@@ -91,13 +92,23 @@ El sistema cuenta con validación estricta de credenciales y perfiles preconfigu
 
 ---
 
+## ⚡ Arquitectura de Persistencia de 3 Capas (Dualidad Online / Offline)
+
+Para garantizar la disponibilidad ininterrumpida tanto en entornos sin conexión como al estar sincronizado con Supabase, el sistema opera bajo una **estrategia de combinación de 3 capas**:
+
+1. **Capa Base Demo (Fallback)**: Garantiza que todos los miembros iniciales, bloques de Lunes a Domingo e historiales kinesiológicos estén disponibles por defecto.
+2. **Capa de Almacenamiento Local (`localStorage`)**: Guarda instantáneamente los nuevos registros de usuarios, reservas creadas, evaluaciones clínicas SOAP escritas y cambios de asistencia en el dispositivo.
+3. **Capa Servidor Backend (NestJS + Supabase PostgreSQL)**: Sincroniza datos en tiempo real mediante fusionadores (`Map` por email/ID) que enriquecen los registros sin sobrescribir ni eliminar miembros creados localmente o bloques horarios de la parrilla.
+
+---
+
 ## 🗺️ Módulos e Historias de Usuario Implementadas (Sprint 1 & Sprint 2)
 
 ### 💻 Programa PC (Staff / Kinesiólogos / Entrenadores / Admin)
 
-- **HU-01 · Configuración de Disponibilidad Horaria**: Modal interactivo para definir bloques horarios (Día, Hora inicio/fin, Título, Profesional, Tipo de atención y Capacidad máxima de cupos) publicados en tiempo real.
-- **HU-02 · Parrilla de Citas y Marcado de Asistencia**: Visualización diaria de boxes kinésicos y clases funcionales con marcado de **"Asistió"** o **"No-Show"** (Inasistencia).
-- **HU-05 · Ficha Clínica Evolutiva (SOAP, EVA, ROM)**: Formulario de atención kinésica con notas **SOAP** (Subjetivo, Objetivo, Análisis, Plan Terapéutico), slider cuantitativo de dolor en escala **EVA (1 a 10)** y movilidad articular **ROM en grados (°)**.
+- **HU-01 · Configuración de Disponibilidad Horaria**: Modal interactivo para definir bloques horarios (Día, Hora inicio/fin, Título, Profesional, Tipo de atención y Capacidad máxima de cupos) publicados en tiempo real de Lunes a Domingo.
+- **HU-02 · Parrilla de Citas y Marcado de Asistencia**: Visualización diaria de boxes kinésicos y clases funcionales con marcado de **"Asistió"** o **"No-Show"** (Inasistencia) y visualización en tiempo real de alumnos inscritos por bloque.
+- **HU-05 · Ficha Clínica Evolutiva (SOAP, EVA, ROM)**: Formulario de atención kinésica con notas **SOAP** (Subjetivo, Objetivo, Análisis, Plan Terapéutico), slider cuantitativo de dolor en escala **EVA (1 a 10)**, movilidad articular **ROM en grados (°)** y botón de **Eliminación de evaluaciones SOAP** registradas por error.
 - **HU-07 · Alertas de Restricciones para Entrenadores**: Pautas médicas de kinesiólogos desplegadas automáticamente en el panel de los entrenadores (ej. *"⚠️ Evitar flexión >90° por LCA"*).
 - **HU-10 · Dashboard de Métricas y Control de Ausentismo**: Control de ocupación, balance de sesiones kinésicas y cálculo de **Tasa de No-Show**.
 

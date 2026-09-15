@@ -86,4 +86,13 @@ export class ClinicalService {
       chartData,
     };
   }
+
+  async deleteEvaluation(patientId: string, evalId: string) {
+    return serial(this.prisma, async (tx) => {
+      const record = await tx.clinicalEvaluation.findUnique({ where: { id: evalId } });
+      if (!record) throw new NotFoundException('Evaluación kinésica no encontrada');
+      await tx.clinicalEvaluation.delete({ where: { id: evalId } });
+      return { success: true, message: 'Evaluación kinésica eliminada correctamente' };
+    });
+  }
 }

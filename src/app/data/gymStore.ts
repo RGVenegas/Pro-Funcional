@@ -258,25 +258,41 @@ const initialMembers: GymMember[] = [
   { id: '7', name: 'Nicolas Fuentes', email: 'nicolas.fuentes@gmail.com', password: 'password123', phone: '+56 9 2109 8765', plan: 'Basic', packName: 'Pack Básico Kinesiológico (4 ses)', totalSessions: 4, remainingSessions: 2, status: 'active', balance: -30, joinDate: '2024-02-14', nextBilling: '2025-02-14', physicalRestrictions: 'Epicondilalgia: uso de banda compresiva' },
   { id: '8', name: 'Fernanda Contreras', email: 'fernanda.contreras@gmail.com', password: 'password123', phone: '+56 9 1098 7654', plan: 'Standard', packName: 'Pack Recuperación Activa (8 ses)', totalSessions: 8, remainingSessions: 6, status: 'active', balance: 0, joinDate: '2024-03-10', nextBilling: '2025-03-10', physicalRestrictions: 'Sin restricciones' },
   { id: '9', name: 'Sebastian Araya', email: 'sebastian.araya@gmail.com', password: 'password123', phone: '+56 9 9876 5432', plan: 'Premium', packName: 'Pack Readaptación Total (12 ses)', totalSessions: 12, remainingSessions: 11, status: 'active', balance: 0, joinDate: '2024-04-02', nextBilling: '2025-04-02', physicalRestrictions: 'Cervicalgia postural: pausas activas' },
+  { id: '10', name: 'Pablo Loncón', email: 'pablito.loncon@gmail.com', password: 'password123', phone: '+56 9 8888 7777', plan: 'Standard', packName: 'Pack Recuperación Activa (8 ses)', totalSessions: 8, remainingSessions: 8, status: 'active', balance: 0, joinDate: '2025-01-20', nextBilling: '2025-02-20', physicalRestrictions: 'Sin restricciones' },
 ];
 
 export function getMembers(): GymMember[] {
-  if (apiEnabled) return serverSnapshot.members;
-  if (typeof window === 'undefined') return initialMembers;
-  const saved = window.localStorage.getItem(storageKey);
-  let list: GymMember[] = [];
-  if (!saved) {
-    list = initialMembers;
-  } else {
-    try {
-      list = JSON.parse(saved) as GymMember[];
-    } catch {
-      list = initialMembers;
+  const map = new Map<string, GymMember>();
+
+  // 1. Load initial demo members as base
+  for (const m of initialMembers) {
+    const key = m.email ? m.email.toLowerCase() : m.id;
+    map.set(key, m);
+  }
+
+  // 2. Merge local storage if saved
+  if (typeof window !== 'undefined') {
+    const saved = window.localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const savedList = JSON.parse(saved) as GymMember[];
+        for (const m of savedList) {
+          const key = m.email ? m.email.toLowerCase() : m.id;
+          const existing = map.get(key);
+          if (existing) {
+            map.set(key, { ...existing, ...m });
+          } else {
+            map.set(key, m);
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
     }
   }
 
-  // Ensure camila.fernandez@gmail.com is present in list
-  if (!list.some((m) => m.email.toLowerCase() === 'camila.fernandez@gmail.com')) {
+  // Ensure camila.fernandez@gmail.com is present in map
+  if (!map.has('camila.fernandez@gmail.com')) {
     const camilaFernandez: GymMember = {
       id: '2',
       name: 'Camila Fernández',
@@ -294,8 +310,23 @@ export function getMembers(): GymMember[] {
       physicalRestrictions: 'Evitar rotaciones forzadas y flexión >90° por post-op LCA',
       clinicalHistory: [],
     };
-    list = [camilaFernandez, ...list];
+    map.set('camila.fernandez@gmail.com', camilaFernandez);
   }
+
+  // 3. Merge server snapshot members if available
+  if (apiEnabled && serverSnapshot.members && serverSnapshot.members.length > 0) {
+    for (const serverMember of serverSnapshot.members as GymMember[]) {
+      const key = serverMember.email ? serverMember.email.toLowerCase() : serverMember.id;
+      const existing = map.get(key);
+      if (existing) {
+        map.set(key, { ...existing, ...serverMember });
+      } else {
+        map.set(key, serverMember);
+      }
+    }
+  }
+
+  const list = Array.from(map.values());
 
   return list.map((m) => ({
     ...m,
@@ -394,6 +425,21 @@ export function updateClinicalEvaluation(
   return updatedEval;
 }
 
+export function deleteClinicalEvaluation(memberId: string, evalId: string): boolean {
+  const member = getMemberById(memberId);
+  if (!member || !member.clinicalHistory) return false;
+
+  const updatedHistory = member.clinicalHistory.filter((e) => e.id !== evalId);
+  updateMember(memberId, { clinicalHistory: updatedHistory });
+
+  addActivity({
+    name: member.name,
+    action: `eliminó una evaluación kinésica`,
+  });
+
+  return true;
+}
+
 export function consumeSession(memberId: string): boolean {
   const member = getMemberById(memberId);
   if (!member) return false;
@@ -452,7 +498,7 @@ export function subscribeToMembers(onChange: () => void): () => void {
 }
 
 export function getActivities(): GymActivity[] {
-  if (apiEnabled) return serverSnapshot.activities;
+  if (apiEnabled && serverSnapshot.activities && serverSnapshot.activities.length > 0) return serverSnapshot.activities;
   if (typeof window === 'undefined') return initialActivities;
   const saved = window.localStorage.getItem(activityStorageKey);
   if (!saved) {
@@ -717,19 +763,49 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
 ];
 
 export function getCentralScheduleBlocks(): CentralScheduleBlock[] {
-  if (apiEnabled) return serverSnapshot.blocks;
-  if (typeof window === 'undefined') return initialScheduleBlocks;
-  const saved = window.localStorage.getItem(scheduleStorageKey);
-  if (!saved) {
-    window.localStorage.setItem(scheduleStorageKey, JSON.stringify(initialScheduleBlocks));
-    return initialScheduleBlocks;
+  const map = new Map<string, CentralScheduleBlock>();
+
+  // 1. Base initial schedule blocks (covers Monday through Sunday)
+  for (const b of initialScheduleBlocks) {
+    const key = `${b.dayOfWeek}-${b.startTime}-${b.title}`;
+    map.set(key, b);
   }
-  try {
-    return JSON.parse(saved) as CentralScheduleBlock[];
-  } catch {
-    window.localStorage.setItem(scheduleStorageKey, JSON.stringify(initialScheduleBlocks));
-    return initialScheduleBlocks;
+
+  // 2. Merge local storage saved blocks if available
+  if (typeof window !== 'undefined') {
+    const saved = window.localStorage.getItem(scheduleStorageKey);
+    if (saved) {
+      try {
+        const savedList = JSON.parse(saved) as CentralScheduleBlock[];
+        for (const b of savedList) {
+          const key = `${b.dayOfWeek}-${b.startTime}-${b.title}`;
+          const existing = map.get(key);
+          if (existing) {
+            map.set(key, { ...existing, ...b });
+          } else {
+            map.set(key, b);
+          }
+        }
+      } catch {
+        // ignore parse error
+      }
+    }
   }
+
+  // 3. Merge server snapshot blocks if available
+  if (apiEnabled && serverSnapshot.blocks && serverSnapshot.blocks.length > 0) {
+    for (const serverBlock of serverSnapshot.blocks as CentralScheduleBlock[]) {
+      const key = `${serverBlock.dayOfWeek}-${serverBlock.startTime}-${serverBlock.title}`;
+      const existing = map.get(key);
+      if (existing) {
+        map.set(key, { ...existing, ...serverBlock });
+      } else {
+        map.set(key, serverBlock);
+      }
+    }
+  }
+
+  return Array.from(map.values());
 }
 
 export function saveCentralScheduleBlocks(blocks: CentralScheduleBlock[]): void {
@@ -784,17 +860,38 @@ export function subscribeToSchedule(onChange: () => void): () => void {
 }
 
 export function getUserBookings(userName?: string): UserBookingRecord[] {
-  if (apiEnabled) return serverSnapshot.bookings.filter((b: UserBookingRecord) => !userName || b.userName.toLowerCase() === userName.toLowerCase());
-  if (typeof window === 'undefined') return [];
-  const saved = window.localStorage.getItem(bookingsStorageKey);
-  let list: UserBookingRecord[] = [];
-  if (saved) {
-    try {
-      list = JSON.parse(saved);
-    } catch {
-      list = [];
+  const map = new Map<string, UserBookingRecord>();
+
+  // 1. Load local storage bookings
+  if (typeof window !== 'undefined') {
+    const saved = window.localStorage.getItem(bookingsStorageKey);
+    if (saved) {
+      try {
+        const savedList = JSON.parse(saved) as UserBookingRecord[];
+        for (const b of savedList) {
+          const key = b.id || `${b.blockId}-${b.date}-${b.userName}`;
+          map.set(key, b);
+        }
+      } catch {
+        // ignore parse error
+      }
     }
   }
+
+  // 2. Merge server snapshot bookings if available
+  if (apiEnabled && serverSnapshot.bookings && serverSnapshot.bookings.length > 0) {
+    for (const serverBooking of serverSnapshot.bookings as UserBookingRecord[]) {
+      const key = serverBooking.id || `${serverBooking.blockId}-${serverBooking.date}-${serverBooking.userName}`;
+      const existing = map.get(key);
+      if (existing) {
+        map.set(key, { ...existing, ...serverBooking });
+      } else {
+        map.set(key, serverBooking);
+      }
+    }
+  }
+
+  const list = Array.from(map.values());
   if (!userName) return list;
   return list.filter((b) => b.userName.toLowerCase() === userName.toLowerCase());
 }

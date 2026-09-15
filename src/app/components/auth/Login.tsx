@@ -1,6 +1,7 @@
 import React, { FormEvent, useState } from 'react';
 import { ArrowRight, Check, Dumbbell, Eye, EyeOff, LockKeyhole, Mail, UserRound, UsersRound } from 'lucide-react';
 import { addActivity, addMember, getMembers } from '../../data/gymStore';
+import { apiEnabled, request, setToken, syncAndRefresh } from '../../data/api';
 
 type AccessMode = 'member' | 'register' | 'staff';
 export type AuthRole = 'user' | 'admin';
@@ -115,6 +116,21 @@ export function Login({ onAuthenticated }: LoginProps) {
 
     setFormError('');
     setIsSubmitted(true);
+
+    if (apiEnabled) {
+      void (async () => {
+        try {
+          const res = await request('/auth/login', 'POST', { email: user.email, password: password || 'password123' });
+          if (res?.accessToken) {
+            setToken(res.accessToken);
+            await syncAndRefresh();
+          }
+        } catch (e) {
+          console.warn('Backend login skipped (offline or local account):', e);
+        }
+      })();
+    }
+
     window.setTimeout(() => onAuthenticated(mode === 'staff' ? 'admin' : 'user', user), 450);
   };
 
@@ -127,6 +143,26 @@ export function Login({ onAuthenticated }: LoginProps) {
     const user: AuthUser = { name: registrationUser.name, email: registrationUser.email, plan: selectedPlan, selectedClasses };
     addMember({ name: user.name, email: user.email, plan: user.plan, password: registrationUser.password });
     addActivity({ name: user.name, action: `se registró con membresía ${user.plan}` });
+
+    if (apiEnabled) {
+      void (async () => {
+        try {
+          const res = await request('/auth/register', 'POST', {
+            email: user.email,
+            password: registrationUser.password || 'password123',
+            name: user.name,
+            plan: user.plan.toUpperCase(),
+          });
+          if (res?.accessToken) {
+            setToken(res.accessToken);
+            await syncAndRefresh();
+          }
+        } catch (e) {
+          console.warn('Backend registration skipped (offline or local account):', e);
+        }
+      })();
+    }
+
     window.setTimeout(() => onAuthenticated('user', user), 450);
   };
 

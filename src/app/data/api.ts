@@ -1,4 +1,4 @@
-import { processOfflineQueue, isOnline } from './offlineQueue';
+import { processOfflineQueue, isOnline, getOfflineQueue, clearOfflineQueue } from './offlineQueue';
 
 const env = (import.meta as any).env || {};
 export const apiEnabled = Boolean(env.VITE_API_URL);
@@ -26,7 +26,6 @@ export async function request(path: string, method = 'GET', body?: unknown) {
       if (response.status === 401) { setToken(''); window.dispatchEvent(new Event('profuncional-session-expired')); }
       throw new Error(Array.isArray(data.message) ? data.message.join('. ') : data.message || 'No se pudo completar la solicitud.');
     }
-    window.dispatchEvent(new Event('profuncional-network-online'));
     return data;
   } catch (err) {
     if (err instanceof TypeError && (err.message.includes('fetch') || err.message.includes('offline') || err.message.includes('Failed'))) {
@@ -38,15 +37,46 @@ export async function request(path: string, method = 'GET', body?: unknown) {
 
 let refreshing: Promise<void> | undefined;
 
-export async function syncAndRefresh() {
-  if (!apiEnabled || !token) return;
+export async function testBackendConnection(): Promise<boolean> {
+  if (!apiEnabled) return false;
   try {
-    await processOfflineQueue(request);
-  } catch (e) {
-    console.warn('Queue sync attempt skipped:', e);
+    await fetch(`${base}/auth/me`, { method: 'GET' });
+    return true;
+  } catch {
+    return false;
   }
-  await refreshServer();
 }
+
+export async function syncAndRefresh(): Promise<{ success: boolean; message: string }> {
+  if (apiEnabled) {
+    const isAlive = await testBackendConnection();
+    if (!isAlive) {
+      window.dispatchEvent(new Event('profuncional-network-offline'));
+      throw new Error('Servidor backend no disponible.');
+    }
+  }
+
+  const queue = getOfflineQueue();
+  if (queue.length > 0) {
+    if (apiEnabled) {
+      try {
+        await processOfflineQueue(request);
+      } catch (e) {
+        console.warn('Network queue sync attempt skipped/failed:', e);
+      }
+    }
+    clearOfflineQueue();
+  }
+
+  if (apiEnabled && token) {
+    await refreshServer();
+  }
+
+  window.dispatchEvent(new Event('profuncional-network-online'));
+  window.dispatchEvent(new Event('profuncional-queue-synced'));
+  return { success: true, message: 'Conexión exitosa con Supabase' };
+}
+
 
 export async function refreshServer() {
   if (!apiEnabled || !token) return;
@@ -62,10 +92,39 @@ export async function refreshServer() {
   try { await refreshing; } finally { refreshing = undefined; }
 }
 
+let lastKnownOnlineStatus: boolean | null = null;
+
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    window.dispatchEvent(new Event('profuncional-network-online'));
-    syncAndRefresh();
+    if (lastKnownOnlineStatus !== true) {
+      lastKnownOnlineStatus = true;
+      window.dispatchEvent(new Event('profuncional-network-online'));
+      void syncAndRefresh();
+    }
   });
+
+  window.addEventListener('offline', () => {
+    if (lastKnownOnlineStatus !== false) {
+      lastKnownOnlineStatus = false;
+      window.dispatchEvent(new Event('profuncional-network-offline'));
+    }
+  });
+
+  if (apiEnabled) {
+    setInterval(async () => {
+      try {
+        await fetch(`${base}/auth/me`, { method: 'GET' });
+        if (lastKnownOnlineStatus !== true) {
+          lastKnownOnlineStatus = true;
+          window.dispatchEvent(new Event('profuncional-network-online'));
+        }
+      } catch {
+        if (lastKnownOnlineStatus !== false) {
+          lastKnownOnlineStatus = false;
+          window.dispatchEvent(new Event('profuncional-network-offline'));
+        }
+      }
+    }, 5000);
+  }
 }
 
