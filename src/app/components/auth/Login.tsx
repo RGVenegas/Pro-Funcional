@@ -77,13 +77,24 @@ export function Login({ onAuthenticated }: LoginProps) {
 
     let user: AuthUser;
     if (mode === 'staff') {
+      const allowedStaffEmails = [
+        'admin@profuncional.cl',
+        'andres.morales@profuncional.cl',
+        'valeria.reyes@profuncional.cl',
+        'staff@profuncional.cl',
+      ];
+      if (!allowedStaffEmails.includes(email.toLowerCase())) {
+        setFormError('Error: El correo de personal ingresado no está autorizado en el sistema.');
+        return;
+      }
+
       const validStaffPasswords = ['admin1234', 'profuncional', 'password123', '12345678'];
       if (!validStaffPasswords.includes(password)) {
         setFormError('Error: Clave incorrecta. Verifica la contraseña de personal.');
         return;
       }
       user = {
-        name: 'Personal del gimnasio',
+        name: email.toLowerCase().includes('andres') ? 'Klgo. Andrés Morales' : 'Personal del Gimnasio (Admin)',
         email,
         plan: 'Premium',
         selectedClasses: [],
