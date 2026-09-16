@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LogOut, UserRound } from 'lucide-react';
 import { AuthUser, Login } from './components/auth/Login';
 import { AdminDashboard } from './components/admin/AdminDashboard';
@@ -20,35 +20,101 @@ type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule';
 type UserView = 'home' | 'plan' | 'calendar' | 'training' | 'card' | 'profile';
 
 export default function App() {
-  const [role, setRole] = useState<Role | null>(null);
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [role, setRole] = useState<Role | null>(() => {
+    return (sessionStorage.getItem('profuncional-auth-role') as Role) || null;
+  });
+
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
+    const saved = sessionStorage.getItem('profuncional-auth-user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
   const [adminView, setAdminView] = useState<AdminView>('dashboard');
   const [userView, setUserView] = useState<UserView>('home');
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
-  const handleViewMember = (memberId: string) => {
+  // Sincronización con el historial del navegador (Flechas atrás/adelante)
+  useEffect(() => {
+    if (!role) return;
+
+    // Asegurar un estado inicial en el historial para evitar salir de la sesión al presionar "Atrás"
+    if (!window.history.state) {
+      const initialState = role === 'admin'
+        ? { role: 'admin', adminView: 'dashboard', selectedMemberId: null }
+        : { role: 'user', userView: 'home' };
+      window.history.replaceState(initialState, '');
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+      if (state && state.role) {
+        setRole(state.role);
+        if (state.role === 'admin') {
+          setAdminView(state.adminView || 'dashboard');
+          setSelectedMemberId(state.selectedMemberId || null);
+        } else if (state.role === 'user') {
+          setUserView(state.userView || 'home');
+        }
+      } else if (role) {
+        // Si el usuario presiona "Atrás" y no hay estado previo, re-empujar el estado actual para no salir de la app
+        const currentState = role === 'admin'
+          ? { role: 'admin', adminView, selectedMemberId }
+          : { role: 'user', userView };
+        window.history.pushState(currentState, '');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [role, adminView, userView, selectedMemberId]);
+
+  const handleAuthenticated = (nextRole: Role, user: AuthUser) => {
+    setRole(nextRole);
+    setCurrentUser(user);
+    sessionStorage.setItem('profuncional-auth-role', nextRole);
+    sessionStorage.setItem('profuncional-auth-user', JSON.stringify(user));
+
+    const initialState = nextRole === 'admin'
+      ? { role: 'admin', adminView: 'dashboard', selectedMemberId: null }
+      : { role: 'user', userView: 'home' };
+    window.history.pushState(initialState, '');
+  };
+
+  const navigateAdmin = (nextView: AdminView, memberId: string | null = null) => {
+    setAdminView(nextView);
     setSelectedMemberId(memberId);
-    setAdminView('member-detail');
+    window.history.pushState({ role: 'admin', adminView: nextView, selectedMemberId: memberId }, '');
+  };
+
+  const navigateUser = (nextView: UserView) => {
+    setUserView(nextView);
+    window.history.pushState({ role: 'user', userView: nextView }, '');
+  };
+
+  const handleViewMember = (memberId: string) => {
+    navigateAdmin('member-detail', memberId);
   };
 
   const handleBackToMembers = () => {
-    setSelectedMemberId(null);
-    setAdminView('members');
+    navigateAdmin('members');
   };
 
   const handleLogout = () => {
+    sessionStorage.removeItem('profuncional-auth-role');
+    sessionStorage.removeItem('profuncional-auth-user');
     setRole(null);
     setCurrentUser(null);
     setAdminView('dashboard');
     setUserView('home');
     setSelectedMemberId(null);
+    window.history.pushState(null, '');
   };
 
   if (!role) {
     return (
       <div className="min-h-screen bg-[#010A01] text-white flex flex-col">
         <OfflineStatusBanner />
-        <Login onAuthenticated={(nextRole, user) => { setRole(nextRole); setCurrentUser(user); }} />
+        <Login onAuthenticated={handleAuthenticated} />
       </div>
     );
   }
@@ -69,7 +135,7 @@ export default function App() {
 
       {role === 'user' && (
         <button
-          onClick={() => setUserView('profile')}
+          onClick={() => navigateUser('profile')}
           aria-label="Abrir perfil"
           title="Abrir perfil"
           className="fixed right-16 sm:right-32 top-3 lg:top-4 z-50 rounded-xl bg-[#05111d] border border-white/20 p-2 sm:px-3 text-white/80 transition-colors hover:bg-white/20 hover:text-white shadow-lg flex items-center gap-1.5 text-xs font-bold"
@@ -83,7 +149,7 @@ export default function App() {
         <div className="flex min-h-screen w-full max-w-full overflow-x-hidden">
           <AdminSidebar 
             currentView={adminView} 
-            onNavigate={setAdminView}
+            onNavigate={(view) => navigateAdmin(view as AdminView)}
           />
           <main className="flex-1 ml-0 lg:ml-64 p-3 pt-16 sm:p-4 sm:pt-16 lg:p-8 lg:pt-8 w-full max-w-full overflow-x-hidden">
             {adminView === 'dashboard' && <AdminDashboard />}
@@ -100,7 +166,7 @@ export default function App() {
       ) : (
         <div className="flex min-h-screen flex-col pb-20 w-full max-w-full overflow-x-hidden">
           <main className="flex-1 p-3 sm:p-4 lg:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
-            {userView === 'home' && currentUser && <UserHome user={currentUser} onNavigate={setUserView} />}
+            {userView === 'home' && currentUser && <UserHome user={currentUser} onNavigate={navigateUser} />}
             {userView === 'plan' && currentUser && (
               <UserPlan
                 plan={currentUser.plan}
@@ -115,7 +181,7 @@ export default function App() {
           </main>
           <UserBottomNav 
             currentView={userView} 
-            onNavigate={setUserView}
+            onNavigate={navigateUser}
           />
         </div>
       )}
