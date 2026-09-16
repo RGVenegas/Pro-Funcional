@@ -119,15 +119,27 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+html, body, #root {
+  overflow-x: hidden !important;
+  max-width: 100vw;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #010A01 !important;
+  color: #ffffff;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#010A01] text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden !important;
+    max-width: 100vw;
   }
 }
 

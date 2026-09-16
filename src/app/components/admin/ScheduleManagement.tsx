@@ -181,19 +181,19 @@ export function ScheduleManagement() {
           <p className="text-white/60 text-sm">Configuración de disponibilidad (HU-01) y control de asistencia kinésica</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 transition-transform hover:scale-105 flex items-center gap-2 shadow-lg shadow-[#00E676]/20"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 transition-transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-[#00E676]/20"
           >
             <PlusCircle className="w-4 h-4" />
             + Configurar Nuevo Bloque
           </button>
 
-          <div className="flex gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+          <div className="flex gap-2 bg-white/5 p-1 rounded-xl border border-white/10 w-full sm:w-auto">
             <button
               onClick={() => setMode('classes')}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
                 mode === 'classes' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
               }`}
             >
@@ -202,7 +202,7 @@ export function ScheduleManagement() {
             </button>
             <button
               onClick={() => setMode('kine-boxes')}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
                 mode === 'kine-boxes' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
               }`}
             >
@@ -284,8 +284,16 @@ export function ScheduleManagement() {
         </button>
       </div>
 
+      {/* Mobile scroll hint indicator */}
+      <div className="lg:hidden flex items-center justify-between text-xs text-[#00E676] bg-[#00E676]/10 border border-[#00E676]/25 rounded-xl px-3 py-2 text-[11px]">
+        <span className="font-semibold flex items-center gap-1.5">
+          <span>📱</span> Desliza horizontalmente para ver la semana completa
+        </span>
+        <span className="font-mono text-[10px] text-white/50 bg-white/5 px-2 py-0.5 rounded border border-white/10">7 días →</span>
+      </div>
+
       {/* Schedule Grid */}
-      <div className="overflow-x-auto pb-4 pt-1 -mx-2 px-2 custom-scrollbar">
+      <div className="w-full max-w-full overflow-x-auto pb-4 pt-1 -mx-2 px-2 custom-scrollbar">
         <div className="grid grid-cols-7 min-w-[1260px] gap-3.5">
           {days.map((day) => {
             const dayBlocks = blocks.filter((b) => b.dayOfWeek === day && b.isActive);
@@ -394,8 +402,8 @@ export function ScheduleManagement() {
 
       {/* Modal HU-01: Configurar Nuevo Bloque Horario */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <form onSubmit={handleCreateBlock} className="bg-[#0b1726] border border-white/15 rounded-2xl p-6 w-full max-w-lg space-y-4 shadow-2xl text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <form onSubmit={handleCreateBlock} className="bg-[#0b1726] border border-white/15 rounded-2xl p-4 sm:p-6 w-full max-w-lg space-y-4 shadow-2xl text-white max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div>
                 <span className="text-xs font-bold uppercase text-[#00E676]">HU-01 · Programa PC</span>
@@ -462,8 +470,8 @@ export function ScheduleManagement() {
 
       {/* Modal / Drawer de Detalle de Clase & Asistencia */}
       {selectedBlock && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#0b1726] border border-white/15 rounded-2xl p-6 w-full max-w-xl space-y-5 shadow-2xl text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-[#0b1726] border border-white/15 rounded-2xl p-4 sm:p-6 w-full max-w-xl space-y-5 shadow-2xl text-white max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between border-b border-white/10 pb-4">
               <div>
                 <span className="text-xs font-bold uppercase text-[#00E676] tracking-wider">{selectedBlock.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>

@@ -233,36 +233,36 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+        <div className="flex items-center gap-3">
           <button
             onClick={onBack}
             aria-label="Volver a la lista de pacientes"
-            className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors shrink-0"
           >
             <ArrowLeft className="w-5 h-5 text-white" />
           </button>
-          <div>
-            <h1 className="text-3xl font-bold text-[#F7F7F7]">Ficha de Paciente / Alumno</h1>
-            <p className="text-white/60">Historial clínico kinésico y control de sesiones</p>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold text-[#F7F7F7] truncate">Ficha de Paciente / Alumno</h1>
+            <p className="text-xs sm:text-sm text-white/60 truncate">Historial clínico kinésico y control de sesiones</p>
           </div>
         </div>
 
         <button
           disabled={!canEdit} onClick={() => { setActiveTab('clinical'); handleOpenNewSoap(); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00E676] text-[#021826] font-bold hover:bg-[#00E676]/90 transition-transform hover:scale-105 shadow-lg shadow-[#00E676]/20"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs sm:text-sm font-bold hover:bg-[#00E676]/90 transition-transform hover:scale-105 shadow-lg shadow-[#00E676]/20"
         >
-          <PlusCircle className="w-5 h-5" />
+          <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>Nueva Atención SOAP</span>
         </button>
       </div>
 
       {actionMessage && (
-        <div className="rounded-xl border border-[#00E676]/40 bg-[#00E676]/15 p-4 text-[#00E676] flex items-center gap-2">
-          <Check className="h-5 w-5 text-[#00E676]" />
-          <span className="text-sm font-medium">{actionMessage}</span>
+        <div className="rounded-xl border border-[#00E676]/40 bg-[#00E676]/15 p-4 text-[#00E676] flex items-center gap-2 text-xs sm:text-sm">
+          <Check className="h-5 w-5 text-[#00E676] shrink-0" />
+          <span className="font-medium">{actionMessage}</span>
         </div>
       )}
 
@@ -272,19 +272,19 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
           <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-amber-400">Alerta de Restricción Física para Entrenadores</p>
-            <p className="text-sm font-medium text-white/90 mt-0.5">{member.physicalRestrictions}</p>
+            <p className="text-xs sm:text-sm font-medium text-white/90 mt-0.5">{member.physicalRestrictions}</p>
           </div>
         </div>
       )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-[#00E676]/30 bg-[#00E676]/10 p-5">
+        <div className="rounded-xl border border-[#00E676]/30 bg-[#00E676]/10 p-4 sm:p-5">
           <div className="mb-2 flex items-center justify-between text-[#00E676]">
             <span className="text-xs font-bold uppercase tracking-wider">Saldo de Sesiones</span>
             <Activity className="h-5 w-5" />
           </div>
-          <p className="text-3xl font-bold text-[#F7F7F7]">{member.remainingSessions ?? 5} / {member.totalSessions ?? 8}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-[#F7F7F7]">{member.remainingSessions ?? 5} / {member.totalSessions ?? 8}</p>
           <p className="mt-1 text-xs text-white/60">sesiones disponibles de {member.packName || 'su paquete'}</p>
           <div className="mt-3 w-full bg-black/30 rounded-full h-2 overflow-hidden">
             <div
@@ -294,12 +294,12 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
           </div>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4 sm:p-5">
           <div className="mb-2 flex items-center justify-between text-white/70">
             <span className="text-xs font-bold uppercase tracking-wider">Última Escala EVA</span>
             <Stethoscope className="h-5 w-5 text-[#00E676]" />
           </div>
-          <p className="text-3xl font-bold text-[#F7F7F7]">
+          <p className="text-2xl sm:text-3xl font-bold text-[#F7F7F7]">
             {member.clinicalHistory && member.clinicalHistory[0] ? `${member.clinicalHistory[0].evaPain} / 10` : 'Sin registro'}
           </p>
           <p className="mt-1 text-xs text-white/55">
@@ -307,12 +307,12 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
           </p>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4 sm:p-5">
           <div className="mb-2 flex items-center justify-between text-white/70">
             <span className="text-xs font-bold uppercase tracking-wider">Movilidad Articular (ROM)</span>
             <Flame className="h-5 w-5 text-amber-400" />
           </div>
-          <p className="text-3xl font-bold text-[#F7F7F7]">
+          <p className="text-2xl sm:text-3xl font-bold text-[#F7F7F7]">
             {member.clinicalHistory && member.clinicalHistory[0] ? `${member.clinicalHistory[0].romDegrees}°` : '120°'}
           </p>
           <p className="mt-1 text-xs text-white/55">Rango de movimiento actual</p>
@@ -320,52 +320,52 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
       </div>
 
       {/* Profile Card */}
-      <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div className="w-20 h-20 rounded-full bg-[#00E676]/20 flex items-center justify-center flex-shrink-0 border border-[#00E676]/40">
-            <span className="text-3xl text-[#00E676] font-semibold">
+      <div className="bg-white/5 rounded-xl p-4 sm:p-6 backdrop-blur-sm border border-white/10 w-full">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-6">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#00E676]/20 flex items-center justify-center flex-shrink-0 border border-[#00E676]/40">
+            <span className="text-2xl sm:text-3xl text-[#00E676] font-semibold">
               {member.name.split(' ').map(n => n[0]).join('')}
             </span>
           </div>
           
-          <div className="flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-              <h2 className="text-2xl font-bold text-[#F7F7F7]">{member.name}</h2>
+          <div className="flex-1 min-w-0 w-full">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#F7F7F7] truncate">{member.name}</h2>
               <StatusBadge status={member.status} />
               <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-[#00E676] font-medium border border-white/10">
                 {member.packName || `Pack ${member.plan}`}
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-white/60">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#00E676]" />
-                <span className="text-sm">{member.email}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <Mail className="w-4 h-4 text-[#00E676] shrink-0" />
+                <span className="text-xs sm:text-sm truncate">{member.email}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#00E676]" />
-                <span className="text-sm">{member.phone || '+56 9 8765 4321'}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <Phone className="w-4 h-4 text-[#00E676] shrink-0" />
+                <span className="text-xs sm:text-sm truncate">{member.phone || '+56 9 8765 4321'}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full md:w-auto">
             <button
               disabled={!canEdit} onClick={() => setShowCreditModal(true)}
-              className="px-4 py-2 bg-[#00E676] text-[#021826] font-bold hover:bg-[#00E676]/90 rounded-lg transition-colors flex items-center gap-2 shadow-md shadow-[#00E676]/20"
+              className="w-full sm:w-auto px-3.5 py-2 bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md shadow-[#00E676]/20"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Acreditar / Devolver Sesiones</span>
             </button>
             <button
               disabled={!canEdit} onClick={handleRenew}
-              className="px-4 py-2 bg-white/10 text-white font-bold hover:bg-white/20 rounded-lg transition-colors flex items-center gap-2 border border-white/15"
+              className="w-full sm:w-auto px-3.5 py-2 bg-white/10 text-white text-xs font-bold hover:bg-white/20 rounded-xl transition-colors flex items-center justify-center gap-2 border border-white/15"
             >
               <RefreshCw className="w-4 h-4 text-[#00E676]" />
               <span>Renovar Pack Máximo</span>
             </button>
             <button
               disabled={!canEdit} onClick={handleSuspend}
-              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 font-semibold ${
+              className={`w-full sm:w-auto px-3.5 py-2 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 font-semibold ${
                 member.status === 'suspended'
                   ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300'
                   : 'bg-red-500/20 hover:bg-red-500/30 text-red-400'

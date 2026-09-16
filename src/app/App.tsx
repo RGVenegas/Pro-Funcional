@@ -54,16 +54,17 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#010A01] text-white flex flex-col">
+    <div className="min-h-screen bg-[#010A01] text-white flex flex-col w-full max-w-full overflow-x-hidden">
       <OfflineStatusBanner />
 
       <button
         onClick={handleLogout}
-        aria-label="Cerrar sesion"
-        title="Cerrar sesion"
-        className="fixed right-4 top-4 z-50 rounded-lg bg-white/10 p-2 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+        aria-label="Cerrar sesión"
+        title="Cerrar sesión"
+        className="fixed right-3 top-3 lg:right-4 lg:top-4 z-50 rounded-xl bg-[#05111d] border border-white/20 p-2 sm:px-3 text-white/80 transition-colors hover:bg-white/20 hover:text-white shadow-lg flex items-center gap-1.5 text-xs font-bold"
       >
-        <LogOut className="h-5 w-5" />
+        <LogOut className="h-4 w-4 text-rose-400" />
+        <span className="hidden sm:inline">Cerrar Sesión</span>
       </button>
 
       {role === 'user' && (
@@ -71,19 +72,20 @@ export default function App() {
           onClick={() => setUserView('profile')}
           aria-label="Abrir perfil"
           title="Abrir perfil"
-          className="fixed right-16 top-4 z-50 rounded-lg bg-white/10 p-2 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+          className="fixed right-16 sm:right-32 top-3 lg:top-4 z-50 rounded-xl bg-[#05111d] border border-white/20 p-2 sm:px-3 text-white/80 transition-colors hover:bg-white/20 hover:text-white shadow-lg flex items-center gap-1.5 text-xs font-bold"
         >
-          <UserRound className="h-5 w-5" />
+          <UserRound className="h-4 w-4 text-[#00E676]" />
+          <span className="hidden sm:inline">Perfil</span>
         </button>
       )}
 
       {role === 'admin' ? (
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen w-full max-w-full overflow-x-hidden">
           <AdminSidebar 
             currentView={adminView} 
             onNavigate={setAdminView}
           />
-          <main className="flex-1 ml-0 lg:ml-64 p-4 lg:p-8">
+          <main className="flex-1 ml-0 lg:ml-64 p-3 pt-16 sm:p-4 sm:pt-16 lg:p-8 lg:pt-8 w-full max-w-full overflow-x-hidden">
             {adminView === 'dashboard' && <AdminDashboard />}
             {adminView === 'members' && <MembersList onViewMember={handleViewMember} />}
             {adminView === 'member-detail' && selectedMemberId && (
@@ -96,8 +98,8 @@ export default function App() {
           </main>
         </div>
       ) : (
-        <div className="flex min-h-screen flex-col pb-20">
-          <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
+        <div className="flex min-h-screen flex-col pb-20 w-full max-w-full overflow-x-hidden">
+          <main className="flex-1 p-3 sm:p-4 lg:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
             {userView === 'home' && currentUser && <UserHome user={currentUser} onNavigate={setUserView} />}
             {userView === 'plan' && currentUser && (
               <UserPlan
