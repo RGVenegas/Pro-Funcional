@@ -38,8 +38,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
+  const port = process.env.PORT || 3001;
+  await app.listen(port, '0.0.0.0');
   console.log(`🚀 ProFuncional Backend corriendo en: http://localhost:${port}/api`);
   console.log(`📑 Documentación Swagger disponible en: http://localhost:${port}/api/docs`);
 }
