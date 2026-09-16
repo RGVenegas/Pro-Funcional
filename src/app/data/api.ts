@@ -1,8 +1,8 @@
 import { processOfflineQueue, isOnline, getOfflineQueue, clearOfflineQueue } from './offlineQueue';
 
 const env = (import.meta as any).env || {};
-export const apiEnabled = Boolean(env.VITE_API_URL);
-const base = String(env.VITE_API_URL || '').replace(/\/$/, '');
+export const apiEnabled = true;
+const base = String(env.VITE_API_URL || '/api').replace(/\/$/, '');
 let token = typeof sessionStorage === 'undefined' ? '' : sessionStorage.getItem('profuncional-token') || '';
 export let serverSnapshot: any = { members: [], bookings: [], blocks: [], activities: [], rewards: [] };
 
