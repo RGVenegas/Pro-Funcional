@@ -33,7 +33,7 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
 
   // Form state for clinical evaluation
   const [evaPain, setEvaPain] = useState<number>(4);
-  const [romDegrees, setRomDegrees] = useState<number>(110);
+  const [romDegrees, setRomDegrees] = useState<number | string>(110);
   const [jointOrArea, setJointOrArea] = useState<string>('Rodilla derecha');
   const [soapS, setSoapS] = useState<string>('');
   const [soapO, setSoapO] = useState<string>('');
@@ -139,6 +139,13 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
     }
   };
 
+  const handleFillSoapTemplate = () => {
+    setSoapS('Paciente refiere leve molestia en zona evaluada durante esfuerzo. Refiere avance positivo en actividades diarias.');
+    setSoapO('ROM medido con buena tolerancia. Sin edema activo. Fuerza muscular 4/5.');
+    setSoapA('Fase de reintegro funcional y readaptación. Buena tolerancia a la carga progresiva.');
+    setSoapP('Realizar 3 series x 10 rep. de ejercicios de control motor. Descarga miofascial al finalizar.');
+  };
+
   const handleOpenNewSoap = () => {
     setEditingEvalId(null);
     setEvaPain(4);
@@ -185,11 +192,12 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
 
   const handleSaveEvaluation = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsedRom = typeof romDegrees === 'string' ? (parseInt(romDegrees, 10) || 0) : (romDegrees || 0);
     const evaluationData = {
       date: today(),
       professional: author,
       evaPain,
-      romDegrees,
+      romDegrees: parsedRom,
       jointOrArea: jointOrArea.trim() || 'Zona / Articulación',
       soap: {
         subjective: soapS.trim() || 'Sin observaciones subjetivas',
@@ -501,22 +509,54 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
           {activeTab === 'clinical' && canEdit && (
             <div className="space-y-6">
               {showSoapForm ? (
-                <form onSubmit={handleSaveEvaluation} className="rounded-xl border border-[#00E676]/40 bg-[#00E676]/5 p-6 space-y-6">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <form onSubmit={handleSaveEvaluation} className="rounded-2xl border border-[#00E676]/40 bg-[#00E676]/5 p-5 sm:p-6 space-y-6 shadow-xl">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
                     <div>
-                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
                         <Stethoscope className="w-5 h-5 text-[#00E676]" />
                         {editingEvalId ? 'Editar Evaluación Kinésica y Nota SOAP' : 'Nueva Evaluación Kinésica y Nota SOAP'}
                       </h3>
-                      <p className="text-xs text-white/60 mt-1">Registra la evolución del paciente, dolor en escala EVA y movilidad ROM</p>
+                      <p className="text-xs text-white/60 mt-1">Metodología clínica SOAP: Registra la evolución del paciente de forma simple y estructurada</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleCloseSoapForm}
-                      className="text-sm text-white/50 hover:text-white"
-                    >
-                      Cancelar
-                    </button>
+                    
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={handleFillSoapTemplate}
+                        className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-[#00E676]/20 border border-[#00E676]/40 text-[#00E676] text-xs font-bold hover:bg-[#00E676]/30 transition-colors flex items-center justify-center gap-1.5"
+                        title="Rellenar campos con una plantilla estándar de ejemplo"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Usar Plantilla de Ejemplo</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCloseSoapForm}
+                        className="px-3 py-1.5 text-xs text-white/50 hover:text-white bg-white/5 rounded-lg border border-white/10"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Guía rápida mnemotécnica SOAP */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] bg-black/40 p-3 rounded-xl border border-white/10">
+                    <div className="flex items-center gap-2 text-sky-300">
+                      <span className="font-bold px-1.5 py-0.5 rounded bg-sky-500/20 border border-sky-500/30">S</span>
+                      <span><strong>Subjetivo:</strong> Relato y molestias</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-300">
+                      <span className="font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30">O</span>
+                      <span><strong>Objetivo:</strong> Examen y ROM</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-amber-300">
+                      <span className="font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30">A</span>
+                      <span><strong>Análisis:</strong> Diagnóstico/Avance</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-purple-300">
+                      <span className="font-bold px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/30">P</span>
+                      <span><strong>Plan:</strong> Tratamiento y tareas</span>
+                    </div>
                   </div>
 
                   {/* Parámetros Cuantitativos: Zona, EVA, ROM */}
@@ -562,7 +602,11 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
                           min={0}
                           max={180}
                           value={romDegrees}
-                          onChange={(e) => setRomDegrees(Number(e.target.value))}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setRomDegrees(val === '' ? '' : Number(val));
+                          }}
                           placeholder="Ej: 110"
                           className="w-full h-11 px-3 pr-8 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:border-[#00E676] outline-none font-bold"
                         />
@@ -571,61 +615,73 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
                     </div>
                   </div>
 
-                  {/* Notas SOAP */}
+                  {/* Notas SOAP explicadas de fácil comprensión */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-[#00E676] flex items-center gap-1.5">
-                        <span className="h-4 w-4 rounded-full bg-[#00E676]/20 text-[#00E676] flex items-center justify-center text-[10px]">S</span>
-                        Subjetivo (Lo que el paciente refiere)
+                    <div className="space-y-1.5 bg-black/30 p-3 rounded-xl border border-sky-500/20">
+                      <label className="text-xs font-bold text-sky-400 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-5 w-5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 flex items-center justify-center text-[11px] font-bold">S</span>
+                          Subjetivo (Relato del paciente)
+                        </span>
+                        <span className="text-[10px] text-sky-300/70 font-normal">¿Qué siente o relata?</span>
                       </label>
                       <textarea
-                        rows={2}
+                        rows={3}
                         value={soapS}
                         onChange={(e) => setSoapS(e.target.value)}
-                        placeholder="Dolor al apoyar, sensación de inestabilidad, molestias matutinas..."
-                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#00E676] outline-none resize-none"
+                        placeholder="Escribe lo que el paciente expresa: dolor al apoyar, inestabilidad, rigidez matutina..."
+                        className="w-full p-2.5 bg-black/50 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-sky-400 outline-none resize-none"
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-[#00E676] flex items-center gap-1.5">
-                        <span className="h-4 w-4 rounded-full bg-[#00E676]/20 text-[#00E676] flex items-center justify-center text-[10px]">O</span>
-                        Objetivo (Hallazgos del kinesiólogo, palpación, pruebas)
+                    <div className="space-y-1.5 bg-black/30 p-3 rounded-xl border border-emerald-500/20">
+                      <label className="text-xs font-bold text-[#00E676] flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-5 w-5 rounded-full bg-[#00E676]/20 text-[#00E676] border border-[#00E676]/40 flex items-center justify-center text-[11px] font-bold">O</span>
+                          Objetivo (Examen & Mediciones)
+                        </span>
+                        <span className="text-[10px] text-[#00E676]/70 font-normal">¿Qué evalúa el profesional?</span>
                       </label>
                       <textarea
-                        rows={2}
+                        rows={3}
                         value={soapO}
                         onChange={(e) => setSoapO(e.target.value)}
-                        placeholder="Edema leve, test ortopédicos, fuerza muscular 4/5..."
-                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#00E676] outline-none resize-none"
+                        placeholder="Escribe tus hallazgos: presencia de edema, palpación, fuerza 4/5, pruebas ortopédicas..."
+                        className="w-full p-2.5 bg-black/50 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#00E676] outline-none resize-none"
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-[#00E676] flex items-center gap-1.5">
-                        <span className="h-4 w-4 rounded-full bg-[#00E676]/20 text-[#00E676] flex items-center justify-center text-[10px]">A</span>
-                        Análisis / Evaluación (Diagnóstico kinésico y progreso)
+                    <div className="space-y-1.5 bg-black/30 p-3 rounded-xl border border-amber-500/20">
+                      <label className="text-xs font-bold text-amber-400 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-5 w-5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center justify-center text-[11px] font-bold">A</span>
+                          Análisis (Diagnóstico & Avance)
+                        </span>
+                        <span className="text-[10px] text-amber-300/70 font-normal">¿Cuál es la conclusión/fase?</span>
                       </label>
                       <textarea
-                        rows={2}
+                        rows={3}
                         value={soapA}
                         onChange={(e) => setSoapA(e.target.value)}
-                        placeholder="Fase proliferativa, respuesta positiva a la carga excéntrica..."
-                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#00E676] outline-none resize-none"
+                        placeholder="Escribe tu diagnóstico kinésico: respuesta favorable a la carga excéntrica, fase proliferativa..."
+                        className="w-full p-2.5 bg-black/50 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-amber-400 outline-none resize-none"
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-[#00E676] flex items-center gap-1.5">
-                        <span className="h-4 w-4 rounded-full bg-[#00E676]/20 text-[#00E676] flex items-center justify-center text-[10px]">P</span>
-                        Plan Terapéutico (Tratamiento aplicado y tareas)
+                    <div className="space-y-1.5 bg-black/30 p-3 rounded-xl border border-purple-500/20">
+                      <label className="text-xs font-bold text-purple-400 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-5 w-5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center justify-center text-[11px] font-bold">P</span>
+                          Plan Terapéutico (Tratamiento)
+                        </span>
+                        <span className="text-[10px] text-purple-300/70 font-normal">¿Qué tratamiento o tareas aplicar?</span>
                       </label>
                       <textarea
-                        rows={2}
+                        rows={3}
                         value={soapP}
                         onChange={(e) => setSoapP(e.target.value)}
-                        placeholder="Terapia manual, descarga, ejercicios de control motor, 3 series x 10 rep..."
-                        className="w-full p-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-[#00E676] outline-none resize-none"
+                        placeholder="Escribe el plan: terapia manual, ejercicios de control motor (3x10), indicaciones de entrenamiento..."
+                        className="w-full p-2.5 bg-black/50 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/30 focus:border-purple-400 outline-none resize-none"
                       />
                     </div>
                   </div>
@@ -655,7 +711,7 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2.5 rounded-lg bg-[#00E676] text-[#021826] text-sm font-bold hover:bg-[#00E676]/90"
+                      className="px-6 py-2.5 rounded-lg bg-[#00E676] text-[#021826] text-sm font-bold hover:bg-[#00E676]/90 shadow-lg shadow-[#00E676]/20"
                     >
                       {editingEvalId ? 'Guardar Cambios en Ficha' : 'Guardar en Ficha Clínica'}
                     </button>
@@ -665,11 +721,11 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
                 <div className="flex items-center justify-between bg-white/[0.02] border border-white/10 rounded-xl p-4">
                   <div>
                     <h3 className="font-semibold text-white">Historial de Evaluaciones Clínicas</h3>
-                    <p className="text-xs text-white/50">Registro evolutivo con escalas EVA, ROM y notas SOAP</p>
+                    <p className="text-xs text-white/50">Registro evolutivo kinésico con metodología SOAP (EVA & ROM)</p>
                   </div>
                   <button
                     onClick={handleOpenNewSoap}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#00E676] text-[#021826] rounded-lg font-bold text-sm hover:bg-[#00E676]/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#00E676] text-[#021826] rounded-lg font-bold text-sm hover:bg-[#00E676]/90 transition-colors shadow-md shadow-[#00E676]/20"
                   >
                     <PlusCircle className="w-4 h-4" />
                     Nueva Atención
@@ -677,11 +733,11 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
                 </div>
               )}
 
-              {/* Lista de Evaluaciones Previas */}
+              {/* Lista de Evaluaciones Previas con Badges SOAP visuales */}
               <div className="space-y-4">
                 {member.clinicalHistory && member.clinicalHistory.length > 0 ? (
                   member.clinicalHistory.map((evalItem, index) => (
-                    <div key={evalItem.id || index} className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4 hover:border-white/20 transition-colors">
+                    <div key={evalItem.id || index} className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4 hover:border-white/20 transition-colors shadow-lg">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-xl bg-[#00E676]/20 border border-[#00E676]/30 flex items-center justify-center text-[#00E676] font-bold">
@@ -719,30 +775,42 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
                         </div>
                       </div>
 
-                      {/* SOAP Details Grid */}
+                      {/* SOAP Details Grid con badges codificados por color */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                          <span className="font-bold text-[#00E676] block mb-1">S (Subjetivo):</span>
-                          <p className="text-white/80">{evalItem.soap.subjective}</p>
+                        <div className="bg-black/40 p-3.5 rounded-xl border border-sky-500/20 space-y-1">
+                          <span className="font-bold text-sky-300 flex items-center gap-1.5">
+                            <span className="h-4 w-4 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 flex items-center justify-center text-[10px]">S</span>
+                            Subjetivo (Paciente):
+                          </span>
+                          <p className="text-white/80 leading-relaxed">{evalItem.soap.subjective}</p>
                         </div>
-                        <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                          <span className="font-bold text-[#00E676] block mb-1">O (Objetivo):</span>
-                          <p className="text-white/80">{evalItem.soap.objective}</p>
+                        <div className="bg-black/40 p-3.5 rounded-xl border border-emerald-500/20 space-y-1">
+                          <span className="font-bold text-[#00E676] flex items-center gap-1.5">
+                            <span className="h-4 w-4 rounded-full bg-[#00E676]/20 text-[#00E676] border border-[#00E676]/40 flex items-center justify-center text-[10px]">O</span>
+                            Objetivo (Hallazgos & Examen):
+                          </span>
+                          <p className="text-white/80 leading-relaxed">{evalItem.soap.objective}</p>
                         </div>
-                        <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                          <span className="font-bold text-[#00E676] block mb-1">A (Evaluación):</span>
-                          <p className="text-white/80">{evalItem.soap.assessment}</p>
+                        <div className="bg-black/40 p-3.5 rounded-xl border border-amber-500/20 space-y-1">
+                          <span className="font-bold text-amber-300 flex items-center gap-1.5">
+                            <span className="h-4 w-4 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center justify-center text-[10px]">A</span>
+                            Análisis (Diagnóstico & Avance):
+                          </span>
+                          <p className="text-white/80 leading-relaxed">{evalItem.soap.assessment}</p>
                         </div>
-                        <div className="bg-black/30 p-3 rounded-lg border border-white/5">
-                          <span className="font-bold text-[#00E676] block mb-1">P (Plan Terapéutico):</span>
-                          <p className="text-white/80">{evalItem.soap.plan}</p>
+                        <div className="bg-black/40 p-3.5 rounded-xl border border-purple-500/20 space-y-1">
+                          <span className="font-bold text-purple-300 flex items-center gap-1.5">
+                            <span className="h-4 w-4 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center justify-center text-[10px]">P</span>
+                            Plan Terapéutico (Tratamiento):
+                          </span>
+                          <p className="text-white/80 leading-relaxed">{evalItem.soap.plan}</p>
                         </div>
                       </div>
 
                       {evalItem.physicalRestrictions && (
-                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2.5 text-xs text-amber-300 flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                          <span><strong>Restricción activa:</strong> {evalItem.physicalRestrictions}</span>
+                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-300 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                          <span><strong>Restricción física activa para entrenadores:</strong> {evalItem.physicalRestrictions}</span>
                         </div>
                       )}
                     </div>
