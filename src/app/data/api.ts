@@ -21,6 +21,10 @@ export async function request(path: string, method = 'GET', body?: unknown) {
   }
   try {
     const response = await fetch(`${base}${path}`, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+    if (!response.ok && response.status >= 502 && response.status <= 504) {
+      window.dispatchEvent(new Event('profuncional-network-offline'));
+      throw new Error('Servidor backend no disponible.');
+    }
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       if (response.status === 401) { setToken(''); window.dispatchEvent(new Event('profuncional-session-expired')); }
@@ -40,7 +44,10 @@ let refreshing: Promise<void> | undefined;
 export async function testBackendConnection(): Promise<boolean> {
   if (!apiEnabled) return false;
   try {
-    await fetch(`${base}/auth/me`, { method: 'GET' });
+    const res = await fetch(`${base}/auth/me`, { method: 'GET' });
+    if (res.status !== 200 && res.status !== 401) {
+      return false;
+    }
     return true;
   } catch {
     return false;
@@ -111,9 +118,12 @@ if (typeof window !== 'undefined') {
   });
 
   if (apiEnabled) {
-    setInterval(async () => {
+    const checkHealth = async () => {
       try {
-        await fetch(`${base}/auth/me`, { method: 'GET' });
+        const res = await fetch(`${base}/auth/me`, { method: 'GET' });
+        if (res.status !== 200 && res.status !== 401) {
+          throw new Error('Backend server is down');
+        }
         if (lastKnownOnlineStatus !== true) {
           lastKnownOnlineStatus = true;
           window.dispatchEvent(new Event('profuncional-network-online'));
@@ -124,7 +134,10 @@ if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('profuncional-network-offline'));
         }
       }
-    }, 5000);
+    };
+    void checkHealth();
+    setInterval(checkHealth, 2000);
   }
 }
+
 

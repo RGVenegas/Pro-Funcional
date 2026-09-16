@@ -21,60 +21,86 @@ Ecosistema digital compuesto por un **Programa de Escritorio/PC** para la admini
 
 ---
 
-## 🚀 Guía de Instalación y Ejecución
+## 🚀 Guía de Instalación y Ejecución paso a paso
 
-### 1. Iniciar la Aplicación Frontend (Programa PC & App Móvil UI)
+---
+
+### Paso 1: Instalación de Dependencias 📦 *(Solo se ejecuta la primera vez)*
+
+Ejecuta estos comandos únicamente la primera vez que descargues o clones el proyecto en una máquina nueva:
 
 ```bash
-# 1. Instalar dependencias del frontend
+# 1. Instalar dependencias del Frontend (Carpeta principal)
 npm install
 
-# 2. Iniciar servidor de desarrollo (Vite)
-npm run dev
-
-# 3. Compilar bundle de producción
-npm run build
+# 2. Instalar dependencias del Backend
+cd backend
+npm install
+cd ..
 ```
 
 ---
 
-### 2. Iniciar el Servidor Backend API (NestJS)
+### Paso 2: Ejecución del Programa Frontend (PC & App Web) 💻
+
+Para iniciar la interfaz de usuario (Programa PC Staff y App Móvil Web):
+
+```bash
+# Iniciar servidor de desarrollo Vite
+npm run dev
+```
+
+> **Acceso Local:** Abre tu navegador en **http://localhost:5173**
+
+---
+
+### Paso 3: Ejecución del Servidor Backend API (NestJS & Supabase) ⚙️
+
+Si deseas ejecutar el servidor API backend para la sincronización y persistencia con PostgreSQL / Supabase:
 
 ```bash
 # 1. Ingresar a la carpeta backend
 cd backend
 
-# 2. Instalar dependencias del backend
-npm install
-
-# 3. Iniciar el servidor NestJS en desarrollo
-npx nest start --watch
-
-# 4. Compilar producción NestJS
-npx nest build
+# 2. Iniciar el servidor NestJS en modo desarrollo
+npm run start:dev
 ```
 
-> **Nota:** El servidor API NestJS correrá localmente en **http://localhost:3000** con documentación Swagger interactiva disponible en **http://localhost:3000/api**.
+> **Acceso API:** El servidor API correrá localmente en **http://localhost:3000** con documentación Swagger interactiva disponible en **http://localhost:3000/api**.
 
 ---
 
-### 3. Cómo Probar la App Móvil (Vista Celular)
+### Paso 4: Conexión desde Dispositivos Móviles (Celulares / iPhones / Tablets) 📱
 
-La aplicación cuenta con una interfaz **Mobile-First 100% Responsiva**. Puedes probar la experiencia móvil de 2 formas:
+La aplicación cuenta con una interfaz **Mobile-First 100% Responsiva**. Puedes probar la experiencia desde tu teléfono celular de 2 formas:
 
-#### Opción A: Modo Celular en el Navegador PC (Emulación Rápida)
+#### Opción A: Desde un Celular Real (Vía Red Wi-Fi Local)
+1. Asegúrate de iniciar la aplicación con `npm run dev` en tu PC. (El archivo `vite.config.ts` ya está configurado con `host: true` para escuchar peticiones en la red).
+2. Vite te mostrará la IP local de tu máquina en la terminal (Ejemplo: `Network: http://192.168.0.4:5173`).
+3. En tu celular (conectado a la **misma red Wi-Fi** que tu PC), abre Chrome o Safari e ingresa a esa dirección (ej. `http://192.168.0.4:5173`).
+
+#### Opción B: Modo Celular en el Navegador de la PC (Emulación Rápida)
 1. Abre **http://localhost:5173** en Chrome o Edge.
 2. Presiona **`F12`** (o Clic Derecho $\rightarrow$ *Inspeccionar*).
-3. Presiona **`Ctrl + Shift + M`** (o haz clic en el icono de celular/tablet en las Herramientas de Desarrollador).
+3. Presiona **`Ctrl + Shift + M`** (icono de celular/tablet en DevTools).
 4. Selecciona un dispositivo como **iPhone 14/15 Pro** o **Samsung Galaxy**.
 
-#### Opción B: Probar desde un Celular Real (Vía Red Wi-Fi Local)
-1. En la terminal del proyecto, inicia Vite permitiendo conexiones en la red local:
-   ```bash
-   npm run dev -- --host
-   ```
-2. Vite te entregará la IP local de tu computador (ejemplo: `Network: http://192.168.1.15:5173`).
-3. En tu teléfono celular (conectado al mismo Wi-Fi que tu PC), abre Chrome o Safari e ingresa a esa dirección URL.
+---
+
+### Paso 5: Compilación para Producción 🏗️ *(Opcional)*
+
+Si necesitas generar los archivos optimizados para despliegue en servidor final:
+
+```bash
+# Compilar Frontend (Genera carpeta /dist)
+npm run build
+
+# Compilar Backend NestJS (Genera carpeta backend/dist)
+cd backend
+npm run build
+```
+
+
 
 ---
 
@@ -99,6 +125,12 @@ Para garantizar la disponibilidad ininterrumpida tanto en entornos sin conexión
 1. **Capa Base Demo (Fallback)**: Garantiza que todos los miembros iniciales, bloques de Lunes a Domingo e historiales kinesiológicos estén disponibles por defecto.
 2. **Capa de Almacenamiento Local (`localStorage`)**: Guarda instantáneamente los nuevos registros de usuarios, reservas creadas, evaluaciones clínicas SOAP escritas y cambios de asistencia en el dispositivo.
 3. **Capa Servidor Backend (NestJS + Supabase PostgreSQL)**: Sincroniza datos en tiempo real mediante fusionadores (`Map` por email/ID) que enriquecen los registros sin sobrescribir ni eliminar miembros creados localmente o bloques horarios de la parrilla.
+
+### 🔄 Detección y Demostración Automática Online / Offline
+* **Sondeo Inteligente en Tiempo Real (2 segundos)**: El sistema verifica continuamente la disponibilidad de la API Backend.
+* **Modo Servidor Encendido (`npm run start:dev`)**: Muestra brevemente una animación de verificación (*"Evaluando conexión con Supabase..."*), confirma en verde (*"Conexión exitosa con Supabase — Todos los datos están al día"*) y se oculta automáticamente a los 4 segundos para dejar la interfaz limpia.
+* **Modo Servidor Apagado (Demostración)**: Si se detiene la ejecución del backend, el sistema activa automáticamente en máximo 2 segundos el banner de advertencia (*"Se perdió la conexión con Supabase — Operando en Modo Offline"*), demostrando la tolerancia a fallos ante evaluadores sin detener la experiencia de usuario.
+
 
 ---
 

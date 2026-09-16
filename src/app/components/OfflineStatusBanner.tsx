@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { Wifi, WifiOff, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { getOfflineQueue, isOnline } from '../data/offlineQueue';
-import { syncAndRefresh } from '../data/api';
+import { testBackendConnection } from '../data/api';
 
 export const OfflineStatusBanner: React.FC = () => {
   const [online, setOnline] = useState<boolean>(isOnline());
@@ -10,7 +10,8 @@ export const OfflineStatusBanner: React.FC = () => {
   const [syncState, setSyncState] = useState<'idle' | 'evaluating' | 'success' | 'failed'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const wasOfflineRef = useRef<boolean>(!isOnline() || getOfflineQueue().length > 0);
+  const evalTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const wasOfflineRef = useRef<boolean>(!isOnline());
 
   const showTemporarySuccess = (msg: string) => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -30,28 +31,47 @@ export const OfflineStatusBanner: React.FC = () => {
 
     const handleOffline = () => {
       wasOfflineRef.current = true;
+      if (evalTimerRef.current) clearTimeout(evalTimerRef.current);
       setOnline(false);
       setSyncedMessage(null);
-      setSyncState('idle');
+      setSyncState('failed');
+      setErrorMessage('Se perdió la conexión con Supabase — Operando en Modo Offline');
       updateQueue();
     };
 
     const handleOnline = () => {
-      setOnline(true);
       updateQueue();
-      if (wasOfflineRef.current) {
+      if (wasOfflineRef.current || !online) {
         wasOfflineRef.current = false;
-        showTemporarySuccess('Conexión exitosa con Supabase — Todos los datos están al día');
+        setSyncState('evaluating');
+        if (evalTimerRef.current) clearTimeout(evalTimerRef.current);
+        evalTimerRef.current = setTimeout(() => {
+          setOnline(true);
+          setErrorMessage(null);
+          showTemporarySuccess('Conexión exitosa con Supabase — Todos los datos están al día');
+        }, 1200);
+      } else {
+        setOnline(true);
+        setErrorMessage(null);
+        setSyncState('idle');
       }
     };
 
     const handleSynced = () => {
       updateQueue();
-      if (wasOfflineRef.current) {
-        wasOfflineRef.current = false;
-        showTemporarySuccess('Conexión exitosa con Supabase — Sincronización completada');
-      }
+      handleOnline();
     };
+
+    // Initial health check on mount
+    void (async () => {
+      const alive = await testBackendConnection();
+      setOnline(alive);
+      if (!alive) {
+        wasOfflineRef.current = true;
+        setSyncState('failed');
+        setErrorMessage('Se perdió la conexión con Supabase — Operando en Modo Offline');
+      }
+    })();
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -68,76 +88,53 @@ export const OfflineStatusBanner: React.FC = () => {
       window.removeEventListener('profuncional-queue-updated', updateQueue);
       window.removeEventListener('profuncional-queue-synced', handleSynced);
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (evalTimerRef.current) clearTimeout(evalTimerRef.current);
     };
   }, []);
 
-  const handleManualSync = async () => {
-    setSyncState('evaluating');
-    setErrorMessage(null);
-    try {
-      await syncAndRefresh();
-      setOnline(true);
-      setQueueCount(0);
-      showTemporarySuccess('Conexión exitosa con Supabase — Sincronización completada');
-    } catch (e) {
-      setOnline(false);
-      setSyncState('failed');
-      setErrorMessage('❌ Conexión fallida — El servidor backend no responde. Guardando cambios localmente.');
-    }
-  };
-
+  // Hide banner completely when online, no pending operations, and no active message/evaluation
   if (online && queueCount === 0 && !syncedMessage && syncState === 'idle') {
     return null;
   }
 
   return (
-    <div className="w-full bg-[#0b1726] border-b border-white/10 px-4 py-2.5 text-xs font-medium text-white transition-all flex items-center justify-between shadow-lg z-50 animate-fadeIn">
+    <div
+      className={`w-full border-b px-4 py-2.5 text-xs font-medium transition-all flex items-center justify-between shadow-lg z-50 animate-fadeIn ${
+        !online || syncState === 'failed'
+          ? 'bg-amber-950/90 border-amber-500/40 text-amber-200'
+          : syncState === 'evaluating'
+          ? 'bg-sky-950/90 border-sky-500/40 text-sky-200'
+          : 'bg-[#0b1726] border-white/10 text-white'
+      }`}
+    >
       {syncState === 'evaluating' ? (
         <div className="flex items-center space-x-2 text-sky-300">
-          <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+          <Loader2 className="w-4 h-4 animate-spin text-sky-400 shrink-0" />
           <span>
             <strong>Evaluando conexión con Supabase...</strong> Verificando disponibilidad del backend
           </span>
         </div>
-      ) : syncState === 'failed' || errorMessage ? (
-        <div className="flex items-center space-x-2 text-rose-300">
-          <AlertTriangle className="w-4 h-4 text-rose-400 animate-pulse flex-shrink-0" />
+      ) : !online || syncState === 'failed' ? (
+        <div className="flex items-center space-x-2 text-amber-300">
+          <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
           <span>
-            <strong>Conexión fallida</strong> — El servidor backend no responde. Guardando cambios localmente{' '}
-            {queueCount > 0 && `(${queueCount} ${queueCount === 1 ? 'operación pendiente' : 'operaciones pendientes'})`}
-          </span>
-        </div>
-      ) : !online ? (
-        <div className="flex items-center space-x-2 text-amber-400">
-          <WifiOff className="w-4 h-4 animate-pulse text-amber-400 flex-shrink-0" />
-          <span>
-            <strong>Se perdió la conexión con Supabase</strong> — Operando en Modo Offline{' '}
-            {queueCount > 0 && `(${queueCount} ${queueCount === 1 ? 'operación pendiente' : 'operaciones pendientes'})`}
+            <strong>{errorMessage || 'Se perdió la conexión con Supabase — Operando en Modo Offline'}</strong>
+            {queueCount > 0 && ` (${queueCount} ${queueCount === 1 ? 'operación pendiente' : 'operaciones pendientes'})`}
           </span>
         </div>
       ) : syncedMessage ? (
         <div className="flex items-center space-x-2 text-[#00E676]">
-          <CheckCircle2 className="w-4 h-4 text-[#00E676] flex-shrink-0" />
+          <CheckCircle2 className="w-4 h-4 text-[#00E676] shrink-0" />
           <span className="font-semibold">{syncedMessage}</span>
         </div>
       ) : queueCount > 0 ? (
         <div className="flex items-center space-x-2 text-sky-400">
-          <Wifi className="w-4 h-4 text-sky-400 flex-shrink-0" />
+          <Wifi className="w-4 h-4 text-sky-400 shrink-0" />
           <span>
             {queueCount} {queueCount === 1 ? 'operación pendiente' : 'operaciones pendientes'} por sincronizar con Supabase
           </span>
         </div>
       ) : null}
-
-      {(queueCount > 0 || !online || syncState === 'failed') && syncState !== 'evaluating' && (
-        <button
-          onClick={handleManualSync}
-          className="flex items-center space-x-1.5 bg-[#00E676]/20 hover:bg-[#00E676]/30 text-[#00E676] border border-[#00E676]/40 px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Sincronizar ahora</span>
-        </button>
-      )}
     </div>
   );
 };
