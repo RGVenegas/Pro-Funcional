@@ -966,7 +966,6 @@ export function rescheduleBookingTransaction(id: string, identity: string, block
   const all = getUserBookings();
   const old = all.find(b => b.id === id);
   if (!old || !owns(old, identity) || (old.status && old.status !== 'pending')) return { success: false, message: 'Reserva no disponible.' };
-  if (bookingStart(old) - Date.now() < BOOKING_NOTICE_HOURS * 3600000) return { success: false, message: 'Para reagendar deben faltar al menos 24 horas. Contacta a tu profesional.' };
   const error = validateSlot(resolveMember(identity)!, blockId, date, id);
   if (error) return { success: false, message: error };
   const block = getCentralScheduleBlocks().find(b => b.id === blockId)!;

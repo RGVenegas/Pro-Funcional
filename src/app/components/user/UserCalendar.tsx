@@ -115,12 +115,6 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
     setReschedulingBooking(booking);
     setRescheduleNotice(null);
 
-    // Dynamic 24h notice check right on open
-    const hoursNotice = (appointmentTime(booking.date, booking.time.split(' - ')[0]) - Date.now()) / 3600000;
-    if (hoursNotice < 24) {
-      setRescheduleNotice('⚠️ Esta cita es en menos de 24 horas. La política del centro no permite reagendamiento autónomo con menos de 24h de aviso. Por favor contacta al equipo.');
-    }
-
     const available = scheduleBlocks.filter((b) => b.isActive && bookingsForSlot(b.id, getDateForDayOfWeek(b.dayOfWeek)).length < b.capacity);
     const initialBlock = available.find((b) => b.id === booking.blockId) || available[0];
     if (initialBlock) {

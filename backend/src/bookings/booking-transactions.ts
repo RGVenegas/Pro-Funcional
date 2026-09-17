@@ -89,7 +89,6 @@ export class BookingsService {
   async reschedule(id: string, user: { id: string; role: Role; name: string }, dto: RescheduleBookingDto) {
     return serial(this.prisma, async tx => {
       const original = await this.owned(tx, id, user);
-      if (original.bookingDate.getTime() - Date.now() < BOOKING_NOTICE_HOURS * 3600000) throw new BadRequestException('Para reagendar deben faltar al menos 24 horas.');
       const { block, bookingDate } = await this.slot(tx, original.userId, dto.newScheduleBlockId, dto.newBookingDate, id);
       if (original.packageId) { const pack = await tx.sessionPackage.findUnique({ where: { id: original.packageId } }); if (pack?.expiresAt && pack.expiresAt < bookingDate) throw new BadRequestException('La nueva fecha supera la vigencia del paquete.'); }
       const booking = await tx.booking.update({ where: { id }, data: { scheduleBlockId: block.id, bookingDate, confirmedAt: null } });
