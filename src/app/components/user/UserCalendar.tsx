@@ -330,7 +330,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
             const dateInfo = getWeekDateInfo(currentWeek, index);
             const targetDateStr = dateInfo.dateStr;
             const dateNum = dateInfo.dateNum;
-            const isToday = currentWeek === 0 && index === 2; // Wednesday demo
+            const isToday = targetDateStr === today();
 
             // Filter schedule blocks for gym schedule
             const dayBlocks = scheduleBlocks.filter((b) => b.dayOfWeek === day && b.isActive);
