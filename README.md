@@ -7,6 +7,7 @@ Ecosistema digital compuesto por un **Programa de Escritorio/PC** para la admini
 ## 🛠️ Arquitectura y Tecnologías
 
 ### 💻 Frontend (Programa PC & App Móvil)
+
 - **Framework & Lenguaje**: React 18 + TypeScript
 - **Bundler & Tooling**: Vite 6
 - **Estilos & Branding**: Tailwind CSS v4 (Identidad Verde Limón `#00E676` / `#00B4D8`) + Radix UI + Lucide Icons
@@ -14,6 +15,7 @@ Ecosistema digital compuesto por un **Programa de Escritorio/PC** para la admini
 - **Componentes**: React Hook Form, Date-fns, Sonner, QRCode.react, Canvas Confetti
 
 ### ⚙️ Backend (API REST & Servidor)
+
 - **Framework**: NestJS (Node.js / TypeScript)
 - **Base de Datos & Auth**: PostgreSQL administrado vía **Supabase** (Supabase Auth / Prisma ORM)
 - **Pasarela de Pagos**: Webpay Plus (Transbank) / MercadoPago API
@@ -75,11 +77,13 @@ npm run start:dev
 La aplicación cuenta con una interfaz **Mobile-First 100% Responsiva**. Puedes probar la experiencia desde tu teléfono celular de 2 formas:
 
 #### Opción A: Desde un Celular Real (Vía Red Wi-Fi Local)
+
 1. Asegúrate de iniciar la aplicación con `npm run dev` en tu PC. (El archivo `vite.config.ts` ya está configurado con `host: true` para escuchar peticiones en la red).
 2. Vite te mostrará la IP local de tu máquina en la terminal (Ejemplo: `Network: http://192.168.0.4:5173`).
 3. En tu celular (conectado a la **misma red Wi-Fi** que tu PC), abre Chrome o Safari e ingresa a esa dirección (ej. `http://192.168.0.4:5173`).
 
 #### Opción B: Modo Celular en el Navegador de la PC (Emulación Rápida)
+
 1. Abre **http://localhost:5173** en Chrome o Edge.
 2. Presiona **`F12`** (o Clic Derecho $\rightarrow$ *Inspeccionar*).
 3. Presiona **`Ctrl + Shift + M`** (icono de celular/tablet en DevTools).
@@ -100,21 +104,19 @@ cd backend
 npm run build
 ```
 
-
-
 ---
 
 ## 🔐 Credenciales de Acceso y Demostración
 
 El sistema cuenta con validación estricta de credenciales y perfiles preconfigurados con historiales clínicos y paquetes:
 
-| Perfil                                            | Correo de Acceso              | Contraseña Válida                  | Paquete / Rol                       |
-| :------------------------------------------------ | :---------------------------- | :----------------------------------- | :---------------------------------- |
-| **Paciente (Nuevo Registro / Demostración)**      | `pablito.loncon@gmail.com`   | `password123` *(o `12345678`)* | Pack Recuperación Activa (8 ses)   |
-| **Paciente (LCA / Readaptación)**          | `camila.gonzalez@gmail.com` | `password123` *(o `12345678`)* | Pack Recuperación Activa (8 ses)   |
-| **Paciente (Tendinopatía / Funcional)**    | `juan.perez@gmail.com`      | `password123` *(o `12345678`)* | Pack Readaptación Total (12 ses)   |
-| **Paciente (Hombro doloroso)**              | `matias.rojas@gmail.com`    | `password123` *(o `12345678`)* | Pack Básico Kinesiológico (4 ses) |
-| **Personal (Kinesiólogo / Admin / Coach)** | `admin@profuncional.cl`     | `admin1234`                        | Programa PC Staff                   |
+| Perfil                                              | Correo de Acceso              | Contraseña Válida                  | Paquete / Rol                       |
+| :-------------------------------------------------- | :---------------------------- | :----------------------------------- | :---------------------------------- |
+| **Paciente (Nuevo Registro / Demostración)** | `pablito.loncon@gmail.com`  | `password123` *(o `12345678`)* | Pack Recuperación Activa (8 ses)   |
+| **Paciente (LCA / Readaptación)**            | `camila.gonzalez@gmail.com` | `password123` *(o `12345678`)* | Pack Recuperación Activa (8 ses)   |
+| **Paciente (Tendinopatía / Funcional)**      | `juan.perez@gmail.com`      | `password123` *(o `12345678`)* | Pack Readaptación Total (12 ses)   |
+| **Paciente (Hombro doloroso)**                | `matias.rojas@gmail.com`    | `password123` *(o `12345678`)* | Pack Básico Kinesiológico (4 ses) |
+| **Personal (Kinesiólogo / Admin / Coach)**   | `admin@profuncional.cl`     | `admin1234`                        | Programa PC Staff                   |
 
 ---
 
@@ -127,10 +129,10 @@ Para garantizar la disponibilidad ininterrumpida tanto en entornos sin conexión
 3. **Capa Servidor Backend (NestJS + Supabase PostgreSQL)**: Sincroniza datos en tiempo real mediante fusionadores (`Map` por email/ID) que enriquecen los registros sin sobrescribir ni eliminar miembros creados localmente o bloques horarios de la parrilla.
 
 ### 🔄 Detección y Demostración Automática Online / Offline
+
 * **Sondeo Inteligente en Tiempo Real (2 segundos)**: El sistema verifica continuamente la disponibilidad de la API Backend.
 * **Modo Servidor Encendido (`npm run start:dev`)**: Muestra brevemente una animación de verificación (*"Evaluando conexión con Supabase..."*), confirma en verde (*"Conexión exitosa con Supabase — Todos los datos están al día"*) y se oculta automáticamente a los 4 segundos para dejar la interfaz limpia.
 * **Modo Servidor Apagado (Demostración)**: Si se detiene la ejecución del backend, el sistema activa automáticamente en máximo 2 segundos el banner de advertencia (*"Se perdió la conexión con Supabase — Operando en Modo Offline"*), demostrando la tolerancia a fallos ante evaluadores sin detener la experiencia de usuario.
-
 
 ---
 
