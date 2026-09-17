@@ -66,6 +66,28 @@ npx cap open ios       # Compilación en Xcode (macOS)
 
 ---
 
+## 📄 Idea 3: Idempotencia en la API, Control de Caché HTTP y Sincronización entre Pestañas (Cross-Tab Broadcast)
+
+### 🎯 Objetivo
+
+Eliminar inconsistencias de datos desactualizados ("caché viejo") cuando los usuarios mantienen múltiples pestañas abiertas, retornan a la aplicación tras estar inactivos o efectúan reintentos de peticiones de red.
+
+### 🛠️ Detalles del Funcionamiento
+
+1. **Garantía de Idempotencia (`Idempotency-Key` Header):**
+   - Todas las mutaciones (reservas, reagendamientos, fichas kinésicas, aprobaciones de rutinas) envían una cabecera HTTP `Idempotency-Key` única (`crypto.randomUUID()`).
+   - Previene duplicidad de reservas o side-effects en el servidor si la petición se reintenta por red o doble clic.
+2. **Control Estricto de Caché HTTP (Invalidación Inmediata):**
+   - Las solicitudes incluyen cabeceras `Cache-Control: no-cache, no-store, must-revalidate` y `Pragma: no-cache`.
+   - Garantiza que el navegador nunca devuelva respuestas obsoletas del historial de caché al consultar el estado de la aplicación.
+3. **Sincronización en Tiempo Real entre Pestañas (`BroadcastChannel` API):**
+   - Al realizar un cambio en una pestaña, la app transmite una señal mediante `BroadcastChannel('profuncional-cross-tab-sync')`.
+   - Todas las demás pestañas abiertas en el navegador se actualizan instantáneamente sin necesidad de recargar la página.
+4. **Re-sincronización al Volver a la Pestaña (`visibilitychange`):**
+   - Al seleccionar la pestaña tras haber estado inactiva (`document.addEventListener('visibilitychange')`), la interfaz refresca automáticamente los datos del backend para mostrar siempre la información real vigente.
+
+---
+
 ## 📋 Estado del Documento y de las Implementaciones
 
 * **Idea 1 — Arquitectura Offline-First y Sincronización Automática:**
@@ -75,3 +97,8 @@ npx cap open ios       # Compilación en Xcode (macOS)
 * **Idea 2 — Aplicación Móvil Nativa (iOS & Android) con Capacitor:**
 
   - **Estado:** 💡 *Propuesta técnica documentada — Pendiente de compilación para tiendas.*
+* **Idea 3 — Idempotencia en la API, Control de Caché HTTP y Sincronización entre Pestañas (Cross-Tab Sync):**
+
+  - **Estado:** ✅ **IMPLEMENTADO Y DOCUMENTADO** — *Listo para revisión de cara al Sprint 3.*
+  - **Archivos creados/modificados:** `src/app/data/api.ts`, `docs/ideas-a-implementar.md`.
+

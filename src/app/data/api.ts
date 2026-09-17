@@ -6,6 +6,29 @@ const base = String(env.VITE_API_URL || '/api').replace(/\/$/, '');
 let token = typeof sessionStorage === 'undefined' ? '' : sessionStorage.getItem('profuncional-token') || '';
 export let serverSnapshot: any = { members: [], bookings: [], blocks: [], activities: [], rewards: [] };
 
+// BroadcastChannel para sincronización en tiempo real entre pestañas abiertas
+const crossTabChannel = typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined'
+  ? new BroadcastChannel('profuncional-cross-tab-sync')
+  : null;
+
+if (crossTabChannel) {
+  crossTabChannel.onmessage = (event) => {
+    if (event.data === 'refresh-snapshot' && token && apiEnabled) {
+      void refreshServer(false);
+    }
+  };
+}
+
+export function broadcastCrossTabRefresh() {
+  if (crossTabChannel) {
+    try {
+      crossTabChannel.postMessage('refresh-snapshot');
+    } catch {
+      // ignore channel errors
+    }
+  }
+}
+
 export function setToken(value: string) {
   token = value;
   if (value) sessionStorage.setItem('profuncional-token', value);
@@ -20,7 +43,18 @@ export async function request(path: string, method = 'GET', body?: unknown) {
     throw new TypeError('Failed to fetch (offline)');
   }
   try {
-    const response = await fetch(`${base}${path}`, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(method !== 'GET' ? { 'Idempotency-Key': crypto.randomUUID() } : {}),
+    };
+    const response = await fetch(`${base}${path}`, {
+      method,
+      headers,
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
     if (!response.ok && response.status >= 502 && response.status <= 504) {
       window.dispatchEvent(new Event('profuncional-network-offline'));
       throw new Error('Servidor backend no disponible.');
@@ -85,13 +119,16 @@ export async function syncAndRefresh(): Promise<{ success: boolean; message: str
 }
 
 
-export async function refreshServer() {
+export async function refreshServer(broadcastOtherTabs = true) {
   if (!apiEnabled || !token) return;
   if (refreshing) return refreshing;
   refreshing = (async () => {
     try {
       serverSnapshot = await request('/workspace');
       for (const name of ['members', 'schedule', 'bookings', 'activity', 'care']) window.dispatchEvent(new Event(`profuncional-${name}-changed`));
+      if (broadcastOtherTabs) {
+        broadcastCrossTabRefresh();
+      }
     } catch (e) {
       console.warn('Could not refresh server snapshot (offline mode):', e);
     }
@@ -102,6 +139,12 @@ export async function refreshServer() {
 let lastKnownOnlineStatus: boolean | null = null;
 
 if (typeof window !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && apiEnabled && token) {
+      void refreshServer(false);
+    }
+  });
+
   window.addEventListener('online', () => {
     if (lastKnownOnlineStatus !== true) {
       lastKnownOnlineStatus = true;
