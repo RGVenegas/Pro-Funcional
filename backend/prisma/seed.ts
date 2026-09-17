@@ -153,53 +153,30 @@ async function main() {
   });
 
   // 3. Crear Bloques Horarios (HU-01)
-  const block1 = await prisma.scheduleBlock.create({
-    data: {
-      dayOfWeek: 'Monday',
-      startTime: '08:00',
-      endTime: '09:00',
-      title: 'Box Clínico Kinesiología 1',
-      instructor: 'Klgo. Andrés Morales',
-      type: SlotType.KINE_BOX,
-      capacity: 1,
-    },
-  });
+  const initialBlocksData = [
+    { id: 'block-1', dayOfWeek: 'Monday', startTime: '08:00', endTime: '09:00', title: 'Box Clínico Kinesiología 1', instructor: 'Klgo. Andrés Morales', type: SlotType.KINE_BOX, capacity: 1 },
+    { id: 'block-2', dayOfWeek: 'Monday', startTime: '18:00', endTime: '19:00', title: 'Entrenamiento Funcional HIIT', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 12 },
+    { id: 'block-3', dayOfWeek: 'Tuesday', startTime: '09:00', endTime: '10:00', title: 'Kinesiología & Terapia Manual', instructor: 'Klga. Valeria Reyes', type: SlotType.KINE_BOX, capacity: 1 },
+    { id: 'block-4', dayOfWeek: 'Tuesday', startTime: '18:00', endTime: '19:00', title: 'Entrenamiento Funcional y Core', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 12 },
+    { id: 'block-5', dayOfWeek: 'Wednesday', startTime: '09:00', endTime: '10:00', title: 'Entrenamiento Funcional HIIT', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 12 },
+    { id: 'block-6', dayOfWeek: 'Wednesday', startTime: '18:00', endTime: '19:00', title: 'Funcional & Control Motor', instructor: 'Prof. Carlos Vega', type: SlotType.FUNCTIONAL, capacity: 10 },
+    { id: 'block-7', dayOfWeek: 'Thursday', startTime: '10:00', endTime: '11:00', title: 'Evaluación Kinésica & ROM', instructor: 'Klgo. Andrés Morales', type: SlotType.KINE_BOX, capacity: 1 },
+    { id: 'block-8', dayOfWeek: 'Thursday', startTime: '18:00', endTime: '19:00', title: 'Entrenamiento Funcional Carga Progresiva', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 12 },
+    { id: 'block-9', dayOfWeek: 'Friday', startTime: '08:00', endTime: '09:00', title: 'Kinesiología Preventiva', instructor: 'Klga. Valeria Reyes', type: SlotType.KINE_BOX, capacity: 1 },
+    { id: 'block-10', dayOfWeek: 'Friday', startTime: '17:00', endTime: '18:00', title: 'Readaptación Funcional Total', instructor: 'Prof. Carlos Vega', type: SlotType.FUNCTIONAL, capacity: 10 },
+    { id: 'block-11', dayOfWeek: 'Saturday', startTime: '09:00', endTime: '10:00', title: 'Evaluación & Readaptación Sabatina', instructor: 'Klgo. Andrés Morales', type: SlotType.KINE_BOX, capacity: 1 },
+    { id: 'block-12', dayOfWeek: 'Saturday', startTime: '10:30', endTime: '11:30', title: 'Entrenamiento Funcional Fin de Semana', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 10 },
+    { id: 'block-13', dayOfWeek: 'Sunday', startTime: '09:30', endTime: '10:30', title: 'Box Kinésico Matinal Dominical', instructor: 'Klgo. Andrés Morales', type: SlotType.KINE_BOX, capacity: 1 },
+    { id: 'block-14', dayOfWeek: 'Sunday', startTime: '10:30', endTime: '11:30', title: 'Movilidad & Recuperación Guiada', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 10 },
+  ];
 
-  const block2 = await prisma.scheduleBlock.create({
-    data: {
-      dayOfWeek: 'Monday',
-      startTime: '09:00',
-      endTime: '10:00',
-      title: 'Entrenamiento Funcional HIIT',
-      instructor: 'Prof. Mike R.',
-      type: SlotType.FUNCTIONAL,
-      capacity: 12,
-    },
-  });
+  for (const b of initialBlocksData) {
+    await prisma.scheduleBlock.create({ data: b });
+  }
 
-  const block3 = await prisma.scheduleBlock.create({
-    data: {
-      dayOfWeek: 'Wednesday',
-      startTime: '08:00',
-      endTime: '09:00',
-      title: 'Box Clínico Kinesiología 2',
-      instructor: 'Klga. Valeria Reyes',
-      type: SlotType.KINE_BOX,
-      capacity: 1,
-    },
-  });
+  const block1 = await prisma.scheduleBlock.findUnique({ where: { id: 'block-1' } });
+  const block2 = await prisma.scheduleBlock.findUnique({ where: { id: 'block-2' } });
 
-  const block4 = await prisma.scheduleBlock.create({
-    data: {
-      dayOfWeek: 'Wednesday',
-      startTime: '18:00',
-      endTime: '19:00',
-      title: 'Readaptación Funcional Grupal',
-      instructor: 'Prof. Carlos Vega',
-      type: SlotType.FUNCTIONAL,
-      capacity: 10,
-    },
-  });
 
   // 4. Crear Reservas de Ejemplo (HU-03)
   const today = new Date();

@@ -1,15 +1,40 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { BookingStatus, Prisma, Role } from '@prisma/client';
+import { BookingStatus, Prisma, Role, SlotType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto, RescheduleBookingDto } from './dto/booking.dto';
 import { serial } from '../common/transaction';
 import { appointmentTime, today, dayNames, BOOKING_NOTICE_HOURS } from '../common/dates';
 
+const DEFAULT_SCHEDULE_BLOCKS: Record<string, { dayOfWeek: string; startTime: string; endTime: string; title: string; instructor: string; type: SlotType; capacity: number }> = {
+  'block-1': { dayOfWeek: 'Monday', startTime: '08:00', endTime: '09:00', title: 'Box Clínico Kinesiología 1', instructor: 'Klgo. Andrés Morales', type: SlotType.KINE_BOX, capacity: 1 },
+  'block-2': { dayOfWeek: 'Monday', startTime: '18:00', endTime: '19:00', title: 'Entrenamiento Funcional HIIT', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 12 },
+  'block-3': { dayOfWeek: 'Tuesday', startTime: '09:00', endTime: '10:00', title: 'Kinesiología & Terapia Manual', instructor: 'Klga. Valeria Reyes', type: SlotType.KINE_BOX, capacity: 1 },
+  'block-4': { dayOfWeek: 'Tuesday', startTime: '18:00', endTime: '19:00', title: 'Entrenamiento Funcional y Core', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 12 },
+  'block-5': { dayOfWeek: 'Wednesday', startTime: '09:00', endTime: '10:00', title: 'Entrenamiento Funcional HIIT', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 12 },
+  'block-6': { dayOfWeek: 'Wednesday', startTime: '18:00', endTime: '19:00', title: 'Funcional & Control Motor', instructor: 'Prof. Carlos Vega', type: SlotType.FUNCTIONAL, capacity: 10 },
+  'block-7': { dayOfWeek: 'Thursday', startTime: '10:00', endTime: '11:00', title: 'Evaluación Kinésica & ROM', instructor: 'Klgo. Andrés Morales', type: SlotType.KINE_BOX, capacity: 1 },
+  'block-8': { dayOfWeek: 'Thursday', startTime: '18:00', endTime: '19:00', title: 'Entrenamiento Funcional Carga Progresiva', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 12 },
+  'block-9': { dayOfWeek: 'Friday', startTime: '08:00', endTime: '09:00', title: 'Kinesiología Preventiva', instructor: 'Klga. Valeria Reyes', type: SlotType.KINE_BOX, capacity: 1 },
+  'block-10': { dayOfWeek: 'Friday', startTime: '17:00', endTime: '18:00', title: 'Readaptación Funcional Total', instructor: 'Prof. Carlos Vega', type: SlotType.FUNCTIONAL, capacity: 10 },
+  'block-11': { dayOfWeek: 'Saturday', startTime: '09:00', endTime: '10:00', title: 'Evaluación & Readaptación Sabatina', instructor: 'Klgo. Andrés Morales', type: SlotType.KINE_BOX, capacity: 1 },
+  'block-12': { dayOfWeek: 'Saturday', startTime: '10:30', endTime: '11:30', title: 'Entrenamiento Funcional Fin de Semana', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 10 },
+  'block-13': { dayOfWeek: 'Sunday', startTime: '09:30', endTime: '10:30', title: 'Box Kinésico Matinal Dominical', instructor: 'Klgo. Andrés Morales', type: SlotType.KINE_BOX, capacity: 1 },
+  'block-14': { dayOfWeek: 'Sunday', startTime: '10:30', endTime: '11:30', title: 'Movilidad & Recuperación Guiada', instructor: 'Prof. Mike R.', type: SlotType.FUNCTIONAL, capacity: 10 },
+};
+
 @Injectable()
 export class BookingsService {
   constructor(private prisma: PrismaService) {}
   private async slot(tx: Prisma.TransactionClient, userId: string, blockId: string, value: string, exceptId?: string) {
-    const block = await tx.scheduleBlock.findUnique({ where: { id: blockId } });
+    let block = await tx.scheduleBlock.findUnique({ where: { id: blockId } });
+    if (!block && DEFAULT_SCHEDULE_BLOCKS[blockId]) {
+      block = await tx.scheduleBlock.create({
+        data: {
+          id: blockId,
+          ...DEFAULT_SCHEDULE_BLOCKS[blockId],
+        },
+      });
+    }
     const user = await tx.user.findUnique({ where: { id: userId } });
     if (!block?.isActive || user?.status !== 'ACTIVE') throw new BadRequestException('Horario o membresía no disponible.');
     const date = value.slice(0, 10);
