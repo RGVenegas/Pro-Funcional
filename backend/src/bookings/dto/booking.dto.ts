@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsUUID } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateBookingDto {
   @ApiProperty({ example: 'b1234567-89ab-cdef-0123-456789abcdef', description: 'ID del bloque horario' })
-  @IsUUID('4', { message: 'El ID del bloque debe ser un UUID válido' })
+  @IsString({ message: 'El ID del bloque debe ser un texto válido' })
   @IsNotEmpty({ message: 'El ID del bloque es requerido' })
   scheduleBlockId: string;
 
@@ -15,7 +15,7 @@ export class CreateBookingDto {
 
 export class RescheduleBookingDto {
   @ApiProperty({ example: 'b1234567-89ab-cdef-0123-456789abcdef', description: 'Nuevo ID de bloque horario' })
-  @IsUUID('4', { message: 'El ID del bloque debe ser un UUID válido' })
+  @IsString({ message: 'El ID del bloque debe ser un texto válido' })
   @IsNotEmpty({ message: 'El nuevo ID de bloque es requerido' })
   newScheduleBlockId: string;
 
@@ -24,3 +24,4 @@ export class RescheduleBookingDto {
   @IsNotEmpty({ message: 'La nueva fecha es requerida' })
   newBookingDate: string;
 }
+

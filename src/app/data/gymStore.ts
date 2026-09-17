@@ -818,7 +818,7 @@ export function addCentralScheduleBlock(block: Omit<CentralScheduleBlock, 'id' |
   const blocks = getCentralScheduleBlocks();
   const newBlock: CentralScheduleBlock = {
     ...block,
-    id: `block-${Date.now()}`,
+    id: crypto.randomUUID(),
     isActive: true,
     students: [],
   };
