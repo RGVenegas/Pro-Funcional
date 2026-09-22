@@ -268,8 +268,10 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
       <div className="rounded-xl border border-[#00E676]/30 bg-[#00E676]/10 p-3.5 flex items-center gap-3 text-xs text-[#00E676]">
         <Clock className="w-5 h-5 flex-shrink-0 text-[#00E676]" />
         <div>
-          <span className="font-bold uppercase tracking-wider block text-[11px] text-[#00E676]">Rangos de Atención Oficial Pro-Funcional</span>
-          <span className="text-white/90">Lunes a Viernes: <strong>07:00 a 21:00 hrs</strong> &nbsp;|&nbsp; Sábados: <strong>08:00 a 14:00 hrs</strong> &nbsp;|&nbsp; Domingos: <strong>09:00 a 13:00 hrs</strong></span>
+          <span className="font-bold uppercase tracking-wider block text-[11px] text-[#00E676]">Bloques Horarios Oficiales Pro-Funcional</span>
+          <span className="text-white/90">
+            <strong>AM:</strong> 08:00 / 09:15 / 10:30 / 11:45 &nbsp;|&nbsp; <strong>PM:</strong> 15:00 / 16:15 / 17:30 / 18:45 / 20:00
+          </span>
         </div>
       </div>
 

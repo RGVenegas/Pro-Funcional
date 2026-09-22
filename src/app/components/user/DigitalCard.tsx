@@ -4,6 +4,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Sparkles, Check } from 'lucide-react';
 import { AuthUser } from '../auth/Login';
 
+import { Logo } from '../shared/Logo';
+
 interface DigitalCardProps {
   user: AuthUser;
 }
@@ -53,11 +55,8 @@ export function DigitalCard({ user: account }: DigitalCardProps) {
             {/* Header */}
             <div className="flex items-start justify-between mb-8">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-6 h-6 text-[#00E676]" />
-                  <h2 className="text-2xl font-bold tracking-[-0.04em] text-white">PRO<span className="text-[#00E676]">FUNCIONAL</span></h2>
-                </div>
-                <p className="text-sm text-white/60">Centro Kinésico-Deportivo</p>
+                <Logo size="md" />
+                <p className="text-xs text-white/60 mt-1">Centro Kinésico-Deportivo</p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-white/60 mb-1">ID de miembro</p>

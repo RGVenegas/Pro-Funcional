@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LayoutDashboard, Users, Calendar, Menu, X } from 'lucide-react';
+import { Logo } from '../shared/Logo';
 
 interface AdminSidebarProps {
   currentView: string;
@@ -17,9 +18,9 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
 
   const MenuContent = () => (
     <div className="flex flex-col h-full">
-      <div className="p-6 border-b border-white/10">
-        <h1 className="text-2xl font-bold tracking-[-0.04em] text-white">PRO<span className="text-[#00E676]">FUNCIONAL</span></h1>
-        <p className="text-sm text-[#F7F7F7]/60 mt-1">Panel administrativo</p>
+      <div className="p-6 border-b border-white/10 space-y-2">
+        <Logo size="md" />
+        <p className="text-xs text-[#F7F7F7]/60 font-semibold tracking-wide uppercase">Panel administrativo</p>
       </div>
       
       <nav className="flex-1 p-4">

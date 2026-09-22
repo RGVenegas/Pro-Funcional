@@ -35,6 +35,8 @@ const modeCopy: Record<AccessMode, { eyebrow: string; title: string; description
   },
 };
 
+import { Logo } from '../shared/Logo';
+
 export function Login({ onAuthenticated }: LoginProps) {
   const [mode, setMode] = useState<AccessMode>('member');
   const [showPassword, setShowPassword] = useState(false);
@@ -195,12 +197,7 @@ export function Login({ onAuthenticated }: LoginProps) {
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-between px-6 py-7 lg:px-12 lg:py-10">
         <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00E676] text-[#030f1d]">
-              <Dumbbell className="h-5 w-5" strokeWidth={2.5} />
-            </div>
-            <span className="text-lg font-bold tracking-[-0.04em]">PRO<span className="text-[#00E676]">FUNCIONAL</span></span>
-          </div>
+          <Logo size="lg" />
           <span className="hidden text-xs font-semibold uppercase tracking-[0.22em] text-white/35 sm:block">Entrena con intencion</span>
         </header>
 

@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Calendar, Dumbbell, QrCode, TrendingUp, Stethoscope, AlertTriangle, Activity, ArrowRight } from 'lucide-react';
 import { AuthUser } from '../auth/Login';
 import { getMemberByEmail, GymMember, subscribeToMembers } from '../../data/gymStore';
+import { Logo } from '../shared/Logo';
 
 interface UserHomeProps {
   user: AuthUser;
@@ -43,10 +44,12 @@ export function UserHome({ user: account, onNavigate }: UserHomeProps) {
     <div className="mx-auto max-w-4xl space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-to-br from-[#00E676]/20 to-[#00E676]/5 rounded-2xl p-6 backdrop-blur-sm border border-[#00E676]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-[#00E676]">Centro Kinésico-Deportivo</span>
-          <h1 className="text-3xl font-black text-[#F7F7F7] mt-0.5">¡Hola, {account.name}!</h1>
-          <p className="text-white/65 text-sm mt-1">Tu avance físico y sesiones agendadas en un solo lugar.</p>
+        <div className="space-y-2">
+          <Logo size="md" />
+          <div>
+            <h1 className="text-3xl font-black text-[#F7F7F7] mt-0.5">¡Hola, {account.name}!</h1>
+            <p className="text-white/65 text-sm mt-1">Tu avance físico y sesiones agendadas en un solo lugar.</p>
+          </div>
         </div>
 
         <button

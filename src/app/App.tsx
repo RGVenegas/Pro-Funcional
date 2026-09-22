@@ -15,6 +15,8 @@ import { AdminSidebar } from './components/navigation/AdminSidebar';
 import { UserBottomNav } from './components/navigation/UserBottomNav';
 import { OfflineStatusBanner } from './components/OfflineStatusBanner';
 
+import { Logo } from './components/shared/Logo';
+
 type Role = 'admin' | 'user';
 type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule';
 type UserView = 'home' | 'plan' | 'calendar' | 'training' | 'card' | 'profile';
@@ -165,6 +167,11 @@ export default function App() {
         </div>
       ) : (
         <div className="flex min-h-screen flex-col pb-20 w-full max-w-full overflow-x-hidden">
+          <header className="sticky top-0 z-40 bg-[#030f1d]/90 backdrop-blur-md border-b border-white/10 px-4 py-3 sm:px-8">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              <Logo size="sm" />
+            </div>
+          </header>
           <main className="flex-1 p-3 sm:p-4 lg:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
             {userView === 'home' && currentUser && <UserHome user={currentUser} onNavigate={navigateUser} />}
             {userView === 'plan' && currentUser && (
