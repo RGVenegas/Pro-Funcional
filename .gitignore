@@ -1,0 +1,14 @@
+node_modules/
+dist/
+backend/node_modules/
+backend/dist/
+.DS_Store
+*.local
+.env
+.env.*
+backend/.env
+archivos de carga/
+presentaciones_e_informes/
+docs/guion-presentacion-sprint-2.md
+docs/informe-hito-2.md
+
