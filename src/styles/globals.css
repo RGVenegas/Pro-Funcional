@@ -211,3 +211,46 @@ html {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 180, 216, 0.6);
 }
+
+button, a, [role='button'], .interactive-element {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease, filter 180ms ease;
+}
+
+button:hover,
+button:focus-visible,
+a:hover,
+a:focus-visible,
+[role='button']:hover,
+[role='button']:focus-visible,
+.interactive-element:hover,
+.interactive-element:focus-visible {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+button:active,
+a:active,
+[role='button']:active,
+.interactive-element:active {
+  transform: translateY(0px) scale(0.99);
+}
+
+button,
+[role='button'] {
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+button:hover,
+[role='button']:hover {
+  box-shadow: 0 10px 25px rgba(0, 230, 118, 0.08);
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 rgba(0, 230, 118, 0.0); }
+  50% { box-shadow: 0 0 18px rgba(0, 230, 118, 0.16); }
+  100% { box-shadow: 0 0 0 rgba(0, 230, 118, 0); }
+}
+
+.interactive-glow:hover {
+  animation: pulseGlow 500ms ease-out;
+}

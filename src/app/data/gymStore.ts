@@ -777,8 +777,56 @@ export function getUserBookings(userName?: string): UserBookingRecord[] {
   }
 
   const list = Array.from(map.values());
-  if (!userName) return list;
-  return list.filter((b) => b.userName.toLowerCase() === userName.toLowerCase());
+  const demoRiskBookings: UserBookingRecord[] = [
+    {
+      id: 'demo-risk-1',
+      blockId: 'block-10',
+      userName: 'Camila Fernández',
+      date: '2026-09-15',
+      time: '08:00 - 09:00',
+      title: 'Entrenamiento Funcional AM',
+      instructor: 'Prof. Mike R.',
+      type: 'functional',
+      createdAt: '2026-09-10T10:00:00.000Z',
+      memberId: '2',
+      status: 'no-show',
+      confirmedAt: '2026-09-10T09:30:00.000Z',
+    },
+    {
+      id: 'demo-risk-2',
+      blockId: 'block-20',
+      userName: 'Camila Fernández',
+      date: '2026-09-17',
+      time: '09:15 - 10:15',
+      title: 'Circuitos Funcionales AM',
+      instructor: 'Prof. Carlos Vega',
+      type: 'functional',
+      createdAt: '2026-09-12T10:00:00.000Z',
+      memberId: '2',
+      status: 'no-show',
+      confirmedAt: '2026-09-12T09:30:00.000Z',
+    },
+    {
+      id: 'demo-risk-3',
+      blockId: 'block-35',
+      userName: 'Camila Fernández',
+      date: '2026-09-22',
+      time: '18:45 - 19:45',
+      title: 'Entrenamiento Funcional HIIT',
+      instructor: 'Prof. Mike R.',
+      type: 'functional',
+      createdAt: '2026-09-18T10:00:00.000Z',
+      memberId: '2',
+      status: 'no-show',
+      confirmedAt: '2026-09-18T09:30:00.000Z',
+    },
+  ];
+
+  const hasDemoRisk = list.some((b) => b.memberId === '2' && b.status === 'no-show' && b.userName === 'Camila Fernández');
+  const merged = hasDemoRisk ? list : [...demoRiskBookings, ...list];
+
+  if (!userName) return merged;
+  return merged.filter((b) => b.userName.toLowerCase() === userName.toLowerCase());
 }
 
 export function saveUserBookings(bookings: UserBookingRecord[]): void {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { LogOut, UserRound } from 'lucide-react';
 import { AuthUser, Login } from './components/auth/Login';
 import { AdminDashboard } from './components/admin/AdminDashboard';
+import { AdminRiskDashboard } from './components/admin/AdminRiskDashboard';
 import { MembersList } from './components/admin/MembersList';
 import { MemberDetail } from './components/admin/MemberDetail';
 import { ScheduleManagement } from './components/admin/ScheduleManagement';
@@ -18,7 +19,7 @@ import { OfflineStatusBanner } from './components/OfflineStatusBanner';
 import { Logo } from './components/shared/Logo';
 
 type Role = 'admin' | 'user';
-type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule';
+type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule' | 'risk';
 type UserView = 'home' | 'plan' | 'calendar' | 'training' | 'card' | 'profile';
 
 export default function App() {
@@ -163,6 +164,7 @@ export default function App() {
               />
             )}
             {adminView === 'schedule' && <ScheduleManagement />}
+            {adminView === 'risk' && <AdminRiskDashboard />}
           </main>
         </div>
       ) : (

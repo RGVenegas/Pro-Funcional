@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Users, Calendar, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Menu, X, AlertTriangle } from 'lucide-react';
 import { Logo } from '../shared/Logo';
 
 interface AdminSidebarProps {
   currentView: string;
-  onNavigate: (view: 'dashboard' | 'members' | 'schedule') => void;
+  onNavigate: (view: 'dashboard' | 'members' | 'schedule' | 'risk') => void;
 }
 
 export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
@@ -14,6 +14,7 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
     { id: 'dashboard', label: 'Resumen', icon: LayoutDashboard },
     { id: 'members', label: 'Miembros', icon: Users },
     { id: 'schedule', label: 'Horarios', icon: Calendar },
+    { id: 'risk', label: 'Riesgo', icon: AlertTriangle },
   ];
 
   const MenuContent = () => (
@@ -35,10 +36,10 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
                 onNavigate(item.id as any);
                 setIsOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
+              className={`interactive-element interactive-glow w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 ${
                 isActive 
-                  ? 'bg-[#00E676] text-[#021826] font-bold shadow-md shadow-[#00E676]/20' 
-                  : 'text-white/80 hover:bg-white/10'
+                  ? 'bg-[#00E676] text-[#021826] font-bold shadow-md shadow-[#00E676]/20 border border-[#00E676]/60' 
+                  : 'text-white/80 hover:bg-white/10 border border-transparent hover:border-white/10'
               }`}
             >
               <Icon className="w-5 h-5" />
