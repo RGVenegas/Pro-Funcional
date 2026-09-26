@@ -126,7 +126,7 @@ Para garantizar la disponibilidad ininterrumpida tanto en entornos sin conexión
 
 1. **Capa Base Demo (Fallback)**: Garantiza que todos los miembros iniciales, bloques de Lunes a Domingo e historiales kinesiológicos estén disponibles por defecto.
 2. **Capa de Almacenamiento Local (`localStorage`)**: Guarda instantáneamente los nuevos registros de usuarios, reservas creadas, evaluaciones clínicas SOAP escritas y cambios de asistencia en el dispositivo.
-3. **Capa Servidor Backend (NestJS + Supabase PostgreSQL)**: Sincroniza datos en tiempo real mediante fusionadores (`Map` por email/ID) que enriquecen los registros sin sobrescribir ni eliminar miembros creados localmente o bloques horarios de la parrilla.
+3. **Capa Servidor Backend (NestJS + Supabase PostgreSQL)**: Sincroniza datos en tiempo real mediante fusionadores (`Map` por email/ID) que enriquecen los registros sin sobrescribir ni eliminar miembros creados localmente o bloques horarios de la agenda.
 
 ### 🔄 Detección y Demostración Automática Online / Offline
 
@@ -141,7 +141,7 @@ Para garantizar la disponibilidad ininterrumpida tanto en entornos sin conexión
 ### 💻 Programa PC (Staff / Kinesiólogos / Entrenadores / Admin)
 
 - **HU-01 · Configuración de Disponibilidad Horaria**: Modal interactivo para definir bloques horarios (Día, Hora inicio/fin, Título, Profesional, Tipo de atención y Capacidad máxima de cupos) publicados en tiempo real de Lunes a Domingo.
-- **HU-02 · Parrilla de Citas y Marcado de Asistencia**: Visualización diaria de boxes kinésicos y clases funcionales con marcado de **"Asistió"** o **"No-Show"** (Inasistencia) y visualización en tiempo real de alumnos inscritos por bloque.
+- **HU-02 · Agenda de Citas y Marcado de Asistencia**: Visualización diaria de boxes kinésicos y clases funcionales con marcado de **"Asistió"** o **"No-Show"** (Inasistencia) y visualización en tiempo real de alumnos inscritos por bloque.
 - **HU-05 · Ficha Clínica Evolutiva (SOAP, EVA, ROM)**: Formulario de atención kinésica con notas **SOAP** (Subjetivo, Objetivo, Análisis, Plan Terapéutico), slider cuantitativo de dolor en escala **EVA (1 a 10)**, movilidad articular **ROM en grados (°)** y botón de **Eliminación de evaluaciones SOAP** registradas por error.
 - **HU-07 · Alertas de Restricciones para Entrenadores**: Pautas médicas de kinesiólogos desplegadas automáticamente en el panel de los entrenadores (ej. *"⚠️ Evitar flexión >90° por LCA"*).
 - **HU-10 · Dashboard de Métricas y Control de Ausentismo**: Control de ocupación, balance de sesiones kinésicas y cálculo de **Tasa de No-Show**.

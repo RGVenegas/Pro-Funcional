@@ -29,7 +29,7 @@ export class ScheduleController {
   @Get('grid')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.KINESIOLOGO, Role.COACH)
-  @ApiOperation({ summary: 'Obtener parrilla diaria con alumnos y restricciones médicas' })
+  @ApiOperation({ summary: 'Obtener agenda diaria con alumnos y restricciones médicas' })
   @ApiQuery({ name: 'date', required: true, example: '2026-08-31' })
   getDailyGrid(@Query('date') date: string) {
     return this.scheduleService.getDailyGrid(date);

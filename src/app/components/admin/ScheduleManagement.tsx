@@ -177,7 +177,7 @@ export function ScheduleManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1 text-[#F7F7F7]">Parrilla de Citas y Sesiones</h1>
+          <h1 className="text-3xl font-bold mb-1 text-[#F7F7F7]">Agenda de Citas y Sesiones</h1>
           <p className="text-white/60 text-sm">Configuración de disponibilidad (HU-01) y control de asistencia kinésica</p>
         </div>
 
