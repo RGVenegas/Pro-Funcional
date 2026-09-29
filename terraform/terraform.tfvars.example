@@ -1,0 +1,8 @@
+# Plantilla de variables para Terraform (Renombrar a terraform.tfvars al configurar credenciales)
+aws_region   = "us-east-1"
+environment  = "prod"
+app_name     = "profuncional"
+db_name      = "profuncional_db"
+db_username  = "profuncional_admin"
+db_password  = "TuPasswordSuperSeguraRDS2026!"
+jwt_secret   = "TuClaveSecretaJWTProFuncional2026!"

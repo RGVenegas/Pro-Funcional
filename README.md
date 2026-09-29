@@ -155,3 +155,75 @@ Para garantizar la disponibilidad ininterrumpida tanto en entornos sin conexión
 - **HU-06 · Gráficos de Evolución Física**: Curvas interactivas de descenso del dolor en escala **EVA (1-10)** e incremento del rango de movimiento **ROM (grados °)** mediante gráficos Recharts.
 - **HU-11 · Recordatorio In-App de Confirmación de Asistencia**: Banner interactivo en la vista principal (*"¿Vas a asistir a la sesión de hoy?"*) que permite al paciente confirmar de forma activa su asistencia antes de la clase.
 - **Credencial Digital QR**: Pase digital dinámico con código QR (`PROFUNCIONAL:ID`) para acceso a torniquetes o recepción.
+
+---
+
+---
+
+## ☁️ Arquitectura de Nube en AWS, IaC y CI/CD
+
+Toda la infraestructura y despliegues para poner a ProFuncional en producción en AWS están preparados mediante código modular e Infraestructura como Código (IaC):
+
+### 🏗️ 1. Estructura de Infraestructura (IaC con Terraform)
+Ubicación: `terraform/`
+- **VPC & Redes (`vpc.tf`)**: VPC con Subredes Públicas (ALB y NAT Gateway) y Subredes Privadas Aisladas para ECS y RDS.
+- **Seguridad & Aislamiento (`security_groups.tf`)**: SG del ALB permite 80/443; SG de ECS Fargate permite tráfico únicamente desde el ALB; SG de RDS permite puerto `5432` únicamente desde el backend ECS.
+- **Application Load Balancer (`alb.tf`)**: Reenvío y balanceo de carga con Health Check en `/api/v1/health`.
+- **Backend ECS Fargate & CloudWatch (`ecs.tf`)**: Cluster Fargate ejecutando contenedores Docker de NestJS en subredes privadas con logs centralizados en CloudWatch.
+- **Base de Datos RDS PostgreSQL (`rds.tf`)**: Instancia de PostgreSQL gestionada en subredes privadas con cifrado en reposo, backups automáticos de 7+ días y PITR.
+- **Gestión de Secretos (`secrets.tf`)**: AWS Secrets Manager cifrado con clave KMS e IAM Execution Role con política de menor privilegio (`secretsmanager:GetSecretValue`).
+- **Hosting Frontend (`s3_cloudfront.tf`)**: Bucket S3 privado + Amazon CloudFront CDN con Origin Access Control (OAC).
+
+---
+
+### 📋 2. Guía Paso a Paso para Configuración y Despliegue
+
+#### Paso 1: Configurar las Credenciales de AWS en GitHub (Para Despliegue Automático CI/CD)
+1. Entra a tu repositorio en **GitHub** desde el navegador.
+2. Haz clic en **`Settings`** (Configuración en la barra superior).
+3. En el menú lateral izquierdo, selecciona **`Secrets and variables`** $\rightarrow$ **`Actions`**.
+4. Presiona el botón verde **`New repository secret`** para agregar cada una de estas variables:
+
+| Nombre del Secreto | Descripción / Ejemplo |
+| :--- | :--- |
+| `AWS_ACCESS_KEY_ID` | Tu clave de acceso pública de AWS (ej. `AKIAIOSFODNN7EXAMPLE`) |
+| `AWS_SECRET_ACCESS_KEY` | Tu clave secreta de AWS (ej. `wJalrXUtnFEMI/K7MDENG/...`) |
+| `AWS_REGION` | Región de AWS a utilizar (ej. `us-east-1`) |
+| `ECR_REPOSITORY` | Nombre del repositorio ECR (ej. `profuncional-backend`) |
+| `ECS_CLUSTER` | Nombre del cluster ECS (ej. `profuncional-prod-cluster`) |
+| `ECS_SERVICE` | Nombre del servicio ECS (ej. `profuncional-prod-service`) |
+| `S3_BUCKET` | Nombre del bucket S3 de hosting (ej. `profuncional-prod-frontend-hosting`) |
+| `CLOUDFRONT_DISTRIBUTION_ID` | ID de la distribución CloudFront CDN |
+
+#### Paso 2: Crear la Infraestructura en AWS con Terraform (Una sola vez)
+Una vez que tengas tus credenciales de AWS:
+1. Abre tu terminal y ve a la carpeta `terraform`:
+   ```bash
+   cd terraform
+   ```
+2. Crea el archivo de variables copiando la plantilla:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+3. Edita `terraform.tfvars` ingresando tus contraseñas y claves de producción.
+4. Inicializa y aplica la infraestructura:
+   ```bash
+   terraform init
+   terraform plan
+   terraform apply -auto-approve
+   ```
+
+#### Paso 3: Configurar Variables Locales (Desarrollo en tu PC)
+1. En la carpeta raíz del proyecto, copia `.env.example` a `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. En la carpeta `backend/`, copia `.env.example` a `.env`:
+   ```bash
+   cd backend
+   cp .env.example .env
+   ```
+3. ¡Listo! Al realizar un `git push` a la rama `main`, GitHub Actions compilará, probará y desplegará automáticamente Frontend y Backend en AWS.
+
+
+

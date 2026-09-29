@@ -1,0 +1,64 @@
+name: Frontend CI/CD Pipeline (AWS S3 & CloudFront)
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'backend/**'
+      - 'docs/**'
+      - 'terraform/**'
+      - 'README.md'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'backend/**'
+      - 'docs/**'
+      - 'terraform/**'
+
+jobs:
+  build-and-deploy:
+    name: Build Vite App & Deploy to AWS S3 / CloudFront
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Código Fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar Dependencias de Frontend
+        run: npm ci
+
+      - name: Compilar Frontend (Vite Build)
+        run: npm run build
+
+      - name: Configurar Credenciales de AWS
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      - name: Sincronizar Artefactos Estáticos a AWS S3
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET || 'profuncional-prod-frontend-hosting' }}
+        run: |
+          aws s3 sync dist/ s3://$S3_BUCKET/ --delete
+
+      - name: Invalidar Caché de Amazon CloudFront CDN
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          if [ -n "$CLOUDFRONT_ID" ]; then
+            aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_ID --paths "/*"
+          else
+            echo "CLOUDFRONT_DISTRIBUTION_ID no configurada, omitiendo invalidación."
+          fi

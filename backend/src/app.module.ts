@@ -9,11 +9,14 @@ import { BookingsModule } from './bookings/bookings.module';
 import { PackagesModule } from './packages/packages.module';
 import { ClinicalModule } from './clinical/clinical.module';
 
+import { HealthModule } from './health/health.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    HealthModule,
     PrismaModule,
     AuthModule,
     MembersModule,
