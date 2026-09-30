@@ -2,7 +2,7 @@ import { weekDate, today, appointmentTime, addDays } from '../../data/dates';
 import { bookingsForSlot } from '../../data/gymStore';
 import { createBookingTransaction, cancelBookingWith24hRule, rescheduleBookingTransaction, confirmBooking } from '../../data/operations';
 import React, { FormEvent, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Users, User, Stethoscope, Dumbbell, AlertCircle, CheckCircle, Calendar as CalendarIcon, RefreshCw, XCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Users, User, Stethoscope, Dumbbell, AlertCircle, CheckCircle, Calendar as CalendarIcon, RefreshCw, XCircle, LayoutGrid, List } from 'lucide-react';
 import {
   getMembers,
   subscribeToMembers,
@@ -16,6 +16,7 @@ import {
 } from '../../data/gymStore';
 
 type CalendarTab = 'my-schedule' | 'gym-schedule';
+type ViewMode = 'grid' | 'list';
 
 interface UserCalendarProps {
   memberName: string;
@@ -24,6 +25,7 @@ interface UserCalendarProps {
 
 export function UserCalendar({ memberName }: UserCalendarProps) {
   const [activeTab, setActiveTab] = useState<CalendarTab>('my-schedule');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [currentWeek, setCurrentWeek] = useState(0);
   const [bookingBlock, setBookingBlock] = useState<{ block: CentralScheduleBlock; targetDate: string } | null>(null);
   const [reschedulingBooking, setReschedulingBooking] = useState<UserBookingRecord | null>(null);
@@ -217,9 +219,9 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto text-white">
-      {/* Toast Notification (Floating Top Right - z-[9999] so it's always above modals) */}
+      {/* Toast Notification (Floating Top Right - z-[9999]) - HU-18 a11y */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-[9999] max-w-md w-full animate-bounce-in">
+        <div role="alert" aria-live="assertive" className="fixed top-6 right-6 z-[9999] max-w-md w-full animate-bounce-in">
           <div
             className={`rounded-xl border p-4 flex items-start gap-3 text-sm font-medium shadow-2xl backdrop-blur-md ${
               toastMessage.type === 'success'
@@ -242,7 +244,13 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
               </span>
               <span>{toastMessage.text}</span>
             </div>
-            <button onClick={() => setToastMessage(null)} className="text-white/40 hover:text-white text-xs">✕</button>
+            <button
+              onClick={() => setToastMessage(null)}
+              aria-label="Cerrar notificación"
+              className="text-white/40 hover:text-white text-xs min-h-[44px] min-w-[44px] flex items-center justify-center touch-target-44"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
@@ -275,33 +283,69 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 bg-white/5 p-1 rounded-xl w-fit border border-white/10">
-        <button
-          onClick={() => setActiveTab('my-schedule')}
-          className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-            activeTab === 'my-schedule' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
-          }`}
-        >
-          <CalendarIcon className="w-4 h-4" />
-          Mi Horario ({userBookings.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('gym-schedule')}
-          className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-            activeTab === 'gym-schedule' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
-          }`}
-        >
-          <Dumbbell className="w-4 h-4" />
-          Catálogo del Gimnasio & Boxes
-        </button>
+      {/* Control Toolbar: Tabs + HU-19 Conmutador Táctil de Vistas */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Tabs */}
+        <div className="flex gap-2 bg-white/5 p-1 rounded-xl w-full sm:w-auto border border-white/10" role="tablist">
+          <button
+            role="tab"
+            aria-selected={activeTab === 'my-schedule'}
+            aria-label="Ver mi horario agendado"
+            onClick={() => setActiveTab('my-schedule')}
+            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 min-h-[44px] touch-target-44 ${
+              activeTab === 'my-schedule' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
+            }`}
+          >
+            <CalendarIcon className="w-4 h-4 flex-shrink-0" />
+            <span>Mi Horario ({userBookings.length})</span>
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'gym-schedule'}
+            aria-label="Ver catálogo de clases del gimnasio"
+            onClick={() => setActiveTab('gym-schedule')}
+            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 min-h-[44px] touch-target-44 ${
+              activeTab === 'gym-schedule' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
+            }`}
+          >
+            <Dumbbell className="w-4 h-4 flex-shrink-0" />
+            <span>Catálogo del Gimnasio & Boxes</span>
+          </button>
+        </div>
+
+        {/* HU-19: Conmutador Táctil de Vistas (Carrusel Grid vs Lista Compacta Móvil) */}
+        <div aria-label="Modo de visualización de la cuadrícula" className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
+          <button
+            type="button"
+            aria-label="Vista Carrusel de Días"
+            onClick={() => setViewMode('grid')}
+            className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors min-h-[44px] touch-target-44 ${
+              viewMode === 'grid' ? 'bg-[#00E676] text-[#021826]' : 'text-white/60 hover:text-white'
+            }`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            <span className="hidden sm:inline">Vista Carrusel</span>
+          </button>
+          <button
+            type="button"
+            aria-label="Vista Lista Compacta"
+            onClick={() => setViewMode('list')}
+            className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors min-h-[44px] touch-target-44 ${
+              viewMode === 'list' ? 'bg-[#00E676] text-[#021826]' : 'text-white/60 hover:text-white'
+            }`}
+          >
+            <List className="w-4 h-4" />
+            <span className="hidden sm:inline">Vista Lista</span>
+          </button>
+        </div>
       </div>
 
       {/* Week Navigation */}
       <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
         <button
           onClick={() => setCurrentWeek(currentWeek - 1)}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          aria-label="Semana anterior"
+          className="p-2.5 hover:bg-white/10 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center touch-target-44"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -313,91 +357,206 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
         </div>
         <button
           onClick={() => setCurrentWeek(currentWeek + 1)}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          aria-label="Semana siguiente"
+          className="p-2.5 hover:bg-white/10 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center touch-target-44"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Calendar Grid */}
-      <div className="overflow-x-auto pb-4 pt-1 -mx-2 px-2 custom-scrollbar">
-        <div className="grid grid-cols-7 min-w-[1260px] gap-3">
+      {/* Render Vistas: Grid Carrusel (Horizontal) vs Lista Compacta (Vertical Móvil - HU-19) */}
+      {viewMode === 'grid' ? (
+        <div className="overflow-x-auto pb-4 pt-1 -mx-2 px-2 custom-scrollbar">
+          <div className="grid grid-cols-7 min-w-[1260px] gap-3">
+            {days.map((day, index) => {
+              const dateInfo = getWeekDateInfo(currentWeek, index);
+              const targetDateStr = dateInfo.dateStr;
+              const dateNum = dateInfo.dateNum;
+              const isToday = targetDateStr === today();
+
+              const dayBlocks = scheduleBlocks.filter((b) => b.dayOfWeek === day && b.isActive);
+              const dayBookings = userBookings.filter((b) => {
+                if (b.date === targetDateStr) return true;
+                if (b.date) {
+                  const formattedDay = dateInfo.dayFormatted;
+                  const targetMonth = targetDateStr.slice(0, 7);
+                  if (b.date.startsWith(targetMonth) && (b.date.endsWith(`-${formattedDay}`) || b.date.endsWith(`-${dateNum}`))) {
+                    return true;
+                  }
+                }
+                return false;
+              });
+
+              return (
+                <div key={day} className="min-h-[220px] flex flex-col gap-2">
+                  <div className={`text-center p-2.5 rounded-xl ${isToday ? 'bg-[#00E676] text-[#021826] font-bold shadow-lg shadow-[#00E676]/20' : 'bg-white/5 border border-white/10'}`}>
+                    <p className="text-xs font-semibold uppercase">{dayLabels[day]}</p>
+                    <p className="text-xl font-black">{dateNum}</p>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {activeTab === 'gym-schedule' &&
+                      dayBlocks.map((block) => {
+                        const booked = bookingsForSlot(block.id, getDateForDayOfWeek(block.dayOfWeek)).length;
+                        const isUserEnrolled = block.students.some((st) => st.name.toLowerCase() === memberName.toLowerCase());
+
+                        return (
+                          <div
+                            key={block.id}
+                            className={`p-3 rounded-xl border transition-all ${
+                              isUserEnrolled
+                                ? 'bg-[#00E676]/15 border-[#00E676]/40'
+                                : 'bg-white/5 border-white/10 hover:border-white/20'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-1 mb-1">
+                              <p className="font-bold text-xs leading-tight text-white">{block.title}</p>
+                              {isUserEnrolled && (
+                                <span className="text-[9px] bg-[#00E676] text-[#021826] font-bold px-1.5 py-0.5 rounded whitespace-nowrap flex-shrink-0">Agendado</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 text-[11px] text-white/60 mb-1">
+                              <Clock className="w-3 h-3 text-[#00E676] flex-shrink-0" />
+                              <span className="whitespace-nowrap">{block.startTime} - {block.endTime}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[11px] text-white/60 mb-2 truncate">
+                              <User className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{block.instructor}</span>
+                            </div>
+
+                            <div className="pt-2 border-t border-white/10 space-y-2">
+                              <div className="flex items-center justify-between text-xs">
+                                <div className="flex items-center gap-1 text-[11px]">
+                                  <Users className="w-3 h-3 flex-shrink-0" />
+                                  <span className={getAvailabilityColor(booked, block.capacity)}>
+                                    {booked}/{block.capacity} cupos
+                                  </span>
+                                </div>
+                              </div>
+
+                              {!isUserEnrolled && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenBooking(block, targetDateStr)}
+                                  className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-[#00E676]/15 hover:bg-[#00E676] text-[#00E676] hover:text-[#021826] border border-[#00E676]/30 text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm"
+                                >
+                                  {appointmentTime(targetDateStr, block.startTime) <= Date.now() ? 'Reservar (Próx. Sem) →' : 'Reservar Cita →'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                    {activeTab === 'my-schedule' &&
+                      dayBookings.map((booking) => (
+                        <div key={booking.id} className="p-3 rounded-xl bg-white/10 border border-[#00E676]/40 space-y-2">
+                          <div className="flex items-start justify-between gap-1">
+                            <span className="text-[9px] uppercase font-bold text-[#00E676] tracking-wider truncate">{booking.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
+                            <span className="text-[10px] font-mono text-white/60 whitespace-nowrap">{booking.time}</span>
+                          </div>
+                          <div>
+                            <p className="font-bold text-xs text-white leading-tight">{booking.title}</p>
+                            <p className="text-[11px] text-white/60 truncate">{booking.instructor}</p>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5 pt-2 border-t border-white/10 w-full">
+                            <button disabled={Boolean(booking.confirmedAt) || booking.status === 'attended' || booking.status === 'no-show' || appointmentTime(booking.date, booking.time.split(' - ')[0]) <= Date.now()} onClick={async () => { try { await confirmBooking(booking.id, memberName); showToast('Tu intención de asistir quedó confirmada.', 'success'); } catch (e) { showToast((e as Error).message, 'error'); } }} className="px-3 py-2.5 min-h-[44px] touch-target-44 rounded-lg bg-white/5 text-[#00E676] text-xs disabled:opacity-50 font-semibold">{booking.confirmedAt ? 'Asistencia prevista confirmada' : 'Confirmo que asistiré'}</button>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenReschedule(booking)}
+                              className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-[#00E676]/20 hover:bg-[#00E676]/30 text-xs font-semibold text-[#00E676] flex items-center justify-center gap-1 transition-colors border border-[#00E676]/30"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5 text-[#00E676]" />
+                              Reagendar
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => { if (window.confirm('¿Cancelar esta clase? Con menos de 24 horas, se libera el cupo sin devolver la sesión.')) void handleCancel(booking.id); }}
+                              className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-semibold text-rose-300 flex items-center justify-center gap-1 transition-colors"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+
+                    {activeTab === 'gym-schedule' && dayBlocks.length === 0 && (
+                      <p className="text-white/40 text-[11px] text-center py-4">Sin clases disponibles</p>
+                    )}
+
+                    {activeTab === 'my-schedule' && dayBookings.length === 0 && (
+                      <p className="text-white/40 text-[11px] text-center py-4">Sin citas reservadas</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        /* HU-19: Vista Lista Compacta para Celulares (360px - 430px) */
+        <div className="space-y-4">
           {days.map((day, index) => {
             const dateInfo = getWeekDateInfo(currentWeek, index);
             const targetDateStr = dateInfo.dateStr;
-            const dateNum = dateInfo.dateNum;
             const isToday = targetDateStr === today();
 
-            // Filter schedule blocks for gym schedule
             const dayBlocks = scheduleBlocks.filter((b) => b.dayOfWeek === day && b.isActive);
-
-            // Filter user bookings for "my-schedule" strictly by booking date
             const dayBookings = userBookings.filter((b) => {
               if (b.date === targetDateStr) return true;
               if (b.date) {
                 const formattedDay = dateInfo.dayFormatted;
                 const targetMonth = targetDateStr.slice(0, 7);
-                if (b.date.startsWith(targetMonth) && (b.date.endsWith(`-${formattedDay}`) || b.date.endsWith(`-${dateNum}`))) {
+                if (b.date.startsWith(targetMonth) && (b.date.endsWith(`-${formattedDay}`) || b.date.endsWith(`-${dateInfo.dateNum}`))) {
                   return true;
                 }
               }
               return false;
             });
 
+            const hasItems = activeTab === 'gym-schedule' ? dayBlocks.length > 0 : dayBookings.length > 0;
+            if (!hasItems) return null;
+
             return (
-              <div key={day} className="min-h-[220px] flex flex-col gap-2">
-                <div className={`text-center p-2.5 rounded-xl ${isToday ? 'bg-[#00E676] text-[#021826] font-bold shadow-lg shadow-[#00E676]/20' : 'bg-white/5 border border-white/10'}`}>
-                  <p className="text-xs font-semibold uppercase">{dayLabels[day]}</p>
-                  <p className="text-xl font-black">{dateNum}</p>
+              <div key={day} className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                  <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg ${isToday ? 'bg-[#00E676] text-[#021826]' : 'bg-white/10 text-white'}`}>
+                    {dayLabels[day]} {dateInfo.dateNum}
+                  </span>
+                  <span className="text-xs text-white/50">{targetDateStr}</span>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="grid gap-3 sm:grid-cols-2">
                   {activeTab === 'gym-schedule' &&
                     dayBlocks.map((block) => {
                       const booked = bookingsForSlot(block.id, getDateForDayOfWeek(block.dayOfWeek)).length;
                       const isUserEnrolled = block.students.some((st) => st.name.toLowerCase() === memberName.toLowerCase());
 
                       return (
-                        <div
-                          key={block.id}
-                          className={`p-3 rounded-xl border transition-all ${
-                            isUserEnrolled
-                              ? 'bg-[#00E676]/15 border-[#00E676]/40'
-                              : 'bg-white/5 border-white/10 hover:border-white/20'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-1 mb-1">
-                            <p className="font-bold text-xs leading-tight text-white">{block.title}</p>
+                        <div key={block.id} className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="font-bold text-sm text-white">{block.title}</p>
                             {isUserEnrolled && (
-                              <span className="text-[9px] bg-[#00E676] text-[#021826] font-bold px-1.5 py-0.5 rounded whitespace-nowrap flex-shrink-0">Agendado</span>
+                              <span className="text-xs bg-[#00E676] text-[#021826] font-bold px-2 py-0.5 rounded">Agendado</span>
                             )}
                           </div>
-                          <div className="flex items-center gap-1 text-[11px] text-white/60 mb-1">
-                            <Clock className="w-3 h-3 text-[#00E676] flex-shrink-0" />
-                            <span className="whitespace-nowrap">{block.startTime} - {block.endTime}</span>
+                          <div className="flex items-center gap-3 text-xs text-white/70">
+                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#00E676]" /> {block.startTime} - {block.endTime}</span>
+                            <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {block.instructor}</span>
                           </div>
-                          <div className="flex items-center gap-1 text-[11px] text-white/60 mb-2 truncate">
-                            <User className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{block.instructor}</span>
-                          </div>
-
-                          <div className="pt-2 border-t border-white/10 space-y-2">
-                            <div className="flex items-center justify-between text-xs">
-                              <div className="flex items-center gap-1 text-[11px]">
-                                <Users className="w-3 h-3 flex-shrink-0" />
-                                <span className={getAvailabilityColor(booked, block.capacity)}>
-                                  {booked}/{block.capacity} cupos
-                                </span>
-                              </div>
-                            </div>
-
+                          <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                            <span className={`text-xs ${getAvailabilityColor(booked, block.capacity)}`}>
+                              {booked}/{block.capacity} cupos libres
+                            </span>
                             {!isUserEnrolled && (
                               <button
                                 type="button"
                                 onClick={() => handleOpenBooking(block, targetDateStr)}
-                                className="w-full py-1.5 px-2 rounded-lg bg-[#00E676]/15 hover:bg-[#00E676] text-[#00E676] hover:text-[#021826] border border-[#00E676]/30 text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm"
+                                className="min-h-[44px] touch-target-44 px-4 py-2 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 shadow-md"
                               >
-                                {appointmentTime(targetDateStr, block.startTime) <= Date.now() ? 'Reservar (Próx. Sem) →' : 'Reservar Cita →'}
+                                Reservar Cita →
                               </button>
                             )}
                           </div>
@@ -407,68 +566,60 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
 
                   {activeTab === 'my-schedule' &&
                     dayBookings.map((booking) => (
-                      <div key={booking.id} className="p-3 rounded-xl bg-white/10 border border-[#00E676]/40 space-y-2">
-                        <div className="flex items-start justify-between gap-1">
-                          <span className="text-[9px] uppercase font-bold text-[#00E676] tracking-wider truncate">{booking.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
-                          <span className="text-[10px] font-mono text-white/60 whitespace-nowrap">{booking.time}</span>
+                      <div key={booking.id} className="p-3.5 rounded-xl bg-[#00E676]/10 border border-[#00E676]/30 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-[#00E676] uppercase">{booking.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
+                          <span className="text-xs text-white/70">{booking.time}</span>
                         </div>
-                        <div>
-                          <p className="font-bold text-xs text-white leading-tight">{booking.title}</p>
-                          <p className="text-[11px] text-white/60 truncate">{booking.instructor}</p>
-                        </div>
+                        <p className="font-bold text-sm text-white">{booking.title}</p>
+                        <p className="text-xs text-white/60">{booking.instructor}</p>
 
-                        {/* Botones de Acción */}
-                        <div className="flex flex-col gap-1.5 pt-2 border-t border-white/10 w-full">
-                          <button disabled={Boolean(booking.confirmedAt) || booking.status === 'attended' || booking.status === 'no-show' || appointmentTime(booking.date, booking.time.split(' - ')[0]) <= Date.now()} onClick={async () => { try { await confirmBooking(booking.id, memberName); showToast('Tu intención de asistir quedó confirmada.', 'success'); } catch (e) { showToast((e as Error).message, 'error'); } }} className="px-3 py-2 rounded-lg bg-white/5 text-[#00E676] text-xs disabled:opacity-50 font-semibold">{booking.confirmedAt ? 'Asistencia prevista confirmada' : 'Confirmo que asistiré'}</button>
+                        <div className="flex gap-2 pt-2 border-t border-white/10">
                           <button
                             type="button"
                             onClick={() => handleOpenReschedule(booking)}
-                            className="w-full py-1.5 px-2 rounded-lg bg-[#00E676]/20 hover:bg-[#00E676]/30 text-xs font-semibold text-[#00E676] flex items-center justify-center gap-1 transition-colors border border-[#00E676]/30"
+                            className="flex-1 min-h-[44px] touch-target-44 py-2 px-3 rounded-xl bg-[#00E676]/20 text-[#00E676] text-xs font-bold flex items-center justify-center gap-1 border border-[#00E676]/30"
                           >
-                            <RefreshCw className="w-3 h-3 text-[#00E676]" />
-                            Reagendar
+                            <RefreshCw className="w-3.5 h-3.5" /> Reagendar
                           </button>
-
                           <button
                             type="button"
-                            onClick={() => { if (window.confirm('¿Cancelar esta clase? Con menos de 24 horas, se libera el cupo sin devolver la sesión.')) void handleCancel(booking.id); }}
-                            className="w-full py-1.5 px-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-semibold text-rose-300 flex items-center justify-center gap-1 transition-colors"
+                            onClick={() => { if (window.confirm('¿Cancelar esta clase?')) void handleCancel(booking.id); }}
+                            className="min-h-[44px] touch-target-44 py-2 px-3 rounded-xl bg-rose-500/20 text-rose-300 text-xs font-bold"
                           >
                             Cancelar
                           </button>
                         </div>
                       </div>
                     ))}
-
-                  {activeTab === 'gym-schedule' && dayBlocks.length === 0 && (
-                    <p className="text-white/40 text-[11px] text-center py-4">Sin clases disponibles</p>
-                  )}
-
-                  {activeTab === 'my-schedule' && dayBookings.length === 0 && (
-                    <p className="text-white/40 text-[11px] text-center py-4">Sin citas reservadas</p>
-                  )}
                 </div>
               </div>
             );
           })}
         </div>
-      </div>
+      )}
 
-      {/* Modal HU-03: Confirmar Reserva autónoma */}
+      {/* Modal HU-03: Confirmar Reserva autónoma - HU-18 ARIA accessible */}
       {bookingBlock && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="modal-booking-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <form onSubmit={handleBookingSubmit} className="bg-[#0b1726] border border-[#00E676]/40 rounded-2xl p-6 w-full max-w-lg space-y-4 shadow-2xl relative">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div>
                 <span className="text-xs font-bold uppercase text-[#00E676] tracking-wider">HU-03 · Agendamiento Autónomo</span>
-                <h3 className="text-xl font-bold mt-1 text-white">{bookingBlock.block.title}</h3>
+                <h3 id="modal-booking-title" className="text-xl font-bold mt-1 text-white">{bookingBlock.block.title}</h3>
               </div>
-              <button type="button" onClick={() => setBookingBlock(null)} className="text-white/50 hover:text-white text-sm bg-white/5 p-2 rounded-lg">✕</button>
+              <button
+                type="button"
+                onClick={() => setBookingBlock(null)}
+                aria-label="Cerrar modal de reserva"
+                className="text-white/50 hover:text-white text-sm bg-white/5 p-2 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center touch-target-44"
+              >
+                ✕
+              </button>
             </div>
 
-            {/* Inline Alert Inside Booking Modal */}
             {bookingNotice && (
-              <div className={`rounded-xl border p-3.5 flex items-start gap-3 text-xs ${
+              <div role="alert" className={`rounded-xl border p-3.5 flex items-start gap-3 text-xs ${
                 bookingNotice.startsWith('ℹ️')
                   ? 'border-[#00E676]/50 bg-[#00E676]/15 text-[#00E676]'
                   : 'border-red-500/50 bg-red-500/20 text-red-200'
@@ -500,33 +651,50 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                 name="bookingDate"
                 type="date"
                 defaultValue={bookingBlock.targetDate}
-                className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]"
+                className="mt-1.5 h-11 min-h-[44px] w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-base outline-none focus:border-[#00E676]"
               />
             </label>
 
             <div className="pt-3 flex justify-end gap-3 border-t border-white/10">
-              <button type="button" onClick={() => setBookingBlock(null)} className="px-4 py-2.5 rounded-xl bg-white/10 text-white text-xs font-bold hover:bg-white/20">Cancelar</button>
-              <button type="submit" className="px-5 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 shadow-lg shadow-[#00E676]/20">Confirmar & Descontar 1 Sesión</button>
+              <button
+                type="button"
+                onClick={() => setBookingBlock(null)}
+                className="px-4 py-2.5 rounded-xl bg-white/10 text-white text-xs font-bold hover:bg-white/20 min-h-[44px] touch-target-44"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 shadow-lg shadow-[#00E676]/20 min-h-[44px] touch-target-44"
+              >
+                Confirmar & Descontar 1 Sesión
+              </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Modal HU-04: Reagendar Cita sin costo ni alteración de saldo */}
+      {/* Modal HU-04: Reagendar Cita - HU-18 ARIA accessible */}
       {reschedulingBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="modal-reschedule-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <form onSubmit={handleRescheduleSubmit} className="bg-[#0b1726] border border-[#00E676]/50 rounded-2xl p-6 w-full max-w-lg space-y-4 shadow-2xl relative">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div>
                 <span className="text-xs font-bold uppercase text-[#00E676] tracking-wider">HU-04 · Reagendamiento de Cita</span>
-                <h3 className="text-xl font-bold mt-1 text-white">Reagendar "{reschedulingBooking.title}"</h3>
+                <h3 id="modal-reschedule-title" className="text-xl font-bold mt-1 text-white">Reagendar "{reschedulingBooking.title}"</h3>
               </div>
-              <button type="button" onClick={() => setReschedulingBooking(null)} className="text-white/50 hover:text-white text-sm bg-white/5 p-2 rounded-lg">✕</button>
+              <button
+                type="button"
+                onClick={() => setReschedulingBooking(null)}
+                aria-label="Cerrar modal de reagendamiento"
+                className="text-white/50 hover:text-white text-sm bg-white/5 p-2 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center touch-target-44"
+              >
+                ✕
+              </button>
             </div>
 
-            {/* Inline Alert Inside Reschedule Modal */}
             {rescheduleNotice && (
-              <div className="rounded-xl border border-amber-500/60 bg-amber-500/20 p-3.5 flex items-start gap-3 text-xs text-amber-200">
+              <div role="alert" className="rounded-xl border border-amber-500/60 bg-amber-500/20 p-3.5 flex items-start gap-3 text-xs text-amber-200">
                 <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold text-amber-300 block">Aviso de Reagendamiento:</span>
@@ -546,7 +714,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                 required
                 value={selectedRescheduleBlockId}
                 onChange={(e) => handleBlockSelectChange(e.target.value)}
-                className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]"
+                className="mt-1.5 h-11 min-h-[44px] w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-base outline-none focus:border-[#00E676]"
               >
                 {scheduleBlocks.filter((b) => b.isActive && bookingsForSlot(b.id, getDateForDayOfWeek(b.dayOfWeek)).length < b.capacity).map((b) => (
                   <option key={b.id} value={b.id}>
@@ -567,15 +735,21 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                   setSelectedRescheduleDate(e.target.value);
                   setRescheduleNotice(null);
                 }}
-                className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]"
+                className="mt-1.5 h-11 min-h-[44px] w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-base outline-none focus:border-[#00E676]"
               />
             </label>
 
             <div className="pt-3 flex justify-end gap-3 border-t border-white/10">
-              <button type="button" onClick={() => setReschedulingBooking(null)} className="px-4 py-2.5 rounded-xl bg-white/10 text-white text-xs font-bold hover:bg-white/20">Cancelar</button>
+              <button
+                type="button"
+                onClick={() => setReschedulingBooking(null)}
+                className="px-4 py-2.5 rounded-xl bg-white/10 text-white text-xs font-bold hover:bg-white/20 min-h-[44px] touch-target-44"
+              >
+                Cancelar
+              </button>
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 shadow-lg shadow-[#00E676]/20 disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 shadow-lg shadow-[#00E676]/20 min-h-[44px] touch-target-44 disabled:opacity-50"
               >
                 Confirmar Nuevo Horario
               </button>
@@ -610,14 +784,14 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                 <div className="flex items-center gap-2 pt-2 border-t border-white/10">
                   <button
                     onClick={() => handleOpenReschedule(b)}
-                    className="flex-1 py-2 px-3 rounded-lg bg-[#00E676]/20 hover:bg-[#00E676]/30 border border-[#00E676]/30 text-xs font-bold text-[#00E676] flex items-center justify-center gap-1.5 transition-colors"
+                    className="flex-1 py-2.5 px-3 min-h-[44px] touch-target-44 rounded-lg bg-[#00E676]/20 hover:bg-[#00E676]/30 border border-[#00E676]/30 text-xs font-bold text-[#00E676] flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-[#00E676]" />
                     Reagendar
                   </button>
                   <button
                     onClick={() => handleCancel(b.id)}
-                    className="py-2 px-3 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-bold text-rose-300 flex items-center justify-center gap-1.5 transition-colors"
+                    className="py-2.5 px-3 min-h-[44px] touch-target-44 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-bold text-rose-300 flex items-center justify-center gap-1.5 transition-colors"
                   >
                     Cancelar Cita
                   </button>
@@ -629,4 +803,4 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
       )}
     </div>
   );
-}
+}

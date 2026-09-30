@@ -184,8 +184,8 @@ html, body, #root {
       line-height: 1.5;
     }
 
-    input {
-      font-size: var(--text-base);
+    input, select, textarea {
+      font-size: 16px !important;
       font-weight: var(--font-weight-normal);
       line-height: 1.5;
     }
@@ -194,6 +194,30 @@ html, body, #root {
 
 html {
   font-size: var(--font-size);
+}
+
+/* Safe Area Insets para dispositivos móviles nativos (iOS / Android) - HU-17 */
+.pb-safe {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+.pt-safe {
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+}
+.px-safe {
+  padding-left: calc(1rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(1rem + env(safe-area-inset-right, 0px));
+}
+
+/* Target Táctil Mínimo de 44x44px - HU-18 */
+.touch-target-44, .min-h-touch {
+  min-height: 44px !important;
+  min-width: 44px !important;
+}
+
+/* Focus States Visibles de Accesibilidad (a11y) - HU-18 */
+:focus-visible {
+  outline: 2px solid #00E676 !important;
+  outline-offset: 2px !important;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -254,3 +278,4 @@ button:hover,
 .interactive-glow:hover {
   animation: pulseGlow 500ms ease-out;
 }
+
