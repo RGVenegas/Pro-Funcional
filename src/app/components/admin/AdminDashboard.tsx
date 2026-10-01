@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Users, DollarSign, TrendingUp, Calendar, Stethoscope, UserX, QrCode, ArrowUpRight, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Calendar, Stethoscope, UserX, QrCode, ArrowUpRight, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { KPICard } from '../shared/KPICard';
 import { MembershipGrowthChart } from '../charts/MembershipGrowthChart';
 import { RevenueChart, RevenueBreakdownItem } from '../charts/RevenueChart';
@@ -170,11 +170,11 @@ export function AdminDashboard() {
 
   const renderPatients = () => (
     <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold text-[#F7F7F7]">Pacientes / Alumnos con fichas clínicas</h3>
-        <button type="button" onClick={() => setSelectedView('overview')} className="text-sm text-[#00E676] flex items-center gap-1">
-          Volver <ArrowRight className="w-4 h-4" />
+      <div className="flex items-center gap-3 mb-4">
+        <button type="button" onClick={() => setSelectedView('overview')} className="inline-flex items-center gap-2 text-sm text-[#00E676]">
+          <ArrowLeft className="w-4 h-4" /> Volver
         </button>
+        <h3 className="text-xl font-semibold text-[#F7F7F7]">Pacientes / Alumnos con fichas clínicas</h3>
       </div>
 
       <div className="space-y-3">
@@ -214,11 +214,11 @@ export function AdminDashboard() {
 
   const renderNoShow = () => (
     <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold text-[#F7F7F7]">Ausentismo por persona</h3>
-        <button type="button" onClick={() => setSelectedView('overview')} className="text-sm text-[#00E676] flex items-center gap-1">
-          Volver <ArrowRight className="w-4 h-4" />
+      <div className="flex items-center gap-3 mb-4">
+        <button type="button" onClick={() => setSelectedView('overview')} className="inline-flex items-center gap-2 text-sm text-[#00E676]">
+          <ArrowLeft className="w-4 h-4" /> Volver
         </button>
+        <h3 className="text-xl font-semibold text-[#F7F7F7]">Ausentismo por persona</h3>
       </div>
 
       <div className="space-y-3">
@@ -249,11 +249,11 @@ export function AdminDashboard() {
 
   const renderBalance = () => (
     <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold text-[#F7F7F7]">Saldo de clases por alumno</h3>
-        <button type="button" onClick={() => setSelectedView('overview')} className="text-sm text-[#00E676] flex items-center gap-1">
-          Volver <ArrowRight className="w-4 h-4" />
+      <div className="flex items-center gap-3 mb-4">
+        <button type="button" onClick={() => setSelectedView('overview')} className="inline-flex items-center gap-2 text-sm text-[#00E676]">
+          <ArrowLeft className="w-4 h-4" /> Volver
         </button>
+        <h3 className="text-xl font-semibold text-[#F7F7F7]">Saldo de clases por alumno</h3>
       </div>
 
       <div className="space-y-3">
@@ -277,11 +277,11 @@ export function AdminDashboard() {
 
   const renderOccupancy = () => (
     <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold text-[#F7F7F7]">Ocupación por entrenador y clase</h3>
-        <button type="button" onClick={() => setSelectedView('overview')} className="text-sm text-[#00E676] flex items-center gap-1">
-          Volver <ArrowRight className="w-4 h-4" />
+      <div className="flex items-center gap-3 mb-4">
+        <button type="button" onClick={() => setSelectedView('overview')} className="inline-flex items-center gap-2 text-sm text-[#00E676]">
+          <ArrowLeft className="w-4 h-4" /> Volver
         </button>
+        <h3 className="text-xl font-semibold text-[#F7F7F7]">Ocupación por entrenador y clase</h3>
       </div>
 
       <div className="space-y-4">

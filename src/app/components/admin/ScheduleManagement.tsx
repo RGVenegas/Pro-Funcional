@@ -1,11 +1,15 @@
-import { weekDate } from '../../data/dates';
+import { today, weekDate } from '../../data/dates';
 import { studentsForSlot, subscribeToBookings } from '../../data/gymStore';
 import { addCentralScheduleBlock, deleteCentralScheduleBlock, recordAttendance } from '../../data/operations';
 import React, { useEffect, useState, FormEvent } from 'react';
-import { Bell, ChevronLeft, ChevronRight, Users, User, AlertTriangle, CheckCircle, XCircle, Stethoscope, Dumbbell, Clock, Plus, Trash2, PlusCircle } from 'lucide-react';
+import { Bell, ChevronLeft, ChevronRight, Users, User, AlertTriangle, CheckCircle, XCircle, Stethoscope, Dumbbell, Clock, Plus, Trash2, PlusCircle, RotateCcw, CalendarDays, CalendarRange } from 'lucide-react';
 import {
   addActivity,
+  clearScheduleWeek,
   getCentralScheduleBlocks,
+  isScheduleWeekCleared,
+  isScheduleBlockHidden,
+  restoreScheduleWeek,
   updateCentralScheduleBlock,
   subscribeToSchedule,
   CentralScheduleBlock,
@@ -27,12 +31,16 @@ interface CancellationNotification {
 export function ScheduleManagement() {
   const [mode, setMode] = useState<ScheduleMode>('classes');
   const [currentWeek, setCurrentWeek] = useState(0);
+  const [currentDate, setCurrentDate] = useState(today());
+  const [showFullWeek, setShowFullWeek] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<CentralScheduleBlock | null>(null);
+  const [showClearWeekConfirm, setShowClearWeekConfirm] = useState(false);
+  const weekStartDate = weekDate(currentWeek, 0);
   const loadBlocksForWeek = (weekOffset: number) => {
     const daysOrder: ('Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday')[] = [
       'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
     ];
-    return getCentralScheduleBlocks().map((b) => {
+    return getCentralScheduleBlocks().filter((block) => !isScheduleBlockHidden(block.id, weekDate(weekOffset, 0))).map((b) => {
       const idx = daysOrder.indexOf(b.dayOfWeek);
       const slotDate = weekDate(weekOffset, idx >= 0 ? idx : 0);
       const enrolled = studentsForSlot(b.id, slotDate);
@@ -79,6 +87,12 @@ export function ScheduleManagement() {
   const days: ('Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday')[] = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
   ];
+  const visibleDays = days.filter((_, index) => currentWeek !== 0 || showFullWeek || weekDate(0, index) >= currentDate);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentDate(today()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const dayLabels: Record<string, string> = {
     Monday: 'Lunes', Tuesday: 'Martes', Wednesday: 'Miércoles', Thursday: 'Jueves',
@@ -165,6 +179,23 @@ export function ScheduleManagement() {
     }
   };
 
+  const handleClearWeek = () => {
+    setShowClearWeekConfirm(true);
+  };
+
+  const confirmClearWeek = () => {
+    const count = clearScheduleWeek(weekStartDate);
+    setSelectedBlock(null);
+    setShowClearWeekConfirm(false);
+    showToast(`Se borraron ${count} bloques de esta semana.`);
+  };
+
+  const handleRestoreWeek = () => {
+    if (!isScheduleWeekCleared(weekStartDate)) return;
+    restoreScheduleWeek(weekStartDate);
+    showToast('Se restauró el horario de esta semana a como estaba antes de borrarlo.');
+  };
+
   useEffect(() => { if (selectedBlock) setSelectedBlock(blocks.find(b => b.id === selectedBlock.id) || null); }, [blocks]);
   const toggleAttendance = async (blockId: string, studentId: string, newStatus: 'attended' | 'no-show' | 'pending') => {
     const student = blocks.find(b => b.id === blockId)?.students.find(s => s.id === studentId);
@@ -188,6 +219,24 @@ export function ScheduleManagement() {
           >
             <PlusCircle className="w-4 h-4" />
             + Configurar Nuevo Bloque
+          </button>
+
+          <button
+            type="button"
+            onClick={handleClearWeek}
+            disabled={isScheduleWeekCleared(weekStartDate)}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#00E676]/35 bg-[#00E676]/10 px-3 py-2 text-xs font-bold text-[#00E676] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Trash2 className="h-4 w-4" /> Borrar horario de esta semana
+          </button>
+
+          <button
+            type="button"
+            onClick={handleRestoreWeek}
+            disabled={!isScheduleWeekCleared(weekStartDate)}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#00E676]/30 bg-[#00E676]/10 px-3 py-2 text-xs font-bold text-[#00E676] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <RotateCcw className="h-4 w-4" /> Restaurar horario
           </button>
 
           <div className="flex gap-2 bg-white/5 p-1 rounded-xl border border-white/10 w-full sm:w-auto">
@@ -284,6 +333,30 @@ export function ScheduleManagement() {
         </button>
       </div>
 
+      {currentWeek === 0 && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-white/55">{showFullWeek ? 'Mostrando también los días pasados y sus clases.' : 'Mostrando desde hoy hasta el domingo.'}</p>
+          <div className="inline-flex w-full rounded-lg border border-white/10 bg-white/5 p-1 sm:w-auto" role="group" aria-label="Días visibles de la semana">
+            <button
+              type="button"
+              aria-pressed={!showFullWeek}
+              onClick={() => setShowFullWeek(false)}
+              className={`flex-1 inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-semibold sm:flex-none ${!showFullWeek ? 'bg-[#00E676] text-[#021826]' : 'text-white/65'}`}
+            >
+              <CalendarDays className="h-4 w-4" /> Desde hoy
+            </button>
+            <button
+              type="button"
+              aria-pressed={showFullWeek}
+              onClick={() => setShowFullWeek(true)}
+              className={`flex-1 inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-semibold sm:flex-none ${showFullWeek ? 'bg-[#00E676] text-[#021826]' : 'text-white/65'}`}
+            >
+              <CalendarRange className="h-4 w-4" /> Semana completa
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Mobile scroll hint indicator */}
       <div className="lg:hidden flex items-center justify-between text-xs text-[#00E676] bg-[#00E676]/10 border border-[#00E676]/25 rounded-xl px-3 py-2 text-[11px]">
         <span className="font-semibold flex items-center gap-1.5">
@@ -294,8 +367,11 @@ export function ScheduleManagement() {
 
       {/* Schedule Grid */}
       <div className="w-full max-w-full overflow-x-auto pb-4 pt-1 -mx-2 px-2 custom-scrollbar">
-        <div className="grid grid-cols-7 min-w-[1260px] gap-3.5">
-          {days.map((day) => {
+        <div
+          className="grid gap-3.5"
+          style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(170px, 1fr))`, minWidth: `${visibleDays.length * 180}px` }}
+        >
+          {visibleDays.map((day) => {
             const dayBlocks = blocks.filter((b) => b.dayOfWeek === day && b.isActive);
             const slots = mode === 'kine-boxes' ? dayBlocks.filter((s) => s.type === 'kine') : dayBlocks;
 
@@ -399,6 +475,50 @@ export function ScheduleManagement() {
           })}
         </div>
       </div>
+
+      {showClearWeekConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4"
+          role="presentation"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) setShowClearWeekConfirm(false); }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="clear-week-title"
+            className="w-full max-w-md rounded-xl border border-[#00E676]/40 bg-[#071522] p-5 text-white shadow-2xl shadow-[#00E676]/10 sm:p-6"
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#00E676]/30 bg-[#00E676]/10 text-[#00E676]">
+                <Trash2 className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-[#00E676]">Horario semanal</p>
+                <h2 id="clear-week-title" className="text-lg font-bold">¿Borrar esta semana?</h2>
+              </div>
+            </div>
+            <p className="mb-5 rounded-lg border border-[#00E676]/20 bg-[#00E676]/[0.06] p-3 text-sm leading-6 text-white/75">
+              Se quitarán los bloques del <strong className="text-[#00E676]">{getWeekRangeLabel(currentWeek)}</strong>. Las otras semanas no cambiarán y podrás restaurar este horario después.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowClearWeekConfirm(false)}
+                className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/80"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmClearWeek}
+                className="inline-flex items-center gap-2 rounded-lg border border-[#00E676] bg-[#00E676] px-4 py-2.5 text-sm font-bold text-[#021826]"
+              >
+                <Trash2 className="h-4 w-4" /> Borrar semana
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {/* Modal HU-01: Configurar Nuevo Bloque Horario */}
       {isAddModalOpen && (

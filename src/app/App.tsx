@@ -3,6 +3,7 @@ import { LogOut, UserRound } from 'lucide-react';
 import { AuthUser, Login } from './components/auth/Login';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdminRiskDashboard } from './components/admin/AdminRiskDashboard';
+import { AdminStaffDashboard } from './components/admin/AdminStaffDashboard';
 import { MembersList } from './components/admin/MembersList';
 import { MemberDetail } from './components/admin/MemberDetail';
 import { ScheduleManagement } from './components/admin/ScheduleManagement';
@@ -19,7 +20,7 @@ import { OfflineStatusBanner } from './components/OfflineStatusBanner';
 import { Logo } from './components/shared/Logo';
 
 type Role = 'admin' | 'user';
-type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule' | 'risk';
+type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule' | 'risk' | 'staff';
 type UserView = 'home' | 'plan' | 'calendar' | 'training' | 'card' | 'profile';
 
 export default function App() {
@@ -98,6 +99,10 @@ export default function App() {
     navigateAdmin('member-detail', memberId);
   };
 
+  const handleViewRisk = (memberId: string) => {
+    navigateAdmin('risk', memberId);
+  };
+
   const handleBackToMembers = () => {
     navigateAdmin('members');
   };
@@ -156,7 +161,7 @@ export default function App() {
           />
           <main className="flex-1 ml-0 lg:ml-64 p-3 pt-16 sm:p-4 sm:pt-16 lg:p-8 lg:pt-8 w-full max-w-full overflow-x-hidden">
             {adminView === 'dashboard' && <AdminDashboard />}
-            {adminView === 'members' && <MembersList onViewMember={handleViewMember} />}
+            {adminView === 'members' && <MembersList onViewMember={handleViewMember} onViewRisk={handleViewRisk} />}
             {adminView === 'member-detail' && selectedMemberId && (
               <MemberDetail 
                 memberId={selectedMemberId} 
@@ -164,7 +169,14 @@ export default function App() {
               />
             )}
             {adminView === 'schedule' && <ScheduleManagement />}
-            {adminView === 'risk' && <AdminRiskDashboard />}
+            {adminView === 'risk' && (
+              <AdminRiskDashboard
+                memberId={selectedMemberId}
+                onViewMember={handleViewMember}
+                onViewMembers={() => navigateAdmin('members')}
+              />
+            )}
+            {adminView === 'staff' && <AdminStaffDashboard />}
           </main>
         </div>
       ) : (

@@ -10,6 +10,7 @@ import {
   subscribeToSchedule,
   getUserBookings,
   subscribeToBookings,
+  isScheduleBlockHidden,
   CentralScheduleBlock,
   UserBookingRecord,
   GymMember
@@ -27,6 +28,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   const [activeTab, setActiveTab] = useState<CalendarTab>('my-schedule');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [currentWeek, setCurrentWeek] = useState(0);
+  const [currentDate, setCurrentDate] = useState(today());
   const [bookingBlock, setBookingBlock] = useState<{ block: CentralScheduleBlock; targetDate: string } | null>(null);
   const [reschedulingBooking, setReschedulingBooking] = useState<UserBookingRecord | null>(null);
   const [selectedRescheduleBlockId, setSelectedRescheduleBlockId] = useState<string>('');
@@ -73,6 +75,14 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
     Monday: 'Lun', Tuesday: 'Mar', Wednesday: 'Mié', Thursday: 'Jue',
     Friday: 'Vie', Saturday: 'Sáb', Sunday: 'Dom'
   };
+  const visibleDays = days.filter((_, index) => activeTab !== 'gym-schedule' || currentWeek !== 0 || getWeekDateInfo(0, index).dateStr >= currentDate);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentDate(today()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const isDayAvailableForSelection = (date: string) => currentWeek !== 0 || date >= currentDate;
 
   const handleOpenBooking = (block: CentralScheduleBlock, targetDateStr: string) => {
     const slotStart = appointmentTime(targetDateStr, block.startTime);
@@ -117,7 +127,10 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
     setReschedulingBooking(booking);
     setRescheduleNotice(null);
 
-    const available = scheduleBlocks.filter((b) => b.isActive && bookingsForSlot(b.id, getDateForDayOfWeek(b.dayOfWeek)).length < b.capacity);
+    const available = scheduleBlocks.filter((b) => {
+      const date = getDateForDayOfWeek(b.dayOfWeek);
+      return b.isActive && isDayAvailableForSelection(date) && !isScheduleBlockHidden(b.id, date) && bookingsForSlot(b.id, date).length < b.capacity;
+    });
     const initialBlock = available.find((b) => b.id === booking.blockId) || available[0];
     if (initialBlock) {
       setSelectedRescheduleBlockId(initialBlock.id);
@@ -367,14 +380,18 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
       {/* Render Vistas: Grid Carrusel (Horizontal) vs Lista Compacta (Vertical Móvil - HU-19) */}
       {viewMode === 'grid' ? (
         <div className="overflow-x-auto pb-4 pt-1 -mx-2 px-2 custom-scrollbar">
-          <div className="grid grid-cols-7 min-w-[1260px] gap-3">
-            {days.map((day, index) => {
+          <div
+            className="grid gap-3"
+            style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(170px, 1fr))`, minWidth: `${visibleDays.length * 180}px` }}
+          >
+            {visibleDays.map((day) => {
+              const index = days.indexOf(day);
               const dateInfo = getWeekDateInfo(currentWeek, index);
               const targetDateStr = dateInfo.dateStr;
               const dateNum = dateInfo.dateNum;
               const isToday = targetDateStr === today();
 
-              const dayBlocks = scheduleBlocks.filter((b) => b.dayOfWeek === day && b.isActive);
+              const dayBlocks = scheduleBlocks.filter((b) => b.dayOfWeek === day && b.isActive && !isScheduleBlockHidden(b.id, targetDateStr));
               const dayBookings = userBookings.filter((b) => {
                 if (b.date === targetDateStr) return true;
                 if (b.date) {
@@ -498,12 +515,13 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
       ) : (
         /* HU-19: Vista Lista Compacta para Celulares (360px - 430px) */
         <div className="space-y-4">
-          {days.map((day, index) => {
+          {visibleDays.map((day) => {
+            const index = days.indexOf(day);
             const dateInfo = getWeekDateInfo(currentWeek, index);
             const targetDateStr = dateInfo.dateStr;
             const isToday = targetDateStr === today();
 
-            const dayBlocks = scheduleBlocks.filter((b) => b.dayOfWeek === day && b.isActive);
+            const dayBlocks = scheduleBlocks.filter((b) => b.dayOfWeek === day && b.isActive && !isScheduleBlockHidden(b.id, targetDateStr));
             const dayBookings = userBookings.filter((b) => {
               if (b.date === targetDateStr) return true;
               if (b.date) {
@@ -716,7 +734,10 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                 onChange={(e) => handleBlockSelectChange(e.target.value)}
                 className="mt-1.5 h-11 min-h-[44px] w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-base outline-none focus:border-[#00E676]"
               >
-                {scheduleBlocks.filter((b) => b.isActive && bookingsForSlot(b.id, getDateForDayOfWeek(b.dayOfWeek)).length < b.capacity).map((b) => (
+                {scheduleBlocks.filter((b) => {
+                  const date = getDateForDayOfWeek(b.dayOfWeek);
+                  return b.isActive && isDayAvailableForSelection(date) && !isScheduleBlockHidden(b.id, date) && bookingsForSlot(b.id, date).length < b.capacity;
+                }).map((b) => (
                   <option key={b.id} value={b.id}>
                     {dayLabels[b.dayOfWeek]} {b.startTime} hrs - {b.title} ({b.instructor})
                   </option>
@@ -803,4 +824,4 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
       )}
     </div>
   );
-}
+}

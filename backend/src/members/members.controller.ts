@@ -25,6 +25,14 @@ export class MembersController {
     return this.membersService.findAll(search, status);
   }
 
+  @Get('staff')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Listar las cuentas de personal (solo administración)' })
+  findStaff() {
+    return this.membersService.findStaff();
+  }
+
   @Get('activities')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)

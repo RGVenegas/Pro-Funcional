@@ -576,8 +576,70 @@ export interface UserBookingRecord {
 
 const scheduleStorageKey = 'profuncional-schedule-v6';
 const scheduleChangeEvent = 'profuncional-schedule-changed';
+const scheduleWeekOverridesKey = 'profuncional-schedule-week-overrides-v1';
 const bookingsStorageKey = 'profuncional-user-bookings-v1';
 const bookingsChangeEvent = 'profuncional-user-bookings-changed';
+
+interface ScheduleWeekOverride {
+  snapshotBlockIds: string[];
+  cleared: boolean;
+}
+
+function getScheduleWeekOverrides(): Record<string, ScheduleWeekOverride> {
+  if (typeof window === 'undefined') return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(scheduleWeekOverridesKey) || '{}') as Record<string, ScheduleWeekOverride>;
+  } catch {
+    return {};
+  }
+}
+
+function getMondayForDate(date: string): string {
+  const parsed = new Date(`${date}T12:00:00Z`);
+  const weekday = parsed.getUTCDay();
+  parsed.setUTCDate(parsed.getUTCDate() - ((weekday + 6) % 7));
+  return parsed.toISOString().slice(0, 10);
+}
+
+export function isScheduleBlockHidden(blockId: string, date: string): boolean {
+  const override = getScheduleWeekOverrides()[getMondayForDate(date)];
+  return Boolean(override && (override.cleared || !override.snapshotBlockIds.includes(blockId)));
+}
+
+export function isScheduleWeekCleared(weekStartDate: string): boolean {
+  return Boolean(getScheduleWeekOverrides()[getMondayForDate(weekStartDate)]?.cleared);
+}
+
+export function clearScheduleWeek(weekStartDate: string): number {
+  const overrides = getScheduleWeekOverrides();
+  const weekKey = getMondayForDate(weekStartDate);
+  const snapshotBlockIds = getCentralScheduleBlocks()
+    .filter((block) => !isScheduleBlockHidden(block.id, weekKey))
+    .map((block) => block.id);
+  overrides[weekKey] = { snapshotBlockIds, cleared: true };
+  window.localStorage.setItem(scheduleWeekOverridesKey, JSON.stringify(overrides));
+  window.dispatchEvent(new Event(scheduleChangeEvent));
+  addActivity({ name: 'Staff', action: `borró el horario de la semana del ${weekKey}` });
+  return snapshotBlockIds.length;
+}
+
+export function restoreScheduleWeek(weekStartDate: string): void {
+  const overrides = getScheduleWeekOverrides();
+  const weekKey = getMondayForDate(weekStartDate);
+  const override = overrides[weekKey];
+  if (!override) return;
+  overrides[weekKey] = { ...override, cleared: false };
+  window.localStorage.setItem(scheduleWeekOverridesKey, JSON.stringify(overrides));
+  window.dispatchEvent(new Event(scheduleChangeEvent));
+  addActivity({ name: 'Staff', action: `restauró el horario de la semana del ${weekKey}` });
+}
+const checkInsStorageKey = 'profuncional-member-checkins-v1';
+
+export interface MemberCheckIn {
+  id: string;
+  memberId: string;
+  checkedAt: string;
+}
 
 const initialScheduleBlocks: CentralScheduleBlock[] = [
   // LUNES
@@ -835,6 +897,32 @@ export function saveUserBookings(bookings: UserBookingRecord[]): void {
   window.dispatchEvent(new Event(bookingsChangeEvent));
 }
 
+export function getMemberCheckIns(): MemberCheckIn[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    return JSON.parse(window.localStorage.getItem(checkInsStorageKey) || '[]') as MemberCheckIn[];
+  } catch {
+    return [];
+  }
+}
+
+export function recordQrCheckIn(memberId: string): MemberCheckIn {
+  const member = getMemberById(memberId);
+  if (!member || member.status !== 'active') throw new Error('El QR no corresponde a un miembro activo.');
+
+  const checkIn: MemberCheckIn = {
+    id: `checkin-${Date.now()}`,
+    memberId,
+    checkedAt: new Date().toISOString(),
+  };
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(checkInsStorageKey, JSON.stringify([checkIn, ...getMemberCheckIns()]));
+    window.dispatchEvent(new Event(bookingsChangeEvent));
+  }
+  addActivity({ name: member.name, action: 'validó su ingreso con código QR' });
+  return checkIn;
+}
+
 export function subscribeToBookings(onChange: () => void): () => void {
   if (typeof window === 'undefined') return () => {};
   window.addEventListener(bookingsChangeEvent, onChange);
@@ -858,6 +946,7 @@ function owns(b: UserBookingRecord, identity: string) { const m = resolveMember(
 function validateSlot(member: GymMember, blockId: string, date: string, exceptId?: string): string | undefined {
   const block = getCentralScheduleBlocks().find(b => b.id === blockId && b.isActive);
   if (!block) return 'El horario no está disponible.';
+  if (isScheduleBlockHidden(blockId, date)) return 'Este bloque fue eliminado del horario de esa semana.';
   if (member.status !== 'active') return 'Tu membresía no está activa. Contacta al centro.';
   const start = appointmentTime(date, block.startTime);
   if (!Number.isFinite(start) || start <= Date.now()) return 'Selecciona una fecha y hora futuras válidas.';

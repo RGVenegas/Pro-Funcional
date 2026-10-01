@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Users, Calendar, Menu, X, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Menu, X, AlertTriangle, BriefcaseBusiness } from 'lucide-react';
 import { Logo } from '../shared/Logo';
 
 interface AdminSidebarProps {
   currentView: string;
-  onNavigate: (view: 'dashboard' | 'members' | 'schedule' | 'risk') => void;
+  onNavigate: (view: 'dashboard' | 'members' | 'schedule' | 'risk' | 'staff') => void;
 }
 
 export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
@@ -48,6 +48,23 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
           );
         })}
       </nav>
+      <div className="border-t border-white/10 p-4">
+        <button
+          type="button"
+          onClick={() => {
+            onNavigate('staff');
+            setIsOpen(false);
+          }}
+          className={`interactive-element interactive-glow w-full flex items-center gap-3 rounded-lg border px-4 py-3 ${
+            currentView === 'staff'
+              ? 'border-[#00E676]/60 bg-[#00E676] font-bold text-[#021826] shadow-md shadow-[#00E676]/20'
+              : 'border-transparent text-white/80 hover:border-white/10 hover:bg-white/10'
+          }`}
+        >
+          <BriefcaseBusiness className="h-5 w-5" />
+          <span className="font-medium">Personal</span>
+        </button>
+      </div>
     </div>
   );
 

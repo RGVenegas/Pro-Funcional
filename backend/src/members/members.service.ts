@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { serial } from '../common/transaction';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { UpdateMemberDto } from './dto/update-member.dto';
 
 @Injectable()
@@ -33,6 +33,22 @@ export class MembersService {
       ...m,
       activePackage: m.packages[0] || null,
     }));
+  }
+
+  async findStaff() {
+    return this.prisma.user.findMany({
+      where: { role: { in: [Role.ADMIN, Role.KINESIOLOGO, Role.COACH] } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        createdAt: true,
+      },
+      orderBy: { name: 'asc' },
+    });
   }
 
   async findOne(id: string) {

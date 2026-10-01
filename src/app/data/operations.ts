@@ -27,6 +27,9 @@ function isAuthError(e: unknown): boolean {
 }
 
 export async function createBookingTransaction(identity: string, blockId: string, date: string) {
+  if (local.isScheduleBlockHidden(blockId, date)) {
+    return { success: false, message: 'Este bloque fue eliminado del horario de esa semana.' };
+  }
   if (!apiEnabled || !hasToken()) return local.createBookingTransaction(identity, blockId, date);
   try {
     const res = await mutation('/bookings', 'POST', { scheduleBlockId: blockId, bookingDate: date }, `Reserva de hora`);
@@ -55,6 +58,9 @@ export async function cancelBookingWith24hRule(id: string, identity: string) {
 }
 
 export async function rescheduleBookingTransaction(id: string, identity: string, blockId: string, date: string) {
+  if (local.isScheduleBlockHidden(blockId, date)) {
+    return { success: false, message: 'Este bloque fue eliminado del horario de esa semana.' };
+  }
   if (!apiEnabled || !hasToken()) return local.rescheduleBookingTransaction(id, identity, blockId, date);
   try {
     const res = await mutation(`/bookings/${id}/reschedule`, 'PATCH', { newScheduleBlockId: blockId, newBookingDate: date }, `Reagendamiento de reserva`);

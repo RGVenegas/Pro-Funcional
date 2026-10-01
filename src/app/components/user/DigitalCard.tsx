@@ -13,8 +13,9 @@ interface DigitalCardProps {
 export function DigitalCard({ user: account }: DigitalCardProps) {
   const [feedback, setFeedback] = useState<string | null>(null);
 
+  const memberRecord = getMemberByEmail(account.email);
   const user = {
-    id: 'PF-2025-001234',
+    id: memberRecord?.id || account.email,
     name: account.name,
     plan: account.plan ?? 'Premium',
     memberSince: getMemberByEmail(account.email)?.joinDate || '',
