@@ -42,7 +42,7 @@ Ecosistema digital integral compuesto por un **Programa de Escritorio (PC)** par
 - **HU-07 · Alertas de Restricciones Médicas**: Pautas clínicas kinésicas visibles automáticamente para entrenadores de gimnasio.
 - **HU-10 · Dashboard de Métricas & No-Show**: Indicadores de ocupación, saldos de paquetes y porcentaje de ausentismo.
 
-### 📱 App Móvil (Pacientes / Alumnos)
+### 📱 App Móvil (Pacientes / Alumnos) 
 
 - **HU-03 / HU-03.b · Agendamiento Autónomo & Tema Verde Limón**: Catálogo de horas disponibles, reserva en 1 clic y branding institucional.
 - **HU-04 / HU-04.b · Cancelación (Regla 24h) y Reagendamiento**:
