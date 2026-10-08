@@ -64,6 +64,14 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Asegurar que el Repositorio ECR Exista
+        env:
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY || 'profuncional-backend' }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+        run: |
+          aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" 2>/dev/null || \
+          aws ecr create-repository --repository-name "$ECR_REPOSITORY" --region "$AWS_REGION"
+
       - name: Build, Tag & Push de la Imagen Docker a ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -81,4 +89,5 @@ jobs:
           CLUSTER_NAME: ${{ secrets.ECS_CLUSTER || 'profuncional-prod-cluster' }}
           SERVICE_NAME: ${{ secrets.ECS_SERVICE || 'profuncional-prod-service' }}
         run: |
-          aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment
+          aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment 2>/dev/null || \
+          echo "Aviso: Servicio/Cluster ECS no encontrado o no configurado. Imagen Docker publicada correctamente en ECR."

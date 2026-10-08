@@ -46,6 +46,21 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
+      - name: Asegurar que el Bucket S3 Exista
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET || 'profuncional-prod-frontend-hosting' }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+        run: |
+          if ! aws s3api head-bucket --bucket "$S3_BUCKET" 2>/dev/null; then
+            echo "El bucket $S3_BUCKET no existe. Creándolo en AWS..."
+            if [ "$AWS_REGION" = "us-east-1" ]; then
+              aws s3api create-bucket --bucket "$S3_BUCKET"
+            else
+              aws s3api create-bucket --bucket "$S3_BUCKET" --create-bucket-configuration LocationConstraint="$AWS_REGION"
+            fi
+          fi
+
       - name: Sincronizar Artefactos Estáticos a AWS S3
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         env:
