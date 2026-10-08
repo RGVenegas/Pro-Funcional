@@ -17,7 +17,7 @@ function figmaAssetResolver() {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const apiTarget = env.VITE_API_TARGET || (env.VITE_API_URL?.startsWith('http') ? env.VITE_API_URL.replace(/\/api\/?$/, '') : 'http://54.91.72.228:3001')
+  const apiTarget = env.VITE_API_TARGET || (env.VITE_API_URL?.startsWith('http') ? env.VITE_API_URL.replace(/\/api\/?$/, '') : 'http://127.0.0.1:3001')
 
   return {
     plugins: [
