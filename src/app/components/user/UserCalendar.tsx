@@ -76,6 +76,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
     Friday: 'Vie', Saturday: 'Sáb', Sunday: 'Dom'
   };
   const visibleDays = days.filter((_, index) => activeTab !== 'gym-schedule' || currentWeek !== 0 || getWeekDateInfo(0, index).dateStr >= currentDate);
+  const safeVisibleDays = visibleDays.length > 0 ? visibleDays : days;
 
   useEffect(() => {
     const timer = window.setInterval(() => setCurrentDate(today()), 60_000);
@@ -99,20 +100,29 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   };
 
   const getWeekDateInfo = (weekOffset: number, dayIndex: number) => {
-    const baseMonday = new Date(weekDate() + 'T12:00:00');
-    const target = new Date(baseMonday);
-    target.setDate(baseMonday.getDate() + (weekOffset * 7) + dayIndex);
+    try {
+      const mondayStr = weekDate();
+      const baseMonday = new Date(`${mondayStr}T12:00:00Z`);
+      const target = new Date(baseMonday.getTime() + (weekOffset * 7 + dayIndex) * 86400000);
 
-    const year = target.getFullYear();
-    const month = String(target.getMonth() + 1).padStart(2, '0');
-    const day = String(target.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
+      const year = target.getUTCFullYear();
+      const month = String(target.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(target.getUTCDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
 
-    return {
-      dateStr,
-      dateNum: target.getDate(),
-      dayFormatted: day,
-    };
+      return {
+        dateStr,
+        dateNum: target.getUTCDate(),
+        dayFormatted: day,
+      };
+    } catch {
+      const dateStr = today();
+      return {
+        dateStr,
+        dateNum: 1,
+        dayFormatted: '01',
+      };
+    }
   };
 
   const getDateForDayOfWeek = (dayOfWeek: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday', weekOffset: number = currentWeek) => {
@@ -382,9 +392,9 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
         <div className="overflow-x-auto pb-4 pt-1 -mx-2 px-2 custom-scrollbar">
           <div
             className="grid gap-3"
-            style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(170px, 1fr))`, minWidth: `${visibleDays.length * 180}px` }}
+            style={{ gridTemplateColumns: `repeat(${safeVisibleDays.length}, minmax(170px, 1fr))`, minWidth: `${safeVisibleDays.length * 180}px` }}
           >
-            {visibleDays.map((day) => {
+            {safeVisibleDays.map((day) => {
               const index = days.indexOf(day);
               const dateInfo = getWeekDateInfo(currentWeek, index);
               const targetDateStr = dateInfo.dateStr;
@@ -515,7 +525,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
       ) : (
         /* HU-19: Vista Lista Compacta para Celulares (360px - 430px) */
         <div className="space-y-4">
-          {visibleDays.map((day) => {
+          {safeVisibleDays.map((day) => {
             const index = days.indexOf(day);
             const dateInfo = getWeekDateInfo(currentWeek, index);
             const targetDateStr = dateInfo.dateStr;

@@ -595,19 +595,39 @@ function getScheduleWeekOverrides(): Record<string, ScheduleWeekOverride> {
 }
 
 function getMondayForDate(date: string): string {
-  const parsed = new Date(`${date}T12:00:00Z`);
+  if (!date || typeof date !== 'string') return today();
+  const dateOnly = date.slice(0, 10);
+  const parsed = new Date(`${dateOnly}T12:00:00Z`);
+  if (isNaN(parsed.getTime())) return today();
   const weekday = parsed.getUTCDay();
   parsed.setUTCDate(parsed.getUTCDate() - ((weekday + 6) % 7));
   return parsed.toISOString().slice(0, 10);
 }
 
 export function isScheduleBlockHidden(blockId: string, date: string): boolean {
-  const override = getScheduleWeekOverrides()[getMondayForDate(date)];
-  return Boolean(override && (override.cleared || !override.snapshotBlockIds.includes(blockId)));
+  if (!blockId || !date) return false;
+  try {
+    const overrides = getScheduleWeekOverrides();
+    const mondayKey = getMondayForDate(date);
+    const override = overrides[mondayKey];
+    if (!override) return false;
+    if (override.cleared) return true;
+    if (Array.isArray(override.snapshotBlockIds)) {
+      return !override.snapshotBlockIds.includes(blockId);
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 export function isScheduleWeekCleared(weekStartDate: string): boolean {
-  return Boolean(getScheduleWeekOverrides()[getMondayForDate(weekStartDate)]?.cleared);
+  if (!weekStartDate) return false;
+  try {
+    return Boolean(getScheduleWeekOverrides()[getMondayForDate(weekStartDate)]?.cleared);
+  } catch {
+    return false;
+  }
 }
 
 export function clearScheduleWeek(weekStartDate: string): number {
