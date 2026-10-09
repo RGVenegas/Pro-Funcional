@@ -978,7 +978,11 @@ export function studentsForSlot(blockId: string, date: string): EnrolledStudent[
   }));
 }
 export function bookingStart(b: UserBookingRecord): number { return appointmentTime(b.date, b.time.split(' - ')[0]); }
-function resolveMember(identity: string) { return getMembers().find(m => m.id === identity || m.email.toLowerCase() === identity.toLowerCase() || m.name.toLowerCase() === identity.toLowerCase()); }
+function resolveMember(identity?: string) {
+  if (!identity) return undefined;
+  const target = String(identity).toLowerCase();
+  return getMembers().find(m => Boolean(m && ((m.id && m.id.toLowerCase() === target) || (m.email && m.email.toLowerCase() === target) || (m.name && m.name.toLowerCase() === target))));
+}
 function owns(b: UserBookingRecord, identity: string) { const m = resolveMember(identity); return m && (b.memberId ? b.memberId === m.id : b.userName === m.name); }
 function validateSlot(member: GymMember, blockId: string, date: string, exceptId?: string): string | undefined {
   const block = getCentralScheduleBlocks().find(b => b.id === blockId && b.isActive);

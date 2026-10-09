@@ -14,7 +14,7 @@ export function AdminRiskDashboard({ memberId, onViewMember, onViewMembers }: Ad
     const members = getMembers();
     return members.map((member) => {
       const memberBookings = bookings
-        .filter((booking) => booking.memberId ? booking.memberId === member.id : booking.userName.toLowerCase() === member.name.toLowerCase())
+        .filter((booking) => booking.memberId ? booking.memberId === member.id : Boolean(booking.userName && member.name && booking.userName.toLowerCase() === member.name.toLowerCase()))
         .sort((a, b) => b.date.localeCompare(a.date));
       let consecutiveNoShows = 0;
       const dates: string[] = [];

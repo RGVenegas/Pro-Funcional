@@ -22,7 +22,7 @@ export function TrainingTracking({ email, user }: { email?: string; user?: any }
     return () => { a(); b(); };
   }, []);
 
-  const member = getMemberByEmail(email || '') || (user ? getMembers().find(m => m.name.toLowerCase() === user.name.toLowerCase()) : getMembers()[0]);
+  const member = getMemberByEmail(email || '') || (user ? getMembers().find(m => Boolean(m && m.name && user.name && m.name.toLowerCase() === user.name.toLowerCase())) : getMembers()[0]);
   const history = [...(member?.clinicalHistory || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   const [area, setArea] = useState('');
   const selectedArea = area || history.at(-1)?.jointOrArea || 'General';

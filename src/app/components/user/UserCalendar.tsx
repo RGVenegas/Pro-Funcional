@@ -40,16 +40,18 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   // Reactive state
   const [member, setMember] = useState<GymMember | undefined>(() => {
     const list = getMembers();
-    return list.find((m) => m.name.toLowerCase() === memberName.toLowerCase()) || list[0];
+    const searchName = (memberName || '').toLowerCase();
+    return list.find((m) => m && m.name && m.name.toLowerCase() === searchName) || list[0];
   });
 
   const [scheduleBlocks, setScheduleBlocks] = useState<CentralScheduleBlock[]>(() => getCentralScheduleBlocks());
-  const [userBookings, setUserBookings] = useState<UserBookingRecord[]>(() => getUserBookings(memberName).filter(b => b.status !== 'cancelled'));
+  const [userBookings, setUserBookings] = useState<UserBookingRecord[]>(() => getUserBookings(memberName).filter(b => b && b.status !== 'cancelled'));
 
   useEffect(() => {
     const unsubMembers = subscribeToMembers(() => {
       const list = getMembers();
-      const found = list.find((m) => m.name.toLowerCase() === memberName.toLowerCase()) || list[0];
+      const searchName = (memberName || '').toLowerCase();
+      const found = list.find((m) => m && m.name && m.name.toLowerCase() === searchName) || list[0];
       if (found) setMember(found);
     });
 
