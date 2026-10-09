@@ -18,6 +18,9 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "dependencies": {
     "@nestjs/common": "^10.3.8",
     "@nestjs/config": "^3.2.2",
