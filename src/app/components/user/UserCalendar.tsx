@@ -405,8 +405,11 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
               const dateNum = dateInfo.dateNum;
               const isToday = targetDateStr === today();
 
-              const dayBlocks = scheduleBlocks.filter((b) => b.dayOfWeek === day && b.isActive && !isScheduleBlockHidden(b.id, targetDateStr));
-              const dayBookings = userBookings.filter((b) => {
+              const dayBlocks = (scheduleBlocks || []).filter(
+                (b) => b && typeof b === 'object' && b.dayOfWeek === day && b.isActive && !isScheduleBlockHidden(b.id, targetDateStr)
+              );
+              const dayBookings = (userBookings || []).filter((b) => {
+                if (!b) return false;
                 if (b.date === targetDateStr) return true;
                 if (b.date) {
                   const formattedDay = dateInfo.dayFormatted;
@@ -421,19 +424,38 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
               return (
                 <div key={day} className="min-h-[220px] flex flex-col gap-2">
                   <div className={`text-center p-2.5 rounded-xl ${isToday ? 'bg-[#00E676] text-[#021826] font-bold shadow-lg shadow-[#00E676]/20' : 'bg-white/5 border border-white/10'}`}>
-                    <p className="text-xs font-semibold uppercase">{dayLabels[day]}</p>
+                    <p className="text-xs font-semibold uppercase">{dayLabels[day] || day}</p>
                     <p className="text-xl font-black">{dateNum}</p>
                   </div>
 
                   <div className="space-y-2.5">
                     {activeTab === 'gym-schedule' &&
                       dayBlocks.map((block) => {
-                        const booked = bookingsForSlot(block.id, getDateForDayOfWeek(block.dayOfWeek)).length;
-                        const isUserEnrolled = (block.students || []).some((st) => st?.name?.toLowerCase() === (memberName || '').toLowerCase());
+                        if (!block) return null;
+                        const blockDate = block.dayOfWeek ? getDateForDayOfWeek(block.dayOfWeek) : targetDateStr;
+                        const booked = block.id ? bookingsForSlot(block.id, blockDate).length : 0;
+                        const capacityNum = Number(block.capacity) || 8;
+                        const safeMemberName = (memberName || '').toLowerCase();
+                        const isUserEnrolled = Boolean(
+                          safeMemberName &&
+                          Array.isArray(block.students) &&
+                          block.students.some((st) => {
+                            if (!st) return false;
+                            const stName = typeof st === 'string' ? st : (typeof st === 'object' && typeof st.name === 'string' ? st.name : '');
+                            return Boolean(stName && stName.toLowerCase() === safeMemberName);
+                          })
+                        );
+
+                        const isPastSlot = Boolean(
+                          targetDateStr &&
+                          block.startTime &&
+                          Number.isFinite(appointmentTime(targetDateStr, block.startTime)) &&
+                          appointmentTime(targetDateStr, block.startTime) <= Date.now()
+                        );
 
                         return (
                           <div
-                            key={block.id}
+                            key={block.id || Math.random()}
                             className={`p-3 rounded-xl border transition-all ${
                               isUserEnrolled
                                 ? 'bg-[#00E676]/15 border-[#00E676]/40'
@@ -441,26 +463,26 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                             }`}
                           >
                             <div className="flex items-start justify-between gap-1 mb-1">
-                              <p className="font-bold text-xs leading-tight text-white">{block.title}</p>
+                              <p className="font-bold text-xs leading-tight text-white">{block.title || 'Clase de Gimnasio'}</p>
                               {isUserEnrolled && (
                                 <span className="text-[9px] bg-[#00E676] text-[#021826] font-bold px-1.5 py-0.5 rounded whitespace-nowrap flex-shrink-0">Agendado</span>
                               )}
                             </div>
                             <div className="flex items-center gap-1 text-[11px] text-white/60 mb-1">
                               <Clock className="w-3 h-3 text-[#00E676] flex-shrink-0" />
-                              <span className="whitespace-nowrap">{block.startTime} - {block.endTime}</span>
+                              <span className="whitespace-nowrap">{block.startTime || '08:00'} - {block.endTime || '09:00'}</span>
                             </div>
                             <div className="flex items-center gap-1 text-[11px] text-white/60 mb-2 truncate">
                               <User className="w-3 h-3 flex-shrink-0" />
-                              <span className="truncate">{block.instructor}</span>
+                              <span className="truncate">{block.instructor || 'Profesor'}</span>
                             </div>
 
                             <div className="pt-2 border-t border-white/10 space-y-2">
                               <div className="flex items-center justify-between text-xs">
                                 <div className="flex items-center gap-1 text-[11px]">
                                   <Users className="w-3 h-3 flex-shrink-0" />
-                                  <span className={getAvailabilityColor(booked, block.capacity)}>
-                                    {booked}/{block.capacity} cupos
+                                  <span className={getAvailabilityColor(booked, capacityNum)}>
+                                    {booked}/{capacityNum} cupos
                                   </span>
                                 </div>
                               </div>
@@ -471,7 +493,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                                   onClick={() => handleOpenBooking(block, targetDateStr)}
                                   className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-[#00E676]/15 hover:bg-[#00E676] text-[#00E676] hover:text-[#021826] border border-[#00E676]/30 text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm"
                                 >
-                                  {appointmentTime(targetDateStr, block.startTime) <= Date.now() ? 'Reservar (Próx. Sem) →' : 'Reservar Cita →'}
+                                  {isPastSlot ? 'Reservar (Próx. Sem) →' : 'Reservar Cita →'}
                                 </button>
                               )}
                             </div>
@@ -481,7 +503,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
 
                     {activeTab === 'my-schedule' &&
                       dayBookings.map((booking) => (
-                        <div key={booking.id} className="p-3 rounded-xl bg-white/10 border border-[#00E676]/40 space-y-2">
+                        <div key={booking.id || Math.random()} className="p-3 rounded-xl bg-white/10 border border-[#00E676]/40 space-y-2">
                           <div className="flex items-start justify-between gap-1">
                             <span className="text-[9px] uppercase font-bold text-[#00E676] tracking-wider truncate">{booking.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
                             <span className="text-[10px] font-mono text-white/60 whitespace-nowrap">{booking.time}</span>
@@ -535,8 +557,9 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
             const targetDateStr = dateInfo.dateStr;
             const isToday = targetDateStr === today();
 
-            const dayBlocks = scheduleBlocks.filter((b) => b.dayOfWeek === day && b.isActive && !isScheduleBlockHidden(b.id, targetDateStr));
-            const dayBookings = userBookings.filter((b) => {
+            const dayBlocks = (scheduleBlocks || []).filter((b) => b && typeof b === 'object' && b.dayOfWeek === day && b.isActive && !isScheduleBlockHidden(b.id, targetDateStr));
+            const dayBookings = (userBookings || []).filter((b) => {
+              if (!b) return false;
               if (b.date === targetDateStr) return true;
               if (b.date) {
                 const formattedDay = dateInfo.dayFormatted;
@@ -555,7 +578,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
               <div key={day} className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
                 <div className="flex items-center justify-between border-b border-white/10 pb-2">
                   <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg ${isToday ? 'bg-[#00E676] text-[#021826]' : 'bg-white/10 text-white'}`}>
-                    {dayLabels[day]} {dateInfo.dateNum}
+                    {dayLabels[day] || day} {dateInfo.dateNum}
                   </span>
                   <span className="text-xs text-white/50">{targetDateStr}</span>
                 </div>
@@ -563,24 +586,36 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                 <div className="grid gap-3 sm:grid-cols-2">
                   {activeTab === 'gym-schedule' &&
                     dayBlocks.map((block) => {
-                      const booked = bookingsForSlot(block.id, getDateForDayOfWeek(block.dayOfWeek)).length;
-                      const isUserEnrolled = (block.students || []).some((st) => st?.name?.toLowerCase() === (memberName || '').toLowerCase());
+                      if (!block) return null;
+                      const blockDate = block.dayOfWeek ? getDateForDayOfWeek(block.dayOfWeek) : targetDateStr;
+                      const booked = block.id ? bookingsForSlot(block.id, blockDate).length : 0;
+                      const capacityNum = Number(block.capacity) || 8;
+                      const safeMemberName = (memberName || '').toLowerCase();
+                      const isUserEnrolled = Boolean(
+                        safeMemberName &&
+                        Array.isArray(block.students) &&
+                        block.students.some((st) => {
+                          if (!st) return false;
+                          const stName = typeof st === 'string' ? st : (typeof st === 'object' && typeof st.name === 'string' ? st.name : '');
+                          return Boolean(stName && stName.toLowerCase() === safeMemberName);
+                        })
+                      );
 
                       return (
-                        <div key={block.id} className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-2">
+                        <div key={block.id || Math.random()} className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-2">
                           <div className="flex items-center justify-between">
-                            <p className="font-bold text-sm text-white">{block.title}</p>
+                            <p className="font-bold text-sm text-white">{block.title || 'Clase de Gimnasio'}</p>
                             {isUserEnrolled && (
                               <span className="text-xs bg-[#00E676] text-[#021826] font-bold px-2 py-0.5 rounded">Agendado</span>
                             )}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-white/70">
-                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#00E676]" /> {block.startTime} - {block.endTime}</span>
-                            <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {block.instructor}</span>
+                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#00E676]" /> {block.startTime || '08:00'} - {block.endTime || '09:00'}</span>
+                            <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {block.instructor || 'Profesor'}</span>
                           </div>
                           <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                            <span className={`text-xs ${getAvailabilityColor(booked, block.capacity)}`}>
-                              {booked}/{block.capacity} cupos libres
+                            <span className={`text-xs ${getAvailabilityColor(booked, capacityNum)}`}>
+                              {booked}/{capacityNum} cupos libres
                             </span>
                             {!isUserEnrolled && (
                               <button
