@@ -77,6 +77,41 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
     Monday: 'Lun', Tuesday: 'Mar', Wednesday: 'Mié', Thursday: 'Jue',
     Friday: 'Vie', Saturday: 'Sáb', Sunday: 'Dom'
   };
+
+  function getWeekDateInfo(weekOffset: number, dayIndex: number) {
+    try {
+      const mondayStr = weekDate();
+      const baseMonday = new Date(`${mondayStr}T12:00:00Z`);
+      const target = new Date(baseMonday.getTime() + (weekOffset * 7 + dayIndex) * 86400000);
+
+      const year = target.getUTCFullYear();
+      const month = String(target.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(target.getUTCDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+
+      return {
+        dateStr,
+        dateNum: target.getUTCDate(),
+        dayFormatted: day,
+      };
+    } catch {
+      const dateStr = today();
+      return {
+        dateStr,
+        dateNum: 1,
+        dayFormatted: '01',
+      };
+    }
+  }
+
+  function getDateForDayOfWeek(dayOfWeek: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday', weekOffset: number = currentWeek) {
+    const dayIndexMap: Record<string, number> = {
+      Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3, Friday: 4, Saturday: 5, Sunday: 6
+    };
+    const idx = dayIndexMap[dayOfWeek] ?? 0;
+    return getWeekDateInfo(weekOffset, idx).dateStr;
+  }
+
   const visibleDays = days.filter((_, index) => activeTab !== 'gym-schedule' || currentWeek !== 0 || getWeekDateInfo(0, index).dateStr >= currentDate);
   const safeVisibleDays = visibleDays.length > 0 ? visibleDays : days;
 
@@ -101,39 +136,6 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
     setBookingBlock({ block, targetDate: finalTargetDate });
   };
 
-  const getWeekDateInfo = (weekOffset: number, dayIndex: number) => {
-    try {
-      const mondayStr = weekDate();
-      const baseMonday = new Date(`${mondayStr}T12:00:00Z`);
-      const target = new Date(baseMonday.getTime() + (weekOffset * 7 + dayIndex) * 86400000);
-
-      const year = target.getUTCFullYear();
-      const month = String(target.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(target.getUTCDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
-
-      return {
-        dateStr,
-        dateNum: target.getUTCDate(),
-        dayFormatted: day,
-      };
-    } catch {
-      const dateStr = today();
-      return {
-        dateStr,
-        dateNum: 1,
-        dayFormatted: '01',
-      };
-    }
-  };
-
-  const getDateForDayOfWeek = (dayOfWeek: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday', weekOffset: number = currentWeek) => {
-    const dayIndexMap: Record<string, number> = {
-      Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3, Friday: 4, Saturday: 5, Sunday: 6
-    };
-    const idx = dayIndexMap[dayOfWeek] ?? 0;
-    return getWeekDateInfo(weekOffset, idx).dateStr;
-  };
 
   const handleOpenReschedule = (booking: UserBookingRecord) => {
     setReschedulingBooking(booking);
