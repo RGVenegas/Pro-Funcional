@@ -818,9 +818,13 @@ export function getUserBookings(userName?: string): UserBookingRecord[] {
     if (saved) {
       try {
         const savedList = JSON.parse(saved) as UserBookingRecord[];
-        for (const b of savedList) {
-          const key = b.id || `${b.blockId}-${b.date}-${b.userName}`;
-          map.set(key, b);
+        if (Array.isArray(savedList)) {
+          for (const b of savedList) {
+            if (b && typeof b === 'object') {
+              const key = b.id || `${b.blockId || 'noblock'}-${b.date || 'nodate'}-${b.userName || 'nouser'}`;
+              map.set(key, b);
+            }
+          }
         }
       } catch {
         // ignore parse error
@@ -829,19 +833,21 @@ export function getUserBookings(userName?: string): UserBookingRecord[] {
   }
 
   // 2. Merge server snapshot bookings if available
-  if (apiEnabled && serverSnapshot.bookings && serverSnapshot.bookings.length > 0) {
+  if (apiEnabled && serverSnapshot.bookings && Array.isArray(serverSnapshot.bookings)) {
     for (const serverBooking of serverSnapshot.bookings as UserBookingRecord[]) {
-      const key = serverBooking.id || `${serverBooking.blockId}-${serverBooking.date}-${serverBooking.userName}`;
-      const existing = map.get(key);
-      if (existing) {
-        map.set(key, { ...existing, ...serverBooking });
-      } else {
-        map.set(key, serverBooking);
+      if (serverBooking && typeof serverBooking === 'object') {
+        const key = serverBooking.id || `${serverBooking.blockId || 'noblock'}-${serverBooking.date || 'nodate'}-${serverBooking.userName || 'nouser'}`;
+        const existing = map.get(key);
+        if (existing) {
+          map.set(key, { ...existing, ...serverBooking });
+        } else {
+          map.set(key, serverBooking);
+        }
       }
     }
   }
 
-  const list = Array.from(map.values());
+  const list = Array.from(map.values()).filter((b): b is UserBookingRecord => Boolean(b && typeof b === 'object'));
   const demoRiskBookings: UserBookingRecord[] = [
     {
       id: 'demo-risk-1',
@@ -887,11 +893,12 @@ export function getUserBookings(userName?: string): UserBookingRecord[] {
     },
   ];
 
-  const hasDemoRisk = list.some((b) => b.memberId === '2' && b.status === 'no-show' && b.userName === 'Camila Fernández');
+  const hasDemoRisk = list.some((b) => b?.memberId === '2' && b?.status === 'no-show' && b?.userName === 'Camila Fernández');
   const merged = hasDemoRisk ? list : [...demoRiskBookings, ...list];
 
   if (!userName) return merged;
-  return merged.filter((b) => b.userName.toLowerCase() === userName.toLowerCase());
+  const searchName = String(userName).toLowerCase();
+  return merged.filter((b) => Boolean(b && b.userName && String(b.userName).toLowerCase() === searchName));
 }
 
 export function saveUserBookings(bookings: UserBookingRecord[]): void {
@@ -936,12 +943,19 @@ export function subscribeToBookings(onChange: () => void): () => void {
   };
 }
 
-
 export function bookingsForSlot(blockId: string, date: string): UserBookingRecord[] {
-  return getUserBookings().filter(b => b.blockId === blockId && b.date === date && b.status !== 'cancelled');
+  if (!blockId || !date) return [];
+  return getUserBookings().filter(b => b && b.blockId === blockId && b.date === date && b.status !== 'cancelled');
 }
 export function studentsForSlot(blockId: string, date: string): EnrolledStudent[] {
-  return bookingsForSlot(blockId, date).map(b => ({ id: b.memberId || getMembers().find(m => m.name === b.userName)?.id || b.userName, name: b.userName, bookingId: b.id, confirmedAt: b.confirmedAt, status: b.status === 'attended' || b.status === 'no-show' ? b.status : 'pending', restrictions: getMembers().find(m => m.id === b.memberId || m.name === b.userName)?.physicalRestrictions }));
+  return bookingsForSlot(blockId, date).map(b => ({
+    id: b.memberId || getMembers().find(m => m.name === b.userName)?.id || b.userName || 'unknown',
+    name: b.userName || 'Alumno',
+    bookingId: b.id,
+    confirmedAt: b.confirmedAt,
+    status: b.status === 'attended' || b.status === 'no-show' ? b.status : 'pending',
+    restrictions: getMembers().find(m => m.id === b.memberId || m.name === b.userName)?.physicalRestrictions
+  }));
 }
 export function bookingStart(b: UserBookingRecord): number { return appointmentTime(b.date, b.time.split(' - ')[0]); }
 function resolveMember(identity: string) { return getMembers().find(m => m.id === identity || m.email.toLowerCase() === identity.toLowerCase() || m.name.toLowerCase() === identity.toLowerCase()); }

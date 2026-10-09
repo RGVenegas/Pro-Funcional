@@ -18,6 +18,7 @@ import { UserBottomNav } from './components/navigation/UserBottomNav';
 import { OfflineStatusBanner } from './components/OfflineStatusBanner';
 
 import { Logo } from './components/shared/Logo';
+import { ErrorBoundary } from './components/shared/ErrorBoundary';
 
 type Role = 'admin' | 'user';
 type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule' | 'risk' | 'staff';
@@ -160,23 +161,25 @@ export default function App() {
             onNavigate={(view) => navigateAdmin(view as AdminView)}
           />
           <main className="flex-1 ml-0 lg:ml-64 p-3 pt-16 sm:p-4 sm:pt-16 lg:p-8 lg:pt-8 w-full max-w-full overflow-x-hidden">
-            {adminView === 'dashboard' && <AdminDashboard />}
-            {adminView === 'members' && <MembersList onViewMember={handleViewMember} onViewRisk={handleViewRisk} />}
-            {adminView === 'member-detail' && selectedMemberId && (
-              <MemberDetail 
-                memberId={selectedMemberId} 
-                onBack={handleBackToMembers}
-              />
-            )}
-            {adminView === 'schedule' && <ScheduleManagement />}
-            {adminView === 'risk' && (
-              <AdminRiskDashboard
-                memberId={selectedMemberId}
-                onViewMember={handleViewMember}
-                onViewMembers={() => navigateAdmin('members')}
-              />
-            )}
-            {adminView === 'staff' && <AdminStaffDashboard />}
+            <ErrorBoundary>
+              {adminView === 'dashboard' && <AdminDashboard />}
+              {adminView === 'members' && <MembersList onViewMember={handleViewMember} onViewRisk={handleViewRisk} />}
+              {adminView === 'member-detail' && selectedMemberId && (
+                <MemberDetail 
+                  memberId={selectedMemberId} 
+                  onBack={handleBackToMembers}
+                />
+              )}
+              {adminView === 'schedule' && <ScheduleManagement />}
+              {adminView === 'risk' && (
+                <AdminRiskDashboard
+                  memberId={selectedMemberId}
+                  onViewMember={handleViewMember}
+                  onViewMembers={() => navigateAdmin('members')}
+                />
+              )}
+              {adminView === 'staff' && <AdminStaffDashboard />}
+            </ErrorBoundary>
           </main>
         </div>
       ) : (
@@ -187,18 +190,20 @@ export default function App() {
             </div>
           </header>
           <main className="flex-1 p-3 sm:p-4 lg:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
-            {userView === 'home' && currentUser && <UserHome user={currentUser} onNavigate={navigateUser} />}
-            {userView === 'plan' && currentUser && (
-              <UserPlan
-                plan={currentUser.plan}
-                memberName={currentUser.name}
-                onUpdatePlan={(nextPlan) => setCurrentUser((prev) => prev ? { ...prev, plan: nextPlan } : null)}
-              />
-            )}
-            {userView === 'calendar' && currentUser && <UserCalendar memberName={currentUser.name} selectedClasses={currentUser.selectedClasses} />}
-            {userView === 'training' && currentUser && <TrainingTracking email={currentUser.email} user={currentUser} />}
-            {userView === 'card' && currentUser && <DigitalCard user={currentUser} />}
-            {userView === 'profile' && currentUser && <UserProfile user={currentUser} />}
+            <ErrorBoundary>
+              {userView === 'home' && currentUser && <UserHome user={currentUser} onNavigate={navigateUser} />}
+              {userView === 'plan' && currentUser && (
+                <UserPlan
+                  plan={currentUser.plan}
+                  memberName={currentUser.name}
+                  onUpdatePlan={(nextPlan) => setCurrentUser((prev) => prev ? { ...prev, plan: nextPlan } : null)}
+                />
+              )}
+              {userView === 'calendar' && currentUser && <UserCalendar memberName={currentUser.name} selectedClasses={currentUser.selectedClasses} />}
+              {userView === 'training' && currentUser && <TrainingTracking email={currentUser.email} user={currentUser} />}
+              {userView === 'card' && currentUser && <DigitalCard user={currentUser} />}
+              {userView === 'profile' && currentUser && <UserProfile user={currentUser} />}
+            </ErrorBoundary>
           </main>
           <UserBottomNav 
             currentView={userView} 
