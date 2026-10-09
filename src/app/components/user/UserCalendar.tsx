@@ -415,7 +415,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                     {activeTab === 'gym-schedule' &&
                       dayBlocks.map((block) => {
                         const booked = bookingsForSlot(block.id, getDateForDayOfWeek(block.dayOfWeek)).length;
-                        const isUserEnrolled = block.students.some((st) => st.name.toLowerCase() === memberName.toLowerCase());
+                        const isUserEnrolled = (block.students || []).some((st) => st?.name?.toLowerCase() === (memberName || '').toLowerCase());
 
                         return (
                           <div
@@ -478,7 +478,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                           </div>
 
                           <div className="flex flex-col gap-1.5 pt-2 border-t border-white/10 w-full">
-                            <button disabled={Boolean(booking.confirmedAt) || booking.status === 'attended' || booking.status === 'no-show' || appointmentTime(booking.date, booking.time.split(' - ')[0]) <= Date.now()} onClick={async () => { try { await confirmBooking(booking.id, memberName); showToast('Tu intención de asistir quedó confirmada.', 'success'); } catch (e) { showToast((e as Error).message, 'error'); } }} className="px-3 py-2.5 min-h-[44px] touch-target-44 rounded-lg bg-white/5 text-[#00E676] text-xs disabled:opacity-50 font-semibold">{booking.confirmedAt ? 'Asistencia prevista confirmada' : 'Confirmo que asistiré'}</button>
+                            <button disabled={Boolean(booking.confirmedAt) || booking.status === 'attended' || booking.status === 'no-show' || appointmentTime(booking.date, (booking.time || '').split(' - ')[0] || '08:00') <= Date.now()} onClick={async () => { try { await confirmBooking(booking.id, memberName); showToast('Tu intención de asistir quedó confirmada.', 'success'); } catch (e) { showToast((e as Error).message, 'error'); } }} className="px-3 py-2.5 min-h-[44px] touch-target-44 rounded-lg bg-white/5 text-[#00E676] text-xs disabled:opacity-50 font-semibold">{booking.confirmedAt ? 'Asistencia prevista confirmada' : 'Confirmo que asistiré'}</button>
                             <button
                               type="button"
                               onClick={() => handleOpenReschedule(booking)}
@@ -550,7 +550,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                   {activeTab === 'gym-schedule' &&
                     dayBlocks.map((block) => {
                       const booked = bookingsForSlot(block.id, getDateForDayOfWeek(block.dayOfWeek)).length;
-                      const isUserEnrolled = block.students.some((st) => st.name.toLowerCase() === memberName.toLowerCase());
+                      const isUserEnrolled = (block.students || []).some((st) => st?.name?.toLowerCase() === (memberName || '').toLowerCase());
 
                       return (
                         <div key={block.id} className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-2">

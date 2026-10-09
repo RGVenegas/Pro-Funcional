@@ -752,7 +752,10 @@ export function getCentralScheduleBlocks(): CentralScheduleBlock[] {
     }
   }
 
-  return Array.from(map.values());
+  return Array.from(map.values()).map((b) => ({
+    ...b,
+    students: Array.isArray(b.students) ? b.students : [],
+  }));
 }
 
 export function saveCentralScheduleBlocks(blocks: CentralScheduleBlock[]): void {
