@@ -32,11 +32,12 @@ export async function createBookingTransaction(identity: string, blockId: string
   }
   if (!apiEnabled || !hasToken()) return local.createBookingTransaction(identity, blockId, date);
   try {
-    const res = await mutation('/bookings', 'POST', { scheduleBlockId: blockId, bookingDate: date }, `Reserva de hora`);
+    const formattedDate = date && !date.includes('T') ? `${date}T12:00:00.000Z` : date;
+    const res = await mutation('/bookings', 'POST', { scheduleBlockId: blockId, bookingDate: formattedDate }, `Reserva de hora`);
     if (res?.offlineFallback) {
       return local.createBookingTransaction(identity, blockId, date);
     }
-    return { success: true, message: res.message };
+    return { success: true, message: res?.message || 'Reserva confirmada.' };
   } catch (e) {
     if (isAuthError(e)) return local.createBookingTransaction(identity, blockId, date);
     return { success: false, message: (e as Error).message };
@@ -63,11 +64,12 @@ export async function rescheduleBookingTransaction(id: string, identity: string,
   }
   if (!apiEnabled || !hasToken()) return local.rescheduleBookingTransaction(id, identity, blockId, date);
   try {
-    const res = await mutation(`/bookings/${id}/reschedule`, 'PATCH', { newScheduleBlockId: blockId, newBookingDate: date }, `Reagendamiento de reserva`);
+    const formattedDate = date && !date.includes('T') ? `${date}T12:00:00.000Z` : date;
+    const res = await mutation(`/bookings/${id}/reschedule`, 'PATCH', { newScheduleBlockId: blockId, newBookingDate: formattedDate }, `Reagendamiento de reserva`);
     if (res?.offlineFallback) {
       return local.rescheduleBookingTransaction(id, identity, blockId, date);
     }
-    return { success: true, message: res.message };
+    return { success: true, message: res?.message || 'Reserva reagendada.' };
   } catch (e) {
     if (isAuthError(e)) return local.rescheduleBookingTransaction(id, identity, blockId, date);
     return { success: false, message: (e as Error).message };

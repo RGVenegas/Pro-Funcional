@@ -2,7 +2,7 @@ import { weekDate, today, appointmentTime, addDays } from '../../data/dates';
 import { bookingsForSlot } from '../../data/gymStore';
 import { createBookingTransaction, cancelBookingWith24hRule, rescheduleBookingTransaction, confirmBooking } from '../../data/operations';
 import React, { FormEvent, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Users, User, Stethoscope, Dumbbell, AlertCircle, CheckCircle, Calendar as CalendarIcon, RefreshCw, XCircle, LayoutGrid, List } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Users, User, Stethoscope, Dumbbell, AlertCircle, CheckCircle, Calendar as CalendarIcon, RefreshCw, XCircle, LayoutGrid, List, Loader2 } from 'lucide-react';
 import {
   getMembers,
   subscribeToMembers,
@@ -36,6 +36,8 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'warning' | 'error' } | null>(null);
   const [rescheduleNotice, setRescheduleNotice] = useState<string | null>(null);
   const [bookingNotice, setBookingNotice] = useState<string | null>(null);
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
+  const [isSubmittingReschedule, setIsSubmittingReschedule] = useState(false);
 
   // Reactive state
   const [member, setMember] = useState<GymMember | undefined>(() => {
@@ -192,18 +194,23 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   const handleBookingSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setBookingNotice(null);
-    if (!bookingBlock) return;
+    if (!bookingBlock || isSubmittingBooking) return;
 
-    const formData = new FormData(e.currentTarget);
-    const bookingDate = String(formData.get('bookingDate'));
+    setIsSubmittingBooking(true);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const bookingDate = String(formData.get('bookingDate'));
 
-    const result = await createBookingTransaction(memberName, bookingBlock.block.id, bookingDate);
-    if (result.success) {
-      showToast(result.message, 'success');
-      setBookingBlock(null);
-    } else {
-      setBookingNotice(result.message);
-      showToast(result.message, 'error');
+      const result = await createBookingTransaction(memberName, bookingBlock.block.id, bookingDate);
+      if (result.success) {
+        showToast(result.message, 'success');
+        setBookingBlock(null);
+      } else {
+        setBookingNotice(result.message);
+        showToast(result.message, 'error');
+      }
+    } finally {
+      setIsSubmittingBooking(false);
     }
   };
 
@@ -221,19 +228,24 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
   const handleRescheduleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setRescheduleNotice(null);
-    if (!reschedulingBooking) return;
+    if (!reschedulingBooking || isSubmittingReschedule) return;
 
-    const formData = new FormData(e.currentTarget);
-    const newBlockId = String(formData.get('newBlockId'));
-    const newDate = String(formData.get('newDate'));
+    setIsSubmittingReschedule(true);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const newBlockId = String(formData.get('newBlockId'));
+      const newDate = String(formData.get('newDate'));
 
-    const result = await rescheduleBookingTransaction(reschedulingBooking.id, memberName, newBlockId, newDate);
-    if (result.success) {
-      showToast(result.message, 'success');
-      setReschedulingBooking(null);
-    } else {
-      setRescheduleNotice(result.message);
-      showToast(result.message, 'error');
+      const result = await rescheduleBookingTransaction(reschedulingBooking.id, memberName, newBlockId, newDate);
+      if (result.success) {
+        showToast(result.message, 'success');
+        setReschedulingBooking(null);
+      } else {
+        setRescheduleNotice(result.message);
+        showToast(result.message, 'error');
+      }
+    } finally {
+      setIsSubmittingReschedule(false);
     }
   };
 
@@ -732,9 +744,17 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 shadow-lg shadow-[#00E676]/20 min-h-[44px] touch-target-44"
+                disabled={isSubmittingBooking}
+                className="px-5 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 shadow-lg shadow-[#00E676]/20 min-h-[44px] touch-target-44 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Confirmar & Descontar 1 Sesión
+                {isSubmittingBooking ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Procesando Reserva...
+                  </>
+                ) : (
+                  'Confirmar & Descontar 1 Sesión'
+                )}
               </button>
             </div>
           </form>
@@ -819,9 +839,17 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 shadow-lg shadow-[#00E676]/20 min-h-[44px] touch-target-44 disabled:opacity-50"
+                disabled={isSubmittingReschedule}
+                className="px-5 py-2.5 rounded-xl bg-[#00E676] text-[#021826] text-xs font-bold hover:bg-[#00E676]/90 shadow-lg shadow-[#00E676]/20 min-h-[44px] touch-target-44 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Confirmar Nuevo Horario
+                {isSubmittingReschedule ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Reagendando...
+                  </>
+                ) : (
+                  'Confirmar Nuevo Horario'
+                )}
               </button>
             </div>
           </form>
