@@ -30,8 +30,13 @@ export default function App() {
   });
 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
-    const saved = sessionStorage.getItem('profuncional-auth-user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = sessionStorage.getItem('profuncional-auth-user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      sessionStorage.removeItem('profuncional-auth-user');
+      return null;
+    }
   });
 
   const [adminView, setAdminView] = useState<AdminView>('dashboard');
