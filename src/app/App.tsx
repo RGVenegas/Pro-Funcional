@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LogOut, UserRound } from 'lucide-react';
+import { LogOut, UserRound, ChevronLeft } from 'lucide-react';
 import { AuthUser, Login } from './components/auth/Login';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdminRiskDashboard } from './components/admin/AdminRiskDashboard';
@@ -16,6 +16,8 @@ import { UserProfile } from './components/user/UserProfile';
 import { AdminSidebar } from './components/navigation/AdminSidebar';
 import { UserBottomNav } from './components/navigation/UserBottomNav';
 import { OfflineStatusBanner } from './components/OfflineStatusBanner';
+import { PWAInstallPrompt } from './components/shared/PWAInstallPrompt';
+import { initCapacitorBridge } from './utils/capacitorBridge';
 
 import { Logo } from './components/shared/Logo';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
@@ -78,6 +80,21 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [role, adminView, userView, selectedMemberId]);
 
+  // Inicialización de Capacitor (Barra de estado, Splash screen y botón atrás nativo)
+  useEffect(() => {
+    initCapacitorBridge(() => {
+      if (role === 'user' && userView !== 'home') {
+        setUserView('home');
+        return true;
+      }
+      if (role === 'admin' && adminView !== 'dashboard') {
+        setAdminView('dashboard');
+        return true;
+      }
+      return false;
+    });
+  }, [role, userView, adminView]);
+
   const handleAuthenticated = (nextRole: Role, user: AuthUser) => {
     setRole(nextRole);
     setCurrentUser(user);
@@ -129,6 +146,7 @@ export default function App() {
       <div className="min-h-screen bg-[#010A01] text-white flex flex-col">
         <OfflineStatusBanner />
         <Login onAuthenticated={handleAuthenticated} />
+        <PWAInstallPrompt />
       </div>
     );
   }
@@ -136,31 +154,19 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#010A01] text-white flex flex-col w-full max-w-full overflow-x-hidden">
       <OfflineStatusBanner />
-
-      <button
-        onClick={handleLogout}
-        aria-label="Cerrar sesión"
-        title="Cerrar sesión"
-        className="fixed right-3 top-3 lg:right-4 lg:top-4 z-50 rounded-xl bg-[#05111d] border border-white/20 p-2 sm:px-3 text-white/80 transition-colors hover:bg-white/20 hover:text-white shadow-lg flex items-center gap-1.5 text-xs font-bold"
-      >
-        <LogOut className="h-4 w-4 text-rose-400" />
-        <span className="hidden sm:inline">Cerrar Sesión</span>
-      </button>
-
-      {role === 'user' && (
-        <button
-          onClick={() => navigateUser('profile')}
-          aria-label="Abrir perfil"
-          title="Abrir perfil"
-          className="fixed right-16 sm:right-32 top-3 lg:top-4 z-50 rounded-xl bg-[#05111d] border border-white/20 p-2 sm:px-3 text-white/80 transition-colors hover:bg-white/20 hover:text-white shadow-lg flex items-center gap-1.5 text-xs font-bold"
-        >
-          <UserRound className="h-4 w-4 text-[#00E676]" />
-          <span className="hidden sm:inline">Perfil</span>
-        </button>
-      )}
+      {role === 'user' && <PWAInstallPrompt />}
 
       {role === 'admin' ? (
         <div className="flex min-h-screen w-full max-w-full overflow-x-hidden">
+          <button
+            onClick={handleLogout}
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+            className="fixed right-3 top-3 lg:right-4 lg:top-4 z-50 rounded-xl bg-[#05111d] border border-white/20 p-2 sm:px-3 text-white/80 transition-colors hover:bg-white/20 hover:text-white shadow-lg flex items-center gap-1.5 text-xs font-bold"
+          >
+            <LogOut className="h-4 w-4 text-rose-400" />
+            <span className="hidden sm:inline">Cerrar Sesión</span>
+          </button>
           <AdminSidebar 
             currentView={adminView} 
             onNavigate={(view) => navigateAdmin(view as AdminView)}
@@ -189,12 +195,50 @@ export default function App() {
         </div>
       ) : (
         <div className="flex min-h-screen flex-col pb-20 w-full max-w-full overflow-x-hidden">
-          <header className="sticky top-0 z-40 bg-[#030f1d]/90 backdrop-blur-md border-b border-white/10 px-4 py-3 sm:px-8">
+          <header className="sticky top-0 z-40 bg-[#030f1d]/95 backdrop-blur-md border-b border-white/10 px-3 py-2.5 sm:px-8 sm:py-3.5">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
-              <Logo size="sm" />
+              <div className="flex items-center gap-2">
+                {userView !== 'home' && (
+                  <button
+                    onClick={() => navigateUser('home')}
+                    aria-label="Retroceder a la pantalla principal"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#00E676]/15 hover:bg-[#00E676]/25 active:scale-95 text-[#00E676] text-xs font-bold transition-all border border-[#00E676]/30 shadow-md mr-1 min-h-[36px]"
+                  >
+                    <ChevronLeft className="h-4 w-4 text-[#00E676]" />
+                    <span>Atrás</span>
+                  </button>
+                )}
+                <Logo size="sm" />
+              </div>
+
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <button
+                  onClick={() => navigateUser('profile')}
+                  aria-label="Abrir perfil"
+                  title="Abrir perfil"
+                  className={`rounded-xl border p-2 sm:px-3 text-xs font-bold transition-all flex items-center gap-1.5 min-h-[36px] ${
+                    userView === 'profile'
+                      ? 'bg-[#00E676]/20 border-[#00E676] text-[#00E676]'
+                      : 'bg-white/10 border-white/10 text-white/80 hover:bg-white/20 hover:text-white'
+                  }`}
+                >
+                  <UserRound className="h-3.5 w-3.5 text-[#00E676]" />
+                  <span className="hidden sm:inline">Perfil</span>
+                </button>
+
+                <button
+                  onClick={handleLogout}
+                  aria-label="Cerrar sesión"
+                  title="Cerrar sesión"
+                  className="rounded-xl bg-white/10 border border-white/10 p-2 sm:px-3 text-rose-300 transition-colors hover:bg-rose-500/20 text-xs font-bold flex items-center gap-1.5 min-h-[36px]"
+                >
+                  <LogOut className="h-3.5 w-3.5 text-rose-400" />
+                  <span className="hidden sm:inline">Salir</span>
+                </button>
+              </div>
             </div>
           </header>
-          <main className="flex-1 p-3 sm:p-4 lg:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
+          <main className="flex-1 p-2.5 sm:p-4 lg:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
             <ErrorBoundary>
               {userView === 'home' && currentUser && <UserHome user={currentUser} onNavigate={navigateUser} />}
               {userView === 'plan' && currentUser && (

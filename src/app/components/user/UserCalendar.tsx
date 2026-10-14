@@ -2,7 +2,8 @@ import { weekDate, today, appointmentTime, addDays } from '../../data/dates';
 import { bookingsForSlot } from '../../data/gymStore';
 import { createBookingTransaction, cancelBookingWith24hRule, rescheduleBookingTransaction, confirmBooking } from '../../data/operations';
 import React, { FormEvent, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Users, User, Stethoscope, Dumbbell, AlertCircle, CheckCircle, Calendar as CalendarIcon, RefreshCw, XCircle, LayoutGrid, List, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Users, User, Stethoscope, Dumbbell, AlertCircle, CheckCircle, Calendar as CalendarIcon, RefreshCw, XCircle, LayoutGrid, List, Loader2, CalendarPlus } from 'lucide-react';
+import { downloadIcsEvent } from '../../utils/calendarExport';
 import {
   getMembers,
   subscribeToMembers,
@@ -529,6 +530,20 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                             <button disabled={Boolean(booking.confirmedAt) || booking.status === 'attended' || booking.status === 'no-show' || appointmentTime(booking.date, (booking.time || '').split(' - ')[0] || '08:00') <= Date.now()} onClick={async () => { try { await confirmBooking(booking.id, memberName); showToast('Tu intención de asistir quedó confirmada.', 'success'); } catch (e) { showToast((e as Error).message, 'error'); } }} className="px-3 py-2.5 min-h-[44px] touch-target-44 rounded-lg bg-white/5 text-[#00E676] text-xs disabled:opacity-50 font-semibold">{booking.confirmedAt ? 'Asistencia prevista confirmada' : 'Confirmo que asistiré'}</button>
                             <button
                               type="button"
+                              onClick={() => downloadIcsEvent({
+                                title: `ProFuncional: ${booking.title}`,
+                                dateStr: booking.date,
+                                timeStr: (booking.time || '').split(' - ')[0] || '10:00',
+                                description: `Sesión con ${booking.instructor}. Recuerda la regla de cancelación de 24h.`,
+                              })}
+                              className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-semibold text-white/90 flex items-center justify-center gap-1.5 transition-colors border border-white/10"
+                            >
+                              <CalendarPlus className="w-3.5 h-3.5 text-[#00E676]" />
+                              Guardar en Calendario
+                            </button>
+
+                            <button
+                              type="button"
                               onClick={() => handleOpenReschedule(booking)}
                               className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-[#00E676]/20 hover:bg-[#00E676]/30 text-xs font-semibold text-[#00E676] flex items-center justify-center gap-1 transition-colors border border-[#00E676]/30"
                             >
@@ -653,7 +668,21 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                         <p className="font-bold text-sm text-white">{booking.title}</p>
                         <p className="text-xs text-white/60">{booking.instructor}</p>
 
-                        <div className="flex gap-2 pt-2 border-t border-white/10">
+                        <div className="flex flex-wrap gap-2 pt-2 border-t border-white/10">
+                          <button
+                            type="button"
+                            onClick={() => downloadIcsEvent({
+                              title: `ProFuncional: ${booking.title}`,
+                              dateStr: booking.date,
+                              timeStr: (booking.time || '').split(' - ')[0] || '10:00',
+                              description: `Sesión con ${booking.instructor}. Recuerda la regla de cancelación de 24h.`,
+                            })}
+                            className="min-h-[44px] touch-target-44 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold flex items-center justify-center gap-1.5 border border-white/10"
+                            title="Descargar evento para Apple/Google Calendar"
+                          >
+                            <CalendarPlus className="w-3.5 h-3.5 text-[#00E676]" />
+                            <span>Calendario</span>
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleOpenReschedule(booking)}

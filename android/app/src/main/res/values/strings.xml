@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ProFuncional</string>
+    <string name="title_activity_main">ProFuncional</string>
+    <string name="package_name">com.profuncional.app</string>
+    <string name="custom_url_scheme">com.profuncional.app</string>
+</resources>

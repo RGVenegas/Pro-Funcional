@@ -130,21 +130,19 @@ npm run build
 cd backend && npm run build && cd ..
 ```
 
-#### 📱 Generación de App Móvil Nativa (APK Android / IPA iOS con Capacitor)
+#### 📱 App Móvil (PWA Instalable & Nativa Android APK con Capacitor)
 
-```bash
-# 1. Instalar herramientas nativas (Solo la primera vez)
-npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios
-npx cap init ProFuncional com.profuncional.app --web-dir dist
+La aplicación móvil cuenta con **Estrategia Dual** lista para usar:
 
-# 2. Compilar Frontend y sincronizar con proyectos nativos
-npm run build
-npx cap add android && npx cap copy android
-npx cap open android   # Compila el ejecutable APK / AAB en Android Studio
+1. **Instalación Inmediata PWA (Web App Instalable)**:
+   - Abre la web desde Safari (iOS) o Chrome (Android).
+   - Toca el botón emergente *"Instalar ProFuncional"* o *"Agregar a pantalla de inicio"*. La app se ejecuta a pantalla completa, con icono propio y modo offline.
 
-npx cap add ios && npx cap copy ios
-npx cap open ios       # Compila el ejecutable IPA en Xcode (macOS)
-```
+2. **Proyecto Nativo Android (Capacitor)**:
+   - Plataforma Android ya inicializada en la carpeta `/android` con package `com.profuncional.app`.
+   - **Sincronizar cambios**: `npm run mobile:sync` (compila Vite y actualiza assets en Android).
+   - **Abrir en Android Studio**: `npm run mobile:open` (para generar APK/AAB firmados).
+   - **Compilación Automática en la Nube (GitHub Actions)**: El workflow `.github/workflows/build-mobile-apk.yml` compila el instalador `.apk` automáticamente en cada push a `main` y lo deja listo para descarga en la pestaña *Actions*.
 
 #### ☁️ Despliegue de Infraestructura AWS con Terraform
 

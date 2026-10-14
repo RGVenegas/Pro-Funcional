@@ -21,20 +21,20 @@ export function UserProfile({ user: account }: UserProfileProps) {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-4 sm:space-y-6">
       <div>
-        <h1 className="mb-2 text-3xl font-bold text-[#F7F7F7]">Mi perfil</h1>
-        <p className="text-white/60">Administra tus datos y membresia.</p>
+        <h1 className="mb-1 text-xl sm:text-3xl font-bold text-[#F7F7F7]">Mi perfil</h1>
+        <p className="text-xs sm:text-sm text-white/60">Administra tus datos y membresía.</p>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm sm:p-8">
-        <div className="flex flex-col items-start gap-5 border-b border-white/10 pb-6 sm:flex-row sm:items-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-[#00E676] bg-[#00E676]/20">
-            <UserRound className="h-9 w-9 text-[#00E676]" />
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm sm:p-8">
+        <div className="flex flex-col items-start gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-center">
+          <div className="flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-full border-2 border-[#00E676] bg-[#00E676]/20 flex-shrink-0">
+            <UserRound className="h-7 w-7 sm:h-9 sm:w-9 text-[#00E676]" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-[#F7F7F7]">{user.name}</h2>
-            <p className="mt-1 flex items-center gap-2 text-white/60"><Mail className="h-4 w-4" />{user.email}</p>
+            <h2 className="text-lg sm:text-2xl font-bold text-[#F7F7F7]">{user.name}</h2>
+            <p className="mt-0.5 flex items-center gap-2 text-xs sm:text-sm text-white/60"><Mail className="h-3.5 w-3.5" />{user.email}</p>
           </div>
         </div>
 
@@ -52,6 +52,23 @@ export function UserProfile({ user: account }: UserProfileProps) {
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <div className="flex items-center gap-3 rounded-lg bg-white/5 p-4"><Calendar className="h-5 w-5 text-[#00E676]" /><div><p className="text-xs text-white/50">Miembro desde</p><p className="font-medium">{formatDate(user.memberSince)}</p></div></div>
           <div className="flex items-center gap-3 rounded-lg bg-white/5 p-4"><Calendar className="h-5 w-5 text-[#00E676]" /><div><p className="text-xs text-white/50">Vigente hasta</p><p className="font-medium">{formatDate(user.expirationDate)}</p></div></div>
+        </div>
+        <div className="mt-6 rounded-xl border border-[#25D366]/30 bg-[#25D366]/10 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+              <span>Soporte Kinésico y Recepción</span>
+            </h4>
+            <p className="text-xs text-white/70 mt-1">¿Tienes dudas con tu diagnóstico, pauta médica o pagos? Escríbenos directamente.</p>
+          </div>
+          <button
+            onClick={() => {
+              const url = `https://wa.me/56912345678?text=${encodeURIComponent(`Hola ProFuncional, soy ${user.name}. Necesito comunicarme con recepción sobre mi cuenta y sesiones.`)}`;
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }}
+            className="px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-black font-extrabold text-xs shadow-lg shadow-[#25D366]/20 transition-all flex items-center justify-center gap-2"
+          >
+            <span>Contactar por WhatsApp</span>
+          </button>
         </div>
       </div>
       {member && <CarePanel memberId={member.id} section="profile" author={member.name} />}

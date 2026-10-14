@@ -47,60 +47,60 @@ export function DigitalCard({ user: account }: DigitalCardProps) {
         <div className="absolute inset-0 bg-gradient-to-br from-[#00E676]/20 to-[#00E676]/5 blur-3xl" />
         
         {/* Main Card */}
-        <div className="relative bg-gradient-to-br from-[#00E676]/10 to-transparent rounded-2xl p-8 backdrop-blur-sm border border-[#00E676]/20 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[#00E676]/10 to-transparent rounded-2xl p-4 sm:p-8 backdrop-blur-sm border border-[#00E676]/20 overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#00E676]/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#00E676]/5 rounded-full blur-3xl" />
           
           <div className="relative z-10">
             {/* Header */}
-            <div className="flex items-start justify-between mb-8">
+            <div className="flex items-start justify-between mb-6 sm:mb-8">
               <div>
-                <Logo size="md" />
-                <p className="text-xs text-white/60 mt-1">Centro Kinésico-Deportivo</p>
+                <Logo size="sm" />
+                <p className="text-[11px] sm:text-xs text-white/60 mt-1">Centro Kinésico-Deportivo</p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-white/60 mb-1">ID de miembro</p>
-                <p className="font-mono text-sm font-medium text-[#F7F7F7]">{user.id}</p>
+                <p className="text-[11px] sm:text-xs text-white/60 mb-0.5">ID de miembro</p>
+                <p className="font-mono text-xs sm:text-sm font-medium text-[#F7F7F7]">{user.id}</p>
               </div>
             </div>
 
             {/* Member Info */}
-            <div className="mb-8">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-20 h-20 bg-[#00E676]/20 rounded-full flex items-center justify-center border-2 border-[#00E676]">
-                  <span className="text-3xl font-bold text-[#00E676]">
+            <div className="mb-6 sm:mb-8">
+              <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <div className="w-14 h-14 sm:w-20 sm:h-20 bg-[#00E676]/20 rounded-full flex items-center justify-center border-2 border-[#00E676]">
+                  <span className="text-xl sm:text-3xl font-bold text-[#00E676]">
                     {user.name.split(' ').map(n => n[0]).join('')}
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold mb-1 text-[#F7F7F7]">{user.name}</h3>
-                  <p className="text-[#00E676] font-semibold">Miembro {user.plan}</p>
+                  <h3 className="text-lg sm:text-2xl font-bold mb-0.5 text-[#F7F7F7]">{user.name}</h3>
+                  <p className="text-xs sm:text-sm text-[#00E676] font-semibold">Miembro {user.plan}</p>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 text-xs">
                 <div>
-                  <p className="text-xs text-white/60 mb-1">Miembro desde</p>
+                  <p className="text-[11px] text-white/60 mb-0.5">Miembro desde</p>
                   <p className="font-medium text-[#F7F7F7]">{new Date(user.memberSince).toLocaleDateString('es-CL')}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-white/60 mb-1">Vigente hasta</p>
+                  <p className="text-[11px] text-white/60 mb-0.5">Vigente hasta</p>
                   <p className="font-medium text-[#F7F7F7]">{new Date(user.expirationDate).toLocaleDateString('es-CL')}</p>
                 </div>
               </div>
             </div>
 
             {/* QR Code */}
-            <div className="bg-white rounded-2xl p-6 flex flex-col items-center">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 flex flex-col items-center">
               <QRCodeSVG
                 value={`PROFUNCIONAL:${user.id}`}
-                size={200}
+                size={160}
                 level="H"
                 includeMargin={true}
                 fgColor="#021826"
               />
-              <p className="text-[#021826] text-sm font-semibold mt-4">Escanea en el tótem de entrada</p>
+              <p className="text-[#021826] text-xs sm:text-sm font-semibold mt-2.5">Escanea en el tótem de entrada</p>
             </div>
 
             {/* Status Badge */}
@@ -137,18 +137,41 @@ export function DigitalCard({ user: account }: DigitalCardProps) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3">
         <button
-          onClick={() => showFeedback('Pase guardado en tu dispositivo')}
-          className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors font-medium text-white"
+          onClick={() => {
+            if (navigator.clipboard) {
+              navigator.clipboard.writeText(`PROFUNCIONAL:${user.id}`);
+            }
+            showFeedback('Pase guardado en el dispositivo para acceso offline');
+          }}
+          className="flex-1 min-h-[44px] px-6 py-3 bg-[#00E676]/15 hover:bg-[#00E676]/25 border border-[#00E676]/30 rounded-xl transition-all font-bold text-xs text-[#00E676] flex items-center justify-center gap-2 shadow-lg"
         >
-          Guardar en billetera
+          <Sparkles className="w-4 h-4 text-[#00E676]" />
+          <span>Guardar en Dispositivo</span>
         </button>
         <button
-          onClick={() => showFeedback('Enlace de credencial copiado')}
-          className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors font-medium text-white"
+          onClick={async () => {
+            const shareText = `Pase Digital ProFuncional: ${user.name} (ID Socio: ${user.id}) - Plan: ${user.plan}`;
+            if (navigator.share) {
+              try {
+                await navigator.share({
+                  title: 'Mi Pase Digital ProFuncional',
+                  text: shareText,
+                  url: window.location.origin,
+                });
+                showFeedback('¡Credencial compartida!');
+              } catch {
+                // usuario canceló share
+              }
+            } else if (navigator.clipboard) {
+              await navigator.clipboard.writeText(shareText);
+              showFeedback('Detalles de tu carnet copiados al portapapeles');
+            }
+          }}
+          className="flex-1 min-h-[44px] px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl transition-colors font-bold text-xs text-white flex items-center justify-center gap-2"
         >
-          Compartir
+          <span>Compartir Credencial</span>
         </button>
       </div>
     </div>

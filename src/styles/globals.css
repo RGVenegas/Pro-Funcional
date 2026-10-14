@@ -279,3 +279,11 @@ button:hover,
   animation: pulseGlow 500ms ease-out;
 }
 
+/* Escala y densidad optimizada para teléfonos móviles (360px - 430px) */
+@media (max-width: 640px) {
+  html {
+    font-size: 14.5px;
+  }
+}
+
+
