@@ -9,7 +9,9 @@ createRoot(document.getElementById("root")!).render(
   </ErrorBoundary>
 );
 
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+const isProd = Boolean((import.meta as unknown as { env?: { PROD?: boolean } }).env?.PROD);
+
+if ('serviceWorker' in navigator && isProd) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((err) => {
       console.warn('ServiceWorker registration failed: ', err);
