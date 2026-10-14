@@ -29,16 +29,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Instalar Dependencias de Frontend
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Compilar Frontend (Vite Build)
         run: npm run build
 
       - name: Configurar Credenciales de AWS
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.AWS_ACCESS_KEY_ID != ''
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -47,7 +46,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
       - name: Asegurar que el Bucket S3 Exista
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.AWS_ACCESS_KEY_ID != ''
         env:
           S3_BUCKET: ${{ secrets.S3_BUCKET || 'profuncional-prod-frontend-hosting' }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
@@ -62,19 +61,15 @@ jobs:
           fi
 
       - name: Sincronizar Artefactos Estáticos a AWS S3
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.AWS_ACCESS_KEY_ID != ''
         env:
           S3_BUCKET: ${{ secrets.S3_BUCKET || 'profuncional-prod-frontend-hosting' }}
         run: |
           aws s3 sync dist/ s3://$S3_BUCKET/ --delete
 
       - name: Invalidar Caché de Amazon CloudFront CDN
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.AWS_ACCESS_KEY_ID != '' && secrets.CLOUDFRONT_DISTRIBUTION_ID != ''
         env:
           CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
-          if [ -n "$CLOUDFRONT_ID" ]; then
-            aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_ID --paths "/*"
-          else
-            echo "CLOUDFRONT_DISTRIBUTION_ID no configurada, omitiendo invalidación."
-          fi
+          aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_ID --paths "/*"
