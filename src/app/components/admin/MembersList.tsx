@@ -39,7 +39,7 @@ export function MembersList({ onViewMember, onViewRisk }: MembersListProps) {
       .sort((a, b) => b.date.localeCompare(a.date));
     const checkIns = getMemberCheckIns().filter((checkIn) => checkIn.memberId === member.id);
     const missedQrBookings = bookings.filter((booking) => {
-      const startTime = booking.time.split(' - ')[0];
+      const startTime = (booking.time || '').split(' - ')[0] || '10:00';
       const bookingStart = new Date(`${booking.date}T${startTime}:00`);
       const hasQrCheckIn = checkIns.some((checkIn) => {
         const checkedAt = new Date(checkIn.checkedAt);
@@ -227,7 +227,12 @@ export function MembersList({ onViewMember, onViewRisk }: MembersListProps) {
                   <td className="p-3.5">
                     <div className="flex items-center gap-2.5">
                       <div className="w-9 h-9 rounded-full bg-[#00E676]/20 flex items-center justify-center flex-shrink-0 text-[#00E676] font-bold text-xs">
-                        {member.name.split(' ').map(n => n[0]).join('')}
+                        {(member?.name || 'PF')
+                          .split(' ')
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map((n) => n[0])
+                          .join('') || 'PF'}
                       </div>
                       <div className="min-w-0 max-w-[130px] sm:max-w-xs">
                         <button type="button" className="font-medium truncate text-left text-white text-sm hover:text-[#00E676] block w-full" onClick={() => onViewMember(member.id)}>{member.name}</button>

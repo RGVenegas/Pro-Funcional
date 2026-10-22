@@ -44,19 +44,29 @@ export async function createBookingTransaction(identity: string, blockId: string
   }
 }
 
-export async function cancelBookingWith24hRule(id: string, identity: string) {
-  if (!apiEnabled || !hasToken()) return local.cancelBookingWith24hRule(id, identity);
+export async function cancelBookingWith3hRule(id: string, identity: string) {
+  if (!apiEnabled || !hasToken()) return local.cancelBookingWith3hRule(id, identity);
   try {
     const res = await mutation(`/bookings/${id}/cancel`, 'PATCH', undefined, `Cancelación de reserva`);
     if (res?.offlineFallback) {
-      return local.cancelBookingWith24hRule(id, identity);
+      return local.cancelBookingWith3hRule(id, identity);
     }
     return { success: true, isRefunded: res.isRefunded, message: res.message };
   } catch (e) {
-    if (isAuthError(e)) return local.cancelBookingWith24hRule(id, identity);
+    if (isAuthError(e)) return local.cancelBookingWith3hRule(id, identity);
     return { success: false, isRefunded: false, message: (e as Error).message };
   }
 }
+export const cancelBookingWith24hRule = cancelBookingWith3hRule;
+
+export function liberateFutureBookingsForMember(memberId: string, memberName: string) {
+  return local.liberateFutureBookingsForMember(memberId, memberName);
+}
+
+export function reactivateMemberBooking(memberId: string) {
+  return local.reactivateMemberBooking(memberId);
+}
+
 
 export async function rescheduleBookingTransaction(id: string, identity: string, blockId: string, date: string) {
   if (local.isScheduleBlockHidden(blockId, date)) {

@@ -31,6 +31,11 @@ export function UserHome({ user: account, onNavigate }: UserHomeProps) {
   const upcoming = bookings.filter(b => (!b.status || b.status === 'pending') && bookingStart(b) > Date.now()).sort((a, b) => bookingStart(a) - bookingStart(b))[0];
   const nextSession = { name: upcoming?.title || 'Sin clases agendadas', time: upcoming ? formatDate(upcoming.date) + ' · ' + upcoming.time : 'Elige un horario disponible', instructor: upcoming?.instructor || 'Por asignar', type: upcoming?.type === 'kine' ? 'Box Clínico' : 'Entrenamiento' };
 
+  const hoursUntilSession = upcoming ? Math.max(0, Math.round((bookingStart(upcoming) - Date.now()) / (1000 * 60 * 60))) : 0;
+  const minutesUntilSession = upcoming ? Math.max(0, Math.round((bookingStart(upcoming) - Date.now()) / (1000 * 60))) : 0;
+  const canCancelWithoutPenalty = hoursUntilSession >= 3;
+  const isInConfirmationWindow = minutesUntilSession <= 90 && minutesUntilSession > 0;
+
   const remainingSessions = memberData?.remainingSessions ?? 5;
   const totalSessions = memberData?.totalSessions ?? 8;
   const packName = memberData?.packName || 'Pack Recuperación Activa (8 ses)';
@@ -168,28 +173,49 @@ export function UserHome({ user: account, onNavigate }: UserHomeProps) {
           </div>
         </div>
 
-        {/* Alerta de Política 24h para la próxima sesión */}
+        {/* Alerta de Política 3 Horas y Confirmación a 90 min */}
         {upcoming && (
-          <div className={`p-2.5 sm:p-3 rounded-xl border text-[11px] sm:text-xs flex items-center justify-between gap-2 sm:gap-3 ${
-            hoursUntilSession >= 24
-              ? 'bg-[#00E676]/10 border-[#00E676]/30 text-[#00E676]'
-              : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-          }`}>
-            <div className="flex items-center gap-1.5">
-              {hoursUntilSession >= 24 ? (
-                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              ) : (
-                <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              )}
-              <span>
-                {hoursUntilSession >= 24
-                  ? `Puedes reagendar sin costo (quedan aprox. ${hoursUntilSession}h).`
-                  : `Faltan menos de 24h (${hoursUntilSession}h). Cancelación sin reembolso.`}
+          <div className="space-y-2">
+            <div
+              className={`p-2.5 sm:p-3 rounded-xl border text-[11px] sm:text-xs flex items-center justify-between gap-2 sm:gap-3 ${
+                canCancelWithoutPenalty
+                  ? 'bg-[#00E676]/10 border-[#00E676]/30 text-[#00E676]'
+                  : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                {canCancelWithoutPenalty ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                )}
+                <span>
+                  {canCancelWithoutPenalty
+                    ? `Puedes reagendar o cancelar sin costo (quedan ${hoursUntilSession}h · límite 3h antes).`
+                    : `Menos de 3h para la clase (${hoursUntilSession}h restantes). Cancelación sin devolución de cupo.`}
+                </span>
+              </div>
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-black/40 whitespace-nowrap">
+                Límite 3h
               </span>
             </div>
-            <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-black/40 whitespace-nowrap">
-              Regla 24h
-            </span>
+
+            {isInConfirmationWindow && (
+              <div className="p-2.5 sm:p-3 rounded-xl border border-[#25D366]/40 bg-[#25D366]/15 text-[#25D366] text-[11px] sm:text-xs flex items-center justify-between gap-2 animate-pulse">
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>
+                    <strong>Ventana de confirmación activa:</strong> Faltan {minutesUntilSession} min para el inicio. ¡Asegura tu cupo!
+                  </span>
+                </div>
+                <button
+                  onClick={() => alert('¡Asistencia confirmada con éxito! Tu cupo está asegurado.')}
+                  className="px-2.5 py-1 rounded-lg bg-[#25D366] text-black font-bold text-[10px] hover:bg-[#25D366]/90 whitespace-nowrap"
+                >
+                  Confirmar Asistencia
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,4 +1,4 @@
-import { today, appointmentTime, BOOKING_NOTICE_HOURS, dayNames } from './dates';
+import { today, appointmentTime, BOOKING_NOTICE_HOURS, CONFIRMATION_WINDOW_MINUTES, dayNames, isWithinConfirmationWindow, getMinutesUntilClass, calculatePlanCycle } from './dates';
 import { apiEnabled, serverSnapshot } from './api';
 import type { CareProfile } from './careStore';
 export type MembershipPlan = 'Basic' | 'Standard' | 'Premium';
@@ -38,6 +38,9 @@ export interface GymMember {
   nextBilling?: string;
   physicalRestrictions?: string;
   clinicalHistory?: ClinicalEvaluation[];
+  consecutiveNoShows?: number;
+  bookingSuspended?: boolean;
+  suspensionReason?: string;
 }
 
 const storageKey = 'profuncional-members-v2';
@@ -506,16 +509,50 @@ export function getActivities(): GymActivity[] {
     return initialActivities;
   }
   try {
-    return JSON.parse(saved) as GymActivity[];
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed)) return initialActivities;
+    return parsed.map((a: any, idx: number) => ({
+      id: a?.id || `activity-${idx}`,
+      name: typeof a?.name === 'string' && a.name.trim() ? a.name : 'ProFuncional',
+      action: typeof a?.action === 'string' ? a.action : 'actividad registrada',
+      time: typeof a?.time === 'string' ? a.time : 'reciente',
+    }));
   } catch {
     window.localStorage.setItem(activityStorageKey, JSON.stringify(initialActivities));
     return initialActivities;
   }
 }
 
-export function addActivity(activity: Omit<GymActivity, 'id' | 'time'>): void {
+export function addActivity(
+  activityOrName: Omit<GymActivity, 'id' | 'time'> | string,
+  maybeAction?: string
+): void {
   const activities = getActivities();
-  const newActivity: GymActivity = { ...activity, id: `activity-${Date.now()}`, time: 'ahora' };
+  let newActivity: GymActivity;
+
+  if (typeof activityOrName === 'string') {
+    newActivity = {
+      id: `activity-${Date.now()}`,
+      name: activityOrName.trim() || 'ProFuncional',
+      action: maybeAction || 'actividad registrada',
+      time: 'ahora',
+    };
+  } else if (activityOrName && typeof activityOrName === 'object') {
+    newActivity = {
+      id: `activity-${Date.now()}`,
+      name: typeof activityOrName.name === 'string' && activityOrName.name.trim() ? activityOrName.name : 'ProFuncional',
+      action: typeof activityOrName.action === 'string' ? activityOrName.action : 'actividad registrada',
+      time: 'ahora',
+    };
+  } else {
+    newActivity = {
+      id: `activity-${Date.now()}`,
+      name: 'ProFuncional',
+      action: 'actividad registrada',
+      time: 'ahora',
+    };
+  }
+
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(activityStorageKey, JSON.stringify([newActivity, ...activities]));
     window.dispatchEvent(new Event(activityChangeEvent));
@@ -542,6 +579,7 @@ export interface EnrolledStudent {
   restrictions?: string;
   status: 'attended' | 'no-show' | 'pending';
   bookingId?: string;
+  token?: string;
   confirmedAt?: string;
 }
 
@@ -560,6 +598,7 @@ export interface CentralScheduleBlock {
 
 export interface UserBookingRecord {
   id: string;
+  token?: string;
   blockId: string;
   userName: string;
   date: string; // YYYY-MM-DD
@@ -662,51 +701,68 @@ export interface MemberCheckIn {
 }
 
 const initialScheduleBlocks: CentralScheduleBlock[] = [
-  // LUNES
+  // LUNES (Coexistencia Funcional y Boxes Kinésicos simultáneos)
   { id: 'block-1', dayOfWeek: 'Monday', startTime: '08:00', endTime: '09:00', title: 'Entrenamiento Funcional AM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [{ id: '1', name: 'Juan Perez', restrictions: 'Evitar impacto alto en salto', status: 'attended' }] },
+  { id: 'block-1-kine', dayOfWeek: 'Monday', startTime: '08:00', endTime: '09:00', title: 'Box Kinésico 1 · Evaluación & Terapia', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
+  { id: 'block-2-func', dayOfWeek: 'Monday', startTime: '09:15', endTime: '10:15', title: 'Funcional Estaciones AM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-2', dayOfWeek: 'Monday', startTime: '09:15', endTime: '10:15', title: 'Box Kinésico & Readaptación', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-3', dayOfWeek: 'Monday', startTime: '10:30', endTime: '11:30', title: 'Entrenamiento Funcional Estaciones', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-4', dayOfWeek: 'Monday', startTime: '11:45', endTime: '12:45', title: 'Funcional Adaptado AM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-5', dayOfWeek: 'Monday', startTime: '15:00', endTime: '16:00', title: 'Entrenamiento Funcional PM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-6', dayOfWeek: 'Monday', startTime: '16:15', endTime: '17:15', title: 'Funcional & Control Motor', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-7', dayOfWeek: 'Monday', startTime: '17:30', endTime: '18:30', title: 'Circuitos Funcionales Grupal', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [{ id: '2', name: 'Camila Gonzalez', restrictions: 'Evitar rotaciones forzadas y flexión >90° por post-op LCA', status: 'pending' }] },
+  { id: 'block-7-kine', dayOfWeek: 'Monday', startTime: '17:30', endTime: '18:30', title: 'Box Kinésico · Reintegro Deportivo', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-8', dayOfWeek: 'Monday', startTime: '18:45', endTime: '19:45', title: 'Entrenamiento Funcional HIIT', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [{ id: '4', name: 'Antonia Silva', restrictions: undefined, status: 'attended' }] },
+  { id: 'block-8-kine', dayOfWeek: 'Monday', startTime: '18:45', endTime: '19:45', title: 'Box Kinésico · Dolor y Descarga', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-9', dayOfWeek: 'Monday', startTime: '20:00', endTime: '21:00', title: 'Funcional Cierre PM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
 
-  // MARTES
+  // MARTES (Coexistencia Funcional y Boxes Kinésicos simultáneos)
   { id: 'block-10', dayOfWeek: 'Tuesday', startTime: '08:00', endTime: '09:00', title: 'Entrenamiento Funcional AM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-10-kine', dayOfWeek: 'Tuesday', startTime: '08:00', endTime: '09:00', title: 'Box Kinésico 1 · Terapia Manual', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, isActive: true, students: [] },
+  { id: 'block-11-func', dayOfWeek: 'Tuesday', startTime: '09:15', endTime: '10:15', title: 'Funcional & Control Motor AM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-11', dayOfWeek: 'Tuesday', startTime: '09:15', endTime: '10:15', title: 'Kinesiología & Terapia Manual', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, isActive: true, students: [{ id: '8', name: 'Fernanda Contreras', restrictions: undefined, status: 'pending' }] },
   { id: 'block-12', dayOfWeek: 'Tuesday', startTime: '10:30', endTime: '11:30', title: 'Funcional & Core AM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-13', dayOfWeek: 'Tuesday', startTime: '11:45', endTime: '12:45', title: 'Funcional Estaciones AM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-14', dayOfWeek: 'Tuesday', startTime: '15:00', endTime: '16:00', title: 'Funcional Readaptación PM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-15', dayOfWeek: 'Tuesday', startTime: '16:15', endTime: '17:15', title: 'Circuitos Funcionales PM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-16', dayOfWeek: 'Tuesday', startTime: '17:30', endTime: '18:30', title: 'Entrenamiento Funcional HIIT', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-16-kine', dayOfWeek: 'Tuesday', startTime: '17:30', endTime: '18:30', title: 'Box Kinésico · Readaptación Articular', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-17', dayOfWeek: 'Tuesday', startTime: '18:45', endTime: '19:45', title: 'Funcional & Movilidad PM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-17-kine', dayOfWeek: 'Tuesday', startTime: '18:45', endTime: '19:45', title: 'Box Kinésico · Control Motor', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-18', dayOfWeek: 'Tuesday', startTime: '20:00', endTime: '21:00', title: 'Funcional Nocturno PM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
 
-  // MIÉRCOLES
+  // MIÉRCOLES (Coexistencia Funcional y Boxes Kinésicos simultáneos)
   { id: 'block-19', dayOfWeek: 'Wednesday', startTime: '08:00', endTime: '09:00', title: 'Entrenamiento Funcional AM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-19-kine', dayOfWeek: 'Wednesday', startTime: '08:00', endTime: '09:00', title: 'Box Kinésico 1 · Diagnóstico y ROM', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-20', dayOfWeek: 'Wednesday', startTime: '09:15', endTime: '10:15', title: 'Circuitos Funcionales AM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [{ id: '2', name: 'Camila Gonzalez', restrictions: 'Evitar flexión >90° por LCA', status: 'pending' }] },
+  { id: 'block-21-func', dayOfWeek: 'Wednesday', startTime: '10:30', endTime: '11:30', title: 'Funcional Carga Media AM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-21', dayOfWeek: 'Wednesday', startTime: '10:30', endTime: '11:30', title: 'Box Kinésico Evaluación', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-22', dayOfWeek: 'Wednesday', startTime: '11:45', endTime: '12:45', title: 'Funcional Estaciones AM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-23', dayOfWeek: 'Wednesday', startTime: '15:00', endTime: '16:00', title: 'Funcional & Resistencia PM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-24', dayOfWeek: 'Wednesday', startTime: '16:15', endTime: '17:15', title: 'Circuitos Estaciones PM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-25', dayOfWeek: 'Wednesday', startTime: '17:30', endTime: '18:30', title: 'Funcional & Control Motor', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-25-kine', dayOfWeek: 'Wednesday', startTime: '17:30', endTime: '18:30', title: 'Box Kinésico · Terapia Manual', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-26', dayOfWeek: 'Wednesday', startTime: '18:45', endTime: '19:45', title: 'Entrenamiento Funcional Core', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-26-kine', dayOfWeek: 'Wednesday', startTime: '18:45', endTime: '19:45', title: 'Box Kinésico · Descarga Miofascial', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-27', dayOfWeek: 'Wednesday', startTime: '20:00', endTime: '21:00', title: 'Funcional Nocturno PM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
 
-  // JUEVES
+  // JUEVES (Coexistencia Funcional y Boxes Kinésicos simultáneos)
   { id: 'block-28', dayOfWeek: 'Thursday', startTime: '08:00', endTime: '09:00', title: 'Entrenamiento Funcional AM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-28-kine', dayOfWeek: 'Thursday', startTime: '08:00', endTime: '09:00', title: 'Box Kinésico · Corrección Postural', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-29', dayOfWeek: 'Thursday', startTime: '09:15', endTime: '10:15', title: 'Circuitos Funcionales AM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-30-func', dayOfWeek: 'Thursday', startTime: '10:30', endTime: '11:30', title: 'Circuitos Estaciones Funcional', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-30', dayOfWeek: 'Thursday', startTime: '10:30', endTime: '11:30', title: 'Evaluación Kinésica & ROM', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-31', dayOfWeek: 'Thursday', startTime: '11:45', endTime: '12:45', title: 'Funcional Carga Progresiva', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-32', dayOfWeek: 'Thursday', startTime: '15:00', endTime: '16:00', title: 'Funcional Estaciones PM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-33', dayOfWeek: 'Thursday', startTime: '16:15', endTime: '17:15', title: 'Entrenamiento Funcional PM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-34', dayOfWeek: 'Thursday', startTime: '17:30', endTime: '18:30', title: 'Funcional & Movilidad PM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-34-kine', dayOfWeek: 'Thursday', startTime: '17:30', endTime: '18:30', title: 'Box Kinésico · Descarga Muscular', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-35', dayOfWeek: 'Thursday', startTime: '18:45', endTime: '19:45', title: 'Entrenamiento Funcional HIIT', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-35-kine', dayOfWeek: 'Thursday', startTime: '18:45', endTime: '19:45', title: 'Box Kinésico · Terapia Analgésica', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-36', dayOfWeek: 'Thursday', startTime: '20:00', endTime: '21:00', title: 'Funcional Cierre PM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
 
-  // VIERNES
+  // VIERNES (Coexistencia Funcional y Boxes Kinésicos simultáneos)
+  { id: 'block-37-func', dayOfWeek: 'Friday', startTime: '08:00', endTime: '09:00', title: 'Funcional Preventivo AM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-37', dayOfWeek: 'Friday', startTime: '08:00', endTime: '09:00', title: 'Kinesiología Preventiva', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-38', dayOfWeek: 'Friday', startTime: '09:15', endTime: '10:15', title: 'Entrenamiento Funcional AM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-39', dayOfWeek: 'Friday', startTime: '10:30', endTime: '11:30', title: 'Circuitos Estaciones AM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
@@ -714,11 +770,14 @@ const initialScheduleBlocks: CentralScheduleBlock[] = [
   { id: 'block-41', dayOfWeek: 'Friday', startTime: '15:00', endTime: '16:00', title: 'Readaptación Funcional Total', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-42', dayOfWeek: 'Friday', startTime: '16:15', endTime: '17:15', title: 'Funcional & Core PM', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-43', dayOfWeek: 'Friday', startTime: '17:30', endTime: '18:30', title: 'Circuitos Funcionales PM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-43-kine', dayOfWeek: 'Friday', startTime: '17:30', endTime: '18:30', title: 'Box Kinésico · Movilidad Articular', instructor: 'Klga. Valeria Reyes', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-44', dayOfWeek: 'Friday', startTime: '18:45', endTime: '19:45', title: 'Entrenamiento Funcional HIIT', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-44-kine', dayOfWeek: 'Friday', startTime: '18:45', endTime: '19:45', title: 'Box Kinésico Reintegro Funcional', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-45', dayOfWeek: 'Friday', startTime: '20:00', endTime: '21:00', title: 'Funcional Nocturno PM', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
 
-  // SÁBADO (08:00 - 14:00)
+  // SÁBADO (08:00 - 14:00 - Coexistencia Funcional y Boxes Kinésicos simultáneos)
   { id: 'block-46', dayOfWeek: 'Saturday', startTime: '08:00', endTime: '09:00', title: 'Funcional Matinal Sabatino', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
+  { id: 'block-47-func', dayOfWeek: 'Saturday', startTime: '09:15', endTime: '10:15', title: 'Funcional Sabatino Estaciones', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-47', dayOfWeek: 'Saturday', startTime: '09:15', endTime: '10:15', title: 'Evaluación & Readaptación', instructor: 'Klgo. Andrés Morales', type: 'kine', capacity: 1, isActive: true, students: [] },
   { id: 'block-48', dayOfWeek: 'Saturday', startTime: '10:30', endTime: '11:30', title: 'Entrenamiento Funcional Fin de Semana', instructor: 'Prof. Mike R.', type: 'functional', capacity: 8, isActive: true, students: [] },
   { id: 'block-49', dayOfWeek: 'Saturday', startTime: '11:45', endTime: '12:45', title: 'Circuitos Estaciones Sabatino', instructor: 'Prof. Carlos Vega', type: 'functional', capacity: 8, isActive: true, students: [] },
@@ -967,17 +1026,27 @@ export function bookingsForSlot(blockId: string, date: string): UserBookingRecor
   if (!blockId || !date) return [];
   return getUserBookings().filter(b => b && b.blockId === blockId && b.date === date && b.status !== 'cancelled');
 }
+export function generateBookingToken(blockTitle: string, date: string): string {
+  const cleanDate = (date || '').replace(/-/g, '').slice(4);
+  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `PF-${cleanDate}-${rand}`;
+}
+
 export function studentsForSlot(blockId: string, date: string): EnrolledStudent[] {
   return bookingsForSlot(blockId, date).map(b => ({
     id: b.memberId || getMembers().find(m => m.name === b.userName)?.id || b.userName || 'unknown',
     name: b.userName || 'Alumno',
     bookingId: b.id,
+    token: b.token || `PF-${(b.date || '').replace(/-/g, '').slice(4)}-${b.id.slice(0, 4).toUpperCase()}`,
     confirmedAt: b.confirmedAt,
     status: b.status === 'attended' || b.status === 'no-show' ? b.status : 'pending',
     restrictions: getMembers().find(m => m.id === b.memberId || m.name === b.userName)?.physicalRestrictions
   }));
 }
-export function bookingStart(b: UserBookingRecord): number { return appointmentTime(b.date, b.time.split(' - ')[0]); }
+export function bookingStart(b: UserBookingRecord): number {
+  const startTime = (b?.time || '').split(' - ')[0] || '10:00';
+  return appointmentTime(b.date, startTime);
+}
 function resolveMember(identity?: string) {
   if (!identity) return undefined;
   const target = String(identity).toLowerCase();
@@ -995,26 +1064,54 @@ function validateSlot(member: GymMember, blockId: string, date: string, exceptId
   const reservations = getUserBookings().filter(b => b.id !== exceptId && b.status !== 'cancelled');
   if (reservations.filter(b => b.blockId === blockId && b.date === date).length >= block.capacity) return 'Cupos agotados en esta fecha.';
   const end = appointmentTime(date, block.endTime);
-  if (reservations.some(b => owns(b, member.id) && b.date === date && bookingStart(b) < end && appointmentTime(b.date, b.time.split(' - ')[1]) > start)) return 'Ya tienes una reserva que coincide con este horario.';
+  if (reservations.some(b => {
+    const endTimeStr = (b?.time || '').split(' - ')[1] || '11:00';
+    return owns(b, member.id) && b.date === date && bookingStart(b) < end && appointmentTime(b.date, endTimeStr) > start;
+  })) return 'Ya tienes una reserva que coincide con este horario.';
 }
 export function createBookingTransaction(identity: string, blockId: string, date: string) {
   const member = resolveMember(identity);
   if (!member) return { success: false, message: 'Alumno no encontrado.' };
+  if (member.bookingSuspended) {
+    return {
+      success: false,
+      message: `Tu cuenta tiene reservas suspendidas por inasistencias reiteradas (${member.suspensionReason || 'faltas consecutivas sin aviso'}). Acércate a recepción para reactivar tu cupo.`
+    };
+  }
   const error = validateSlot(member, blockId, date);
   if (error) return { success: false, message: error };
   if ((member.remainingSessions ?? 0) < 1) return { success: false, message: 'No tienes sesiones disponibles.' };
   const block = getCentralScheduleBlocks().find(b => b.id === blockId)!;
-  const booking: UserBookingRecord = { id: crypto.randomUUID(), memberId: member.id, userName: member.name, blockId, date, time: block.startTime + ' - ' + block.endTime, title: block.title, instructor: block.instructor, type: block.type, createdAt: new Date().toISOString(), status: 'pending' };
+  const token = generateBookingToken(block.title, date);
+  const booking: UserBookingRecord = {
+    id: crypto.randomUUID(),
+    token,
+    memberId: member.id,
+    userName: member.name,
+    blockId,
+    date,
+    time: block.startTime + ' - ' + block.endTime,
+    title: block.title,
+    instructor: block.instructor,
+    type: block.type,
+    createdAt: new Date().toISOString(),
+    status: 'pending'
+  };
   saveUserBookings([booking, ...getUserBookings()]);
   consumeSession(member.id);
   window.dispatchEvent(new Event(scheduleChangeEvent));
-  return { success: true, message: 'Sesión reservada. Se descontó una sesión de tu saldo.', booking };
+  return {
+    success: true,
+    message: `Sesión reservada exitosamente (Token: ${token}). Recuerda confirmar asistencia 90 min antes.`,
+    booking
+  };
 }
-export function cancelBookingWith24hRule(id: string, identity: string) {
+export function cancelBookingWith3hRule(id: string, identity: string) {
   const all = getUserBookings();
   const booking = all.find(b => b.id === id);
   if (!booking || !owns(booking, identity) || (booking.status && booking.status !== 'pending') || bookingStart(booking) <= Date.now()) return { success: false, isRefunded: false, message: 'Solo puedes cancelar una reserva propia, pendiente y futura.' };
-  const isRefunded = bookingStart(booking) - Date.now() >= BOOKING_NOTICE_HOURS * 3600000;
+  const diffHours = (bookingStart(booking) - Date.now()) / 3600000;
+  const isRefunded = diffHours >= BOOKING_NOTICE_HOURS; // Regla de 3 horas
   saveUserBookings(all.map(b => b.id === id ? { ...b, status: 'cancelled', isRefunded } : b));
   if (isRefunded) refundSession(resolveMember(identity)!.id);
   const notification = { id: crypto.randomUUID(), member: booking.userName, className: booking.title, time: booking.time, instructor: booking.instructor, isRefunded, createdAt: new Date().toISOString() };
@@ -1023,12 +1120,27 @@ export function cancelBookingWith24hRule(id: string, identity: string) {
   localStorage.setItem('profuncional-notifications', JSON.stringify([notification, ...notifications]));
   window.dispatchEvent(new CustomEvent('profuncional-booking-cancelled', { detail: notification }));
   window.dispatchEvent(new Event(scheduleChangeEvent));
-  return { success: true, isRefunded, message: isRefunded ? 'Cupo liberado y una sesión devuelta a tu saldo.' : 'Cupo liberado. Al faltar menos de 24 horas, la sesión no se devuelve.' };
+  return {
+    success: true,
+    isRefunded,
+    message: isRefunded
+      ? 'Cupo liberado con más de 3 horas de anticipación: 1 sesión devuelta a tu saldo.'
+      : 'Cupo liberado con menos de 3 horas de anticipación: La sesión no se devuelve según la política del centro.'
+  };
 }
+export const cancelBookingWith24hRule = cancelBookingWith3hRule;
+
 export function rescheduleBookingTransaction(id: string, identity: string, blockId: string, date: string) {
   const all = getUserBookings();
   const old = all.find(b => b.id === id);
   if (!old || !owns(old, identity) || (old.status && old.status !== 'pending')) return { success: false, message: 'Reserva no disponible.' };
+  const diffHours = (bookingStart(old) - Date.now()) / 3600000;
+  if (diffHours < BOOKING_NOTICE_HOURS) {
+    return {
+      success: false,
+      message: `Los cambios de clase solo se permiten con al menos ${BOOKING_NOTICE_HOURS} horas de anticipación a la hora de inicio.`
+    };
+  }
   const error = validateSlot(resolveMember(identity)!, blockId, date, id);
   if (error) return { success: false, message: error };
   const block = getCentralScheduleBlocks().find(b => b.id === blockId)!;
@@ -1048,5 +1160,61 @@ export function recordAttendance(id: string, status: 'pending' | 'attended' | 'n
   const b = all.find(b => b.id === id);
   if (!b || b.status === 'cancelled' || bookingStart(b) > Date.now()) throw new Error('La clase debe haber comenzado para registrar asistencia.');
   saveUserBookings(all.map(b => b.id === id ? { ...b, status } : b));
+
+  // Gestión de faltas consecutivas y liberación de cupos a nuevos asistentes
+  const member = b.memberId ? getMemberById(b.memberId) : (b.userName ? getMembers().find(m => m.name === b.userName) : undefined);
+  if (member) {
+    if (status === 'attended') {
+      updateMember(member.id, { consecutiveNoShows: 0 });
+    } else if (status === 'no-show') {
+      const newConsecutive = (member.consecutiveNoShows || 0) + 1;
+      const willSuspend = newConsecutive >= 3;
+      updateMember(member.id, {
+        consecutiveNoShows: newConsecutive,
+        bookingSuspended: willSuspend ? true : member.bookingSuspended,
+        suspensionReason: willSuspend ? 'Acumulación de 3 inasistencias consecutivas sin aviso' : member.suspensionReason
+      });
+      if (willSuspend) {
+        liberateFutureBookingsForMember(member.id, member.name);
+      }
+    }
+  }
   window.dispatchEvent(new Event(scheduleChangeEvent));
+}
+
+export function liberateFutureBookingsForMember(memberId: string, memberName: string): number {
+  const all = getUserBookings();
+  const now = Date.now();
+  let liberatedCount = 0;
+  const updated = all.map(b => {
+    const isOwner = b.memberId === memberId || (b.userName && b.userName.toLowerCase() === memberName.toLowerCase());
+    if (isOwner && b.status === 'pending' && bookingStart(b) > now) {
+      liberatedCount++;
+      return { ...b, status: 'cancelled' as const, isRefunded: false };
+    }
+    return b;
+  });
+  if (liberatedCount > 0) {
+    saveUserBookings(updated);
+    addActivity({
+      name: 'Sistema ProFuncional',
+      action: `liberó ${liberatedCount} cupo(s) futuro(s) de ${memberName} por acumulación de inasistencias sin avisar`
+    });
+  }
+  return liberatedCount;
+}
+
+export function reactivateMemberBooking(memberId: string): GymMember | null {
+  const updated = updateMember(memberId, {
+    bookingSuspended: false,
+    consecutiveNoShows: 0,
+    suspensionReason: undefined
+  });
+  if (updated) {
+    addActivity({
+      name: 'Recepción',
+      action: `reactivó los permisos de agendamiento para ${updated.name}`
+    });
+  }
+  return updated;
 }

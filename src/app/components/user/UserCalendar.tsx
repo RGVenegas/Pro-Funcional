@@ -1,8 +1,8 @@
-import { weekDate, today, appointmentTime, addDays } from '../../data/dates';
+import { weekDate, today, appointmentTime, addDays, isWithinConfirmationWindow, getMinutesUntilClass } from '../../data/dates';
 import { bookingsForSlot } from '../../data/gymStore';
-import { createBookingTransaction, cancelBookingWith24hRule, rescheduleBookingTransaction, confirmBooking } from '../../data/operations';
+import { createBookingTransaction, cancelBookingWith3hRule, rescheduleBookingTransaction, confirmBooking } from '../../data/operations';
 import React, { FormEvent, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Users, User, Stethoscope, Dumbbell, AlertCircle, CheckCircle, Calendar as CalendarIcon, RefreshCw, XCircle, LayoutGrid, List, Loader2, CalendarPlus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Users, User, Stethoscope, Dumbbell, AlertCircle, CheckCircle, Calendar as CalendarIcon, RefreshCw, XCircle, LayoutGrid, List, Loader2, CalendarPlus, Ticket, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { downloadIcsEvent } from '../../utils/calendarExport';
 import {
   getMembers,
@@ -27,6 +27,7 @@ interface UserCalendarProps {
 
 export function UserCalendar({ memberName }: UserCalendarProps) {
   const [activeTab, setActiveTab] = useState<CalendarTab>('my-schedule');
+  const [scheduleFilter, setScheduleFilter] = useState<'all' | 'functional' | 'kine'>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [currentWeek, setCurrentWeek] = useState(0);
   const [currentDate, setCurrentDate] = useState(today());
@@ -215,9 +216,9 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
     }
   };
 
-  // HU-04: Cancelación con Regla de 24h
+  // HU-04: Cancelación con Regla de 3 Horas
   const handleCancel = async (bookingId: string) => {
-    const result = await cancelBookingWith24hRule(bookingId, memberName);
+    const result = await cancelBookingWith3hRule(bookingId, memberName);
     if (result.success) {
       showToast(result.message, result.isRefunded ? 'success' : 'warning');
     } else {
@@ -298,28 +299,32 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1 text-[#F7F7F7]">Calendario & Agendamiento</h1>
-          <p className="text-white/60 text-sm">Cancela o reagenda con al menos 24 horas. Una cancelación tardía o inasistencia consume la sesión reservada.</p>
+          <h1 className="text-2xl sm:text-3xl font-black mb-1 text-[#F7F7F7]">Calendario & Agendamiento</h1>
+          <p className="text-white/60 text-xs sm:text-sm">
+            Límite de 3 horas para cambios o cancelaciones (confirmación a 90 min). Inasistencias reiteradas liberan cupos futuros.
+          </p>
         </div>
 
         {/* Saldo de Paquete Card */}
-        <div className="bg-[#00E676]/10 border border-[#00E676]/30 px-4 py-2.5 rounded-xl flex items-center gap-3 text-xs text-[#00E676] font-semibold shadow-md">
-          <Stethoscope className="w-5 h-5 flex-shrink-0 text-[#00E676]" />
+        <div className="bg-[#00E676]/10 border border-[#00E676]/30 px-3.5 py-2 rounded-xl flex items-center gap-2.5 text-xs text-[#00E676] font-semibold shadow-md self-start sm:self-auto">
+          <Stethoscope className="w-4 h-4 flex-shrink-0 text-[#00E676]" />
           <div>
-            <span className="text-white/60 text-[11px] block">Mi Saldo de Paquete</span>
-            <span><strong>{member?.remainingSessions ?? 5} de {member?.totalSessions ?? 8} sesiones disponibles</strong></span>
+            <span className="text-white/50 text-[10px] block uppercase tracking-wider">Saldo Activo</span>
+            <span><strong>{member?.remainingSessions ?? 5} de {member?.totalSessions ?? 8} sesiones</strong></span>
           </div>
         </div>
       </div>
 
-      {/* Banner de Horarios de Atención Oficial */}
-      <div className="rounded-xl border border-[#00E676]/30 bg-[#00E676]/10 p-3.5 flex items-center gap-3 text-xs text-[#00E676]">
-        <Clock className="w-5 h-5 flex-shrink-0 text-[#00E676]" />
-        <div>
-          <span className="font-bold uppercase tracking-wider block text-[11px] text-[#00E676]">Bloques Horarios Oficiales Pro-Funcional</span>
-          <span className="text-white/90">
-            <strong>AM:</strong> 08:00 / 09:15 / 10:30 / 11:45 &nbsp;|&nbsp; <strong>PM:</strong> 15:00 / 16:15 / 17:30 / 18:45 / 20:00
-          </span>
+      {/* Banner de Horarios de Atención Oficial (Estilizado & Limpio) */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2 text-[#00E676]">
+          <Clock className="w-4 h-4 flex-shrink-0" />
+          <span className="font-bold text-[11px] uppercase tracking-wider">Bloques Oficiales:</span>
+        </div>
+        <div className="text-white/80 text-[11px] space-x-2">
+          <span><strong className="text-white">AM:</strong> 08:00 · 09:15 · 10:30 · 11:45</span>
+          <span className="text-white/30">|</span>
+          <span><strong className="text-white">PM:</strong> 15:00 · 16:15 · 17:30 · 18:45 · 20:00</span>
         </div>
       </div>
 
@@ -380,6 +385,56 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
         </div>
       </div>
 
+      {/* Selector de Salas / Filtro de Simultaneidad en Catálogo */}
+      {activeTab === 'gym-schedule' && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-base text-purple-400">⚡</span>
+            <div>
+              <span className="font-bold text-white block">Visualización de Horarios Simultáneos</span>
+              <span className="text-white/60 text-[11px]">Las clases funcionales y los boxes de kinesiología funcionan en paralelo en el mismo bloque horario.</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setScheduleFilter('all')}
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 min-h-[36px] ${
+                scheduleFilter === 'all'
+                  ? 'bg-[#00E676] text-[#021826]'
+                  : 'bg-white/5 text-white/70 hover:text-white border border-white/10'
+              }`}
+            >
+              <span>⚡ Todos (Simultáneos)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setScheduleFilter('functional')}
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 min-h-[36px] ${
+                scheduleFilter === 'functional'
+                  ? 'bg-[#00E676] text-[#021826]'
+                  : 'bg-white/5 text-white/70 hover:text-white border border-white/10'
+              }`}
+            >
+              <Dumbbell className="w-3.5 h-3.5" />
+              <span>Sala Funcional</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setScheduleFilter('kine')}
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 min-h-[36px] ${
+                scheduleFilter === 'kine'
+                  ? 'bg-[#00E676] text-[#021826]'
+                  : 'bg-white/5 text-white/70 hover:text-white border border-white/10'
+              }`}
+            >
+              <Stethoscope className="w-3.5 h-3.5" />
+              <span>Boxes Kinésicos</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Week Navigation */}
       <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
         <button
@@ -418,9 +473,16 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
               const dateNum = dateInfo.dateNum;
               const isToday = targetDateStr === today();
 
-              const dayBlocks = (scheduleBlocks || []).filter(
+              const rawDayBlocks = (scheduleBlocks || []).filter(
                 (b) => b && typeof b === 'object' && b.dayOfWeek === day && b.isActive && !isScheduleBlockHidden(b.id, targetDateStr)
               );
+              const dayBlocks = rawDayBlocks
+                .filter((b) => {
+                  if (scheduleFilter === 'functional') return b.type === 'functional';
+                  if (scheduleFilter === 'kine') return b.type === 'kine';
+                  return true;
+                })
+                .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
               const dayBookings = (userBookings || []).filter((b) => {
                 if (!b) return false;
                 if (b.date === targetDateStr) return true;
@@ -466,6 +528,9 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                           appointmentTime(targetDateStr, block.startTime) <= Date.now()
                         );
 
+                        const simultaneousCount = rawDayBlocks.filter((o) => o.startTime === block.startTime).length;
+                        const isSimultaneous = simultaneousCount > 1;
+
                         return (
                           <div
                             key={block.id || Math.random()}
@@ -475,6 +540,22 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                                 : 'bg-white/5 border-white/10 hover:border-white/20'
                             }`}
                           >
+                            {/* Badges de Sala y Coexistencia Simultánea */}
+                            <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                block.type === 'kine'
+                                  ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                                  : 'bg-[#00E676]/20 text-[#00E676] border border-[#00E676]/30'
+                              }`}>
+                                {block.type === 'kine' ? '🏥 Box Kinésico' : '🏋️ Sala Funcional'}
+                              </span>
+                              {isSimultaneous && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/25 text-purple-300 border border-purple-500/35" title="Horario con Box y Sala Funcional funcionando en simultáneo">
+                                  ⚡ Simultáneo
+                                </span>
+                              )}
+                            </div>
+
                             <div className="flex items-start justify-between gap-1 mb-1">
                               <p className="font-bold text-xs leading-tight text-white">{block.title || 'Clase de Gimnasio'}</p>
                               {isUserEnrolled && (
@@ -515,52 +596,89 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                       })}
 
                     {activeTab === 'my-schedule' &&
-                      dayBookings.map((booking) => (
-                        <div key={booking.id || Math.random()} className="p-3 rounded-xl bg-white/10 border border-[#00E676]/40 space-y-2">
-                          <div className="flex items-start justify-between gap-1">
-                            <span className="text-[9px] uppercase font-bold text-[#00E676] tracking-wider truncate">{booking.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
-                            <span className="text-[10px] font-mono text-white/60 whitespace-nowrap">{booking.time}</span>
-                          </div>
-                          <div>
-                            <p className="font-bold text-xs text-white leading-tight">{booking.title}</p>
-                            <p className="text-[11px] text-white/60 truncate">{booking.instructor}</p>
-                          </div>
+                      dayBookings.map((booking) => {
+                        const token = booking.token || `PF-${(booking.date || '').replace(/-/g, '').slice(4)}-${booking.id.slice(0, 4).toUpperCase()}`;
+                        const within90m = isWithinConfirmationWindow(booking.date, booking.time);
+                        return (
+                          <div key={booking.id || Math.random()} className="p-3 rounded-xl bg-white/10 border border-[#00E676]/40 space-y-2.5">
+                            <div className="flex items-start justify-between gap-1">
+                              <span className="text-[9px] uppercase font-bold text-[#00E676] tracking-wider truncate">{booking.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
+                              <span className="text-[10px] font-mono text-white/60 whitespace-nowrap">{booking.time}</span>
+                            </div>
 
-                          <div className="flex flex-col gap-1.5 pt-2 border-t border-white/10 w-full">
-                            <button disabled={Boolean(booking.confirmedAt) || booking.status === 'attended' || booking.status === 'no-show' || appointmentTime(booking.date, (booking.time || '').split(' - ')[0] || '08:00') <= Date.now()} onClick={async () => { try { await confirmBooking(booking.id, memberName); showToast('Tu intención de asistir quedó confirmada.', 'success'); } catch (e) { showToast((e as Error).message, 'error'); } }} className="px-3 py-2.5 min-h-[44px] touch-target-44 rounded-lg bg-white/5 text-[#00E676] text-xs disabled:opacity-50 font-semibold">{booking.confirmedAt ? 'Asistencia prevista confirmada' : 'Confirmo que asistiré'}</button>
-                            <button
-                              type="button"
-                              onClick={() => downloadIcsEvent({
-                                title: `ProFuncional: ${booking.title}`,
-                                dateStr: booking.date,
-                                timeStr: (booking.time || '').split(' - ')[0] || '10:00',
-                                description: `Sesión con ${booking.instructor}. Recuerda la regla de cancelación de 24h.`,
-                              })}
-                              className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-semibold text-white/90 flex items-center justify-center gap-1.5 transition-colors border border-white/10"
-                            >
-                              <CalendarPlus className="w-3.5 h-3.5 text-[#00E676]" />
-                              Guardar en Calendario
-                            </button>
+                            {/* Token de Reserva y Asistencia */}
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#00E676]/15 border border-[#00E676]/30 text-[10px] font-mono font-bold text-[#00E676]">
+                              <Ticket className="w-3 h-3 flex-shrink-0" />
+                              <span>Token: {token}</span>
+                            </div>
 
-                            <button
-                              type="button"
-                              onClick={() => handleOpenReschedule(booking)}
-                              className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-[#00E676]/20 hover:bg-[#00E676]/30 text-xs font-semibold text-[#00E676] flex items-center justify-center gap-1 transition-colors border border-[#00E676]/30"
-                            >
-                              <RefreshCw className="w-3.5 h-3.5 text-[#00E676]" />
-                              Reagendar
-                            </button>
+                            <div>
+                              <p className="font-bold text-xs text-white leading-tight">{booking.title}</p>
+                              <p className="text-[11px] text-white/60 truncate">{booking.instructor}</p>
+                            </div>
 
-                            <button
-                              type="button"
-                              onClick={() => { if (window.confirm('¿Cancelar esta clase? Con menos de 24 horas, se libera el cupo sin devolver la sesión.')) void handleCancel(booking.id); }}
-                              className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-semibold text-rose-300 flex items-center justify-center gap-1 transition-colors"
-                            >
-                              Cancelar
-                            </button>
+                            <div className="flex flex-col gap-1.5 pt-2 border-t border-white/10 w-full">
+                              {booking.confirmedAt ? (
+                                <div className="px-3 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5 border border-emerald-500/30">
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                  <span>Asistencia Confirmada</span>
+                                </div>
+                              ) : within90m ? (
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      await confirmBooking(booking.id, memberName);
+                                      showToast('¡Asistencia confirmada! Tu cupo está asegurado para esta clase.', 'success');
+                                    } catch (e) {
+                                      showToast((e as Error).message, 'error');
+                                    }
+                                  }}
+                                  className="w-full min-h-[44px] touch-target-44 px-3 py-2 rounded-lg bg-[#00E676] text-[#021826] text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shadow-[#00E676]/20 animate-pulse hover:brightness-105"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                  <span>Confirmar Asistencia (90 min)</span>
+                                </button>
+                              ) : (
+                                <div className="text-[10px] text-white/50 text-center py-1 bg-white/5 rounded border border-white/5">
+                                  Confirmación disponible 90 min antes
+                                </div>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => downloadIcsEvent({
+                                  title: `ProFuncional: ${booking.title}`,
+                                  dateStr: booking.date,
+                                  timeStr: (booking.time || '').split(' - ')[0] || '10:00',
+                                  description: `Sesión con ${booking.instructor}. Token: ${token}. Límite de cambio/cancelación: 3 horas antes.`,
+                                })}
+                                className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-semibold text-white/90 flex items-center justify-center gap-1.5 transition-colors border border-white/10"
+                              >
+                                <CalendarPlus className="w-3.5 h-3.5 text-[#00E676]" />
+                                Guardar en Calendario
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleOpenReschedule(booking)}
+                                className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-[#00E676]/20 hover:bg-[#00E676]/30 text-xs font-semibold text-[#00E676] flex items-center justify-center gap-1 transition-colors border border-[#00E676]/30"
+                              >
+                                <RefreshCw className="w-3.5 h-3.5 text-[#00E676]" />
+                                Reagendar (≥3h)
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => { if (window.confirm('¿Cancelar esta clase? Con al menos 3 horas de anticipación se devuelve la sesión. Con menos de 3 horas, el cupo se libera sin devolución.')) void handleCancel(booking.id); }}
+                                className="w-full min-h-[44px] touch-target-44 py-2 px-3 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-semibold text-rose-300 flex items-center justify-center gap-1 transition-colors"
+                              >
+                                Cancelar Cita
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
 
                     {activeTab === 'gym-schedule' && dayBlocks.length === 0 && (
                       <p className="text-white/40 text-[11px] text-center py-4">Sin clases disponibles</p>
@@ -584,7 +702,14 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
             const targetDateStr = dateInfo.dateStr;
             const isToday = targetDateStr === today();
 
-            const dayBlocks = (scheduleBlocks || []).filter((b) => b && typeof b === 'object' && b.dayOfWeek === day && b.isActive && !isScheduleBlockHidden(b.id, targetDateStr));
+            const rawDayBlocks = (scheduleBlocks || []).filter((b) => b && typeof b === 'object' && b.dayOfWeek === day && b.isActive && !isScheduleBlockHidden(b.id, targetDateStr));
+            const dayBlocks = rawDayBlocks
+              .filter((b) => {
+                if (scheduleFilter === 'functional') return b.type === 'functional';
+                if (scheduleFilter === 'kine') return b.type === 'kine';
+                return true;
+              })
+              .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
             const dayBookings = (userBookings || []).filter((b) => {
               if (!b) return false;
               if (b.date === targetDateStr) return true;
@@ -627,9 +752,25 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                           return Boolean(stName && stName.toLowerCase() === safeMemberName);
                         })
                       );
+                      const simultaneousCount = rawDayBlocks.filter((o) => o.startTime === block.startTime).length;
+                      const isSimultaneous = simultaneousCount > 1;
 
                       return (
                         <div key={block.id || Math.random()} className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                              block.type === 'kine'
+                                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                                : 'bg-[#00E676]/20 text-[#00E676] border border-[#00E676]/30'
+                            }`}>
+                              {block.type === 'kine' ? '🏥 Box Kinésico' : '🏋️ Sala Funcional'}
+                            </span>
+                            {isSimultaneous && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/25 text-purple-300 border border-purple-500/35" title="Horario con Box y Sala Funcional funcionando en simultáneo">
+                                ⚡ Simultáneo
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center justify-between">
                             <p className="font-bold text-sm text-white">{block.title || 'Clase de Gimnasio'}</p>
                             {isUserEnrolled && (
@@ -742,7 +883,21 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
               </div>
             )}
 
-            <div className="bg-white/5 p-4 rounded-xl space-y-2 border border-white/10 text-xs">
+            <div className="bg-white/5 p-4 rounded-xl space-y-2.5 border border-white/10 text-xs">
+              <div className="flex items-center gap-2 flex-wrap pb-1 border-b border-white/10">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                  bookingBlock.block.type === 'kine'
+                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                    : 'bg-[#00E676]/20 text-[#00E676] border border-[#00E676]/30'
+                }`}>
+                  {bookingBlock.block.type === 'kine' ? '🏥 Box Kinésico (Atención 1 a 1)' : '🏋️ Sala Funcional (Clase Grupal)'}
+                </span>
+                {scheduleBlocks.filter(o => o.dayOfWeek === bookingBlock.block.dayOfWeek && o.startTime === bookingBlock.block.startTime).length > 1 && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/25 text-purple-300 border border-purple-500/35">
+                    ⚡ Horario Simultáneo
+                  </span>
+                )}
+              </div>
               <p className="text-white/70"><strong>Profesional:</strong> {bookingBlock.block.instructor}</p>
               <p className="text-white/70"><strong>Horario:</strong> {bookingBlock.block.startTime} - {bookingBlock.block.endTime} hrs</p>
               <p className="text-white/70"><strong>Cupos disponibles:</strong> {bookingBlock.block.capacity - bookingsForSlot(bookingBlock.block.id, bookingBlock.targetDate).length} de {bookingBlock.block.capacity}</p>
@@ -897,34 +1052,76 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            {userBookings.map((b) => (
-              <div key={b.id} className="p-4 rounded-xl bg-black/30 border border-white/10 flex flex-col justify-between gap-3">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-bold uppercase text-[#00E676] tracking-wider">{b.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
-                    <span className="text-xs font-bold text-[#00E676]">{b.date}</span>
-                  </div>
-                  <p className="font-bold text-sm text-white">{b.title}</p>
-                  <p className="text-xs text-white/60">{b.instructor} · {b.time}</p>
-                </div>
+            {userBookings.map((b) => {
+              const token = b.token || `PF-${(b.date || '').replace(/-/g, '').slice(4)}-${b.id.slice(0, 4).toUpperCase()}`;
+              const within90m = isWithinConfirmationWindow(b.date, b.time);
+              return (
+                <div key={b.id} className="p-4 rounded-xl bg-black/30 border border-white/10 flex flex-col justify-between gap-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold uppercase text-[#00E676] tracking-wider">{b.type === 'kine' ? 'Box Kinésico' : 'Clase Funcional'}</span>
+                      <span className="text-xs font-bold text-[#00E676]">{b.date}</span>
+                    </div>
 
-                <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                  <button
-                    onClick={() => handleOpenReschedule(b)}
-                    className="flex-1 py-2.5 px-3 min-h-[44px] touch-target-44 rounded-lg bg-[#00E676]/20 hover:bg-[#00E676]/30 border border-[#00E676]/30 text-xs font-bold text-[#00E676] flex items-center justify-center gap-1.5 transition-colors"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5 text-[#00E676]" />
-                    Reagendar
-                  </button>
-                  <button
-                    onClick={() => handleCancel(b.id)}
-                    className="py-2.5 px-3 min-h-[44px] touch-target-44 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-bold text-rose-300 flex items-center justify-center gap-1.5 transition-colors"
-                  >
-                    Cancelar Cita
-                  </button>
+                    {/* Token de Reserva y Asistencia */}
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#00E676]/15 border border-[#00E676]/30 text-[10px] font-mono font-bold text-[#00E676] mb-1.5">
+                      <Ticket className="w-3 h-3 flex-shrink-0" />
+                      <span>Token: {token}</span>
+                    </div>
+
+                    <p className="font-bold text-sm text-white">{b.title}</p>
+                    <p className="text-xs text-white/60">{b.instructor} · {b.time}</p>
+                  </div>
+
+                  {b.confirmedAt ? (
+                    <div className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5 border border-emerald-500/30">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span>Asistencia Confirmada</span>
+                    </div>
+                  ) : within90m ? (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await confirmBooking(b.id, memberName);
+                          showToast('¡Asistencia confirmada! Tu cupo está asegurado para esta clase.', 'success');
+                        } catch (e) {
+                          showToast((e as Error).message, 'error');
+                        }
+                      }}
+                      className="w-full min-h-[44px] touch-target-44 px-3 py-2 rounded-lg bg-[#00E676] text-[#021826] text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shadow-[#00E676]/20 animate-pulse hover:brightness-105"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Confirmar Asistencia (90 min)</span>
+                    </button>
+                  ) : (
+                    <div className="text-[11px] text-white/50 text-center py-1 bg-white/5 rounded border border-white/5">
+                      Confirmación disponible 90 min antes
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                    <button
+                      onClick={() => handleOpenReschedule(b)}
+                      className="flex-1 py-2.5 px-3 min-h-[44px] touch-target-44 rounded-lg bg-[#00E676]/20 hover:bg-[#00E676]/30 border border-[#00E676]/30 text-xs font-bold text-[#00E676] flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 text-[#00E676]" />
+                      Reagendar (≥3h)
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('¿Cancelar esta clase? Con al menos 3 horas de anticipación se devuelve la sesión a tu saldo. Con menos de 3 horas, el cupo se libera sin devolución.')) {
+                          void handleCancel(b.id);
+                        }
+                      }}
+                      className="py-2.5 px-3 min-h-[44px] touch-target-44 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-bold text-rose-300 flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      Cancelar Cita
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

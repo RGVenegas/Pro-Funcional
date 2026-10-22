@@ -1,5 +1,6 @@
 export const GYM_TIME_ZONE = 'America/Santiago';
-export const BOOKING_NOTICE_HOURS = 24;
+export const BOOKING_NOTICE_HOURS = 3;
+export const CONFIRMATION_WINDOW_MINUTES = 90;
 export const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export function today(now = new Date()): string {

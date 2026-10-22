@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Users, Calendar, Menu, X, AlertTriangle, BriefcaseBusiness } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Menu, X, AlertTriangle, BriefcaseBusiness, CreditCard, MessageSquare } from 'lucide-react';
 import { Logo } from '../shared/Logo';
 
 interface AdminSidebarProps {
   currentView: string;
-  onNavigate: (view: 'dashboard' | 'members' | 'schedule' | 'risk' | 'staff') => void;
+  onNavigate: (view: 'dashboard' | 'members' | 'schedule' | 'risk' | 'staff' | 'payments' | 'reminders') => void;
 }
 
 export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
@@ -14,7 +14,9 @@ export function AdminSidebar({ currentView, onNavigate }: AdminSidebarProps) {
     { id: 'dashboard', label: 'Resumen', icon: LayoutDashboard },
     { id: 'members', label: 'Miembros', icon: Users },
     { id: 'schedule', label: 'Horarios', icon: Calendar },
-    { id: 'risk', label: 'Riesgo', icon: AlertTriangle },
+    { id: 'risk', label: 'Inasistencias & Cupos', icon: AlertTriangle },
+    { id: 'payments', label: 'Pagos & MP', icon: CreditCard },
+    { id: 'reminders', label: 'WhatsApp Friendly', icon: MessageSquare },
   ];
 
   const MenuContent = () => (

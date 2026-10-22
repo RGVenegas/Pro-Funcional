@@ -16,7 +16,7 @@ import {
   EnrolledStudent
 } from '../../data/gymStore';
 
-type ScheduleMode = 'classes' | 'kine-boxes';
+type ScheduleMode = 'all' | 'functional' | 'kine-boxes';
 
 interface CancellationNotification {
   id: string;
@@ -29,7 +29,7 @@ interface CancellationNotification {
 }
 
 export function ScheduleManagement() {
-  const [mode, setMode] = useState<ScheduleMode>('classes');
+  const [mode, setMode] = useState<ScheduleMode>('all');
   const [currentWeek, setCurrentWeek] = useState(0);
   const [currentDate, setCurrentDate] = useState(today());
   const [showFullWeek, setShowFullWeek] = useState(false);
@@ -239,19 +239,27 @@ export function ScheduleManagement() {
             <RotateCcw className="h-4 w-4" /> Restaurar horario
           </button>
 
-          <div className="flex gap-2 bg-white/5 p-1 rounded-xl border border-white/10 w-full sm:w-auto">
+          <div className="flex gap-1.5 bg-white/5 p-1 rounded-xl border border-white/10 w-full sm:w-auto">
             <button
-              onClick={() => setMode('classes')}
-              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
-                mode === 'classes' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
+              onClick={() => setMode('all')}
+              className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+                mode === 'all' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
+              }`}
+            >
+              <span>⚡ Vista Simultánea</span>
+            </button>
+            <button
+              onClick={() => setMode('functional')}
+              className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+                mode === 'functional' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
               }`}
             >
               <Dumbbell className="w-4 h-4" />
-              Clases & Boxes
+              Sala Funcional
             </button>
             <button
               onClick={() => setMode('kine-boxes')}
-              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
+              className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 ${
                 mode === 'kine-boxes' ? 'bg-[#00E676] text-[#021826]' : 'text-white/70 hover:text-white'
               }`}
             >
@@ -260,6 +268,20 @@ export function ScheduleManagement() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Simultaneous & Parallel Schedules Notice */}
+      <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-purple-200">
+        <div className="flex items-center gap-2.5">
+          <span className="text-base flex-shrink-0">⚡</span>
+          <div>
+            <span className="font-bold block text-purple-300 uppercase tracking-wider text-[11px]">Coexistencia de Horarios Simultáneos</span>
+            <span className="text-white/80">Los Boxes Kinésicos y la Sala de Entrenamiento Funcional funcionan en paralelo a la misma hora (ej: 08:00 hrs) sin solaparse ni ocultarse.</span>
+          </div>
+        </div>
+        <span className="px-2.5 py-1 bg-purple-500/20 border border-purple-500/40 rounded-full font-bold text-[10px] whitespace-nowrap text-purple-200">
+          Multi-Sala Activo
+        </span>
       </div>
 
       {/* Operating Hours Banner (Rangos de atención del gimnasio) */}
@@ -373,7 +395,13 @@ export function ScheduleManagement() {
         >
           {visibleDays.map((day) => {
             const dayBlocks = blocks.filter((b) => b.dayOfWeek === day && b.isActive);
-            const slots = mode === 'kine-boxes' ? dayBlocks.filter((s) => s.type === 'kine') : dayBlocks;
+            const slots = dayBlocks
+              .filter((s) => {
+                if (mode === 'functional') return s.type === 'functional';
+                if (mode === 'kine-boxes') return s.type === 'kine';
+                return true;
+              })
+              .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
             return (
               <div key={day} className="bg-white/5 rounded-2xl p-3.5 backdrop-blur-sm border border-white/10 flex flex-col justify-start gap-3">
@@ -386,6 +414,8 @@ export function ScheduleManagement() {
                   {slots.map((slot) => {
                     const hasRestrictions = slot.students.some((st) => Boolean(st.restrictions));
                     const bookedCount = slot.students.length;
+                    const simultaneousSlots = dayBlocks.filter((o) => o.startTime === slot.startTime);
+                    const isSimultaneous = simultaneousSlots.length > 1;
 
                     return (
                       <div
@@ -393,7 +423,7 @@ export function ScheduleManagement() {
                         className={`p-3 rounded-xl border transition-all hover:scale-[1.01] ${getOccupancyColor(bookedCount, slot.capacity)} flex flex-col justify-between`}
                       >
                         {/* Top bar: Hora + Eliminar */}
-                        <div className="flex items-center justify-between gap-1 mb-2">
+                        <div className="flex items-center justify-between gap-1 mb-1.5">
                           <span className="text-[11px] font-mono font-bold bg-black/60 px-2 py-0.5 rounded-md text-white flex items-center gap-1 whitespace-nowrap border border-white/10">
                             <Clock className="w-3 h-3 text-[#00E676] flex-shrink-0" />
                             {slot.startTime} - {slot.endTime}
@@ -408,6 +438,22 @@ export function ScheduleManagement() {
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
+                        </div>
+
+                        {/* Badges de Sala y Coexistencia Simultánea */}
+                        <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                            slot.type === 'kine'
+                              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                              : 'bg-[#00E676]/20 text-[#00E676] border border-[#00E676]/30'
+                          }`}>
+                            {slot.type === 'kine' ? '🏥 Box Kinésico' : '🏋️ Sala Funcional'}
+                          </span>
+                          {isSimultaneous && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/25 text-purple-300 border border-purple-500/35" title="Horario con Box y Sala Funcional funcionando en simultáneo">
+                              ⚡ Paralelo ({simultaneousSlots.length})
+                            </span>
+                          )}
                         </div>
 
                         {/* Info principal: Título e Instructor */}
@@ -432,7 +478,14 @@ export function ScheduleManagement() {
                           <div className="space-y-1 mb-2 pt-1">
                             {slot.students.map((st) => (
                               <div key={st.id} className="flex items-center justify-between text-[11px] bg-black/40 px-2 py-1 rounded-lg gap-1 border border-white/5">
-                                <span className="font-medium text-white truncate max-w-[80px]" title={st.name}>{st.name}</span>
+                                <div className="flex items-center gap-1 truncate max-w-[110px]">
+                                  <span className="font-medium text-white truncate" title={st.name}>{st.name}</span>
+                                  {st.token && (
+                                    <span className="text-[8px] font-mono font-bold text-[#00E676] bg-[#00E676]/15 px-1 py-0.2 rounded border border-[#00E676]/25" title={`Token: ${st.token}`}>
+                                      {st.token}
+                                    </span>
+                                  )}
+                                </div>
                                 
                                 <div className="flex items-center gap-1 flex-shrink-0">
                                   {st.restrictions && (
@@ -446,10 +499,12 @@ export function ScheduleManagement() {
                                         ? 'bg-emerald-500/30 text-emerald-300'
                                         : st.status === 'no-show'
                                         ? 'bg-rose-500/30 text-rose-300'
+                                        : st.confirmedAt
+                                        ? 'bg-blue-500/30 text-blue-300'
                                         : 'bg-white/10 text-white/70'
                                     }`}
                                   >
-                                    {st.status === 'attended' ? 'Asistió' : st.status === 'no-show' ? 'No-Show' : 'Pendient.'}
+                                    {st.status === 'attended' ? 'Asistió' : st.status === 'no-show' ? 'No-Show' : st.confirmedAt ? 'Confirmado' : 'Pendiente'}
                                   </span>
                                 </div>
                               </div>
@@ -578,6 +633,11 @@ export function ScheduleManagement() {
                 Capacidad Máxima (Cupos)
                 <input required name="capacity" type="number" min="1" max="30" defaultValue="1" className="mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-white text-sm outline-none focus:border-[#00E676]" />
               </label>
+
+              <div className="col-span-2 text-[11px] text-purple-200 bg-purple-500/10 border border-purple-500/30 p-2.5 rounded-xl flex items-center gap-2">
+                <span className="text-sm">⚡</span>
+                <span><strong>Simultaneidad permitida:</strong> Puedes crear un Box Kinésico a la misma hora que una Clase Funcional (ej. 08:00 hrs) y se desplegarán en paralelo.</span>
+              </div>
             </div>
 
             <div className="pt-3 flex justify-end gap-3 border-t border-white/10">
@@ -615,18 +675,27 @@ export function ScheduleManagement() {
               <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                 {selectedBlock.students.map((student) => (
                   <div key={student.id} className="p-3.5 bg-white/5 rounded-xl border border-white/10 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm text-white">{student.name}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-sm text-white">{student.name}</span>
+                        {student.token && (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#00E676]/15 text-[#00E676] border border-[#00E676]/30 font-bold">
+                            Token: {student.token}
+                          </span>
+                        )}
+                      </div>
                       <span
-                        className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
+                        className={`text-xs px-2.5 py-0.5 rounded-full font-bold self-start sm:self-auto ${
                           student.status === 'attended'
                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                             : student.status === 'no-show'
                             ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                            : student.confirmedAt
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                             : 'bg-white/10 text-white/70'
                         }`}
                       >
-                        {student.status === 'attended' ? '✓ Asistencia confirmada' : student.status === 'no-show' ? '✗ Inasistencia (No-Show)' : student.confirmedAt ? 'Confirmó que asistirá' : 'Pendiente de confirmación'}
+                        {student.status === 'attended' ? '✓ Asistió' : student.status === 'no-show' ? '✗ Inasistencia (No-Show)' : student.confirmedAt ? '✓ Confirmó que asistirá (In-App)' : 'Pendiente de confirmación'}
                       </span>
                     </div>
 

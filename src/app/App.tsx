@@ -4,6 +4,8 @@ import { AuthUser, Login } from './components/auth/Login';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdminRiskDashboard } from './components/admin/AdminRiskDashboard';
 import { AdminStaffDashboard } from './components/admin/AdminStaffDashboard';
+import { AdminPayments } from './components/admin/AdminPayments';
+import { AdminWhatsAppReminders } from './components/admin/AdminWhatsAppReminders';
 import { MembersList } from './components/admin/MembersList';
 import { MemberDetail } from './components/admin/MemberDetail';
 import { ScheduleManagement } from './components/admin/ScheduleManagement';
@@ -23,7 +25,7 @@ import { Logo } from './components/shared/Logo';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
 
 type Role = 'admin' | 'user';
-type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule' | 'risk' | 'staff';
+type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule' | 'risk' | 'staff' | 'payments' | 'reminders';
 type UserView = 'home' | 'plan' | 'calendar' | 'training' | 'card' | 'profile';
 
 export default function App() {
@@ -190,6 +192,8 @@ export default function App() {
                 />
               )}
               {adminView === 'staff' && <AdminStaffDashboard />}
+              {adminView === 'payments' && <AdminPayments />}
+              {adminView === 'reminders' && <AdminWhatsAppReminders />}
             </ErrorBoundary>
           </main>
         </div>

@@ -149,8 +149,13 @@ export function AdminDashboard() {
             <div key={activity.id} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#09C82C]/20 flex items-center justify-center">
-                  <span className="text-[#09C82C] font-semibold">
-                    {activity.name.split(' ').map((n) => n[0]).join('')}
+                  <span className="text-[#09C82C] font-semibold text-xs">
+                    {(activity?.name || 'PF')
+                      .split(' ')
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((n) => n[0])
+                      .join('') || 'PF'}
                   </span>
                 </div>
                 <div>

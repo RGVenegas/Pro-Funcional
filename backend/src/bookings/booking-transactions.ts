@@ -82,13 +82,15 @@ export class BookingsService {
         isRefunded = true;
       }
       const result = await tx.booking.update({ where: { id }, data: { status: BookingStatus.CANCELLED, cancelledAt: new Date(), isRefunded, confirmedAt: null } });
-      await tx.activityLog.create({ data: { userId: booking.userId, userName: booking.user.name, action: `canceló ${booking.scheduleBlock.title} (${isRefunded ? 'sesión devuelta' : 'sin devolución por plazo menor a 24h'})` } });
-      return { booking: result, isRefunded, message: isRefunded ? 'Cupo liberado y sesión devuelta al paquete original.' : 'Cupo liberado. Al faltar menos de 24 horas, la sesión no se devuelve.' };
+      await tx.activityLog.create({ data: { userId: booking.userId, userName: booking.user.name, action: `canceló ${booking.scheduleBlock.title} (${isRefunded ? 'sesión devuelta' : 'sin devolución por plazo menor a 3h'})` } });
+      return { booking: result, isRefunded, message: isRefunded ? 'Cupo liberado y sesión devuelta al paquete original.' : 'Cupo liberado. Al faltar menos de 3 horas, la sesión no se devuelve.' };
     });
   }
   async reschedule(id: string, user: { id: string; role: Role; name: string }, dto: RescheduleBookingDto) {
     return serial(this.prisma, async tx => {
       const original = await this.owned(tx, id, user);
+      const eligible = original.bookingDate.getTime() - Date.now() >= BOOKING_NOTICE_HOURS * 3600000;
+      if (!eligible) throw new BadRequestException(`Los cambios de clase solo se permiten con al menos ${BOOKING_NOTICE_HOURS} horas de anticipación.`);
       const { block, bookingDate } = await this.slot(tx, original.userId, dto.newScheduleBlockId, dto.newBookingDate, id);
       if (original.packageId) { const pack = await tx.sessionPackage.findUnique({ where: { id: original.packageId } }); if (pack?.expiresAt && pack.expiresAt < bookingDate) throw new BadRequestException('La nueva fecha supera la vigencia del paquete.'); }
       const booking = await tx.booking.update({ where: { id }, data: { scheduleBlockId: block.id, bookingDate, confirmedAt: null } });

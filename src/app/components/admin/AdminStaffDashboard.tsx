@@ -216,7 +216,7 @@ export function AdminStaffDashboard() {
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#00E676]/20 bg-[#00E676]/10 text-xs font-bold text-[#00E676]">
-                          {person.name.split(/\s+/).filter((part) => !['Klgo.', 'Klga.', 'Prof.'].includes(part)).slice(0, 2).map((part) => part[0]).join('')}
+                          {(person?.name || 'Staff').split(/\s+/).filter((part) => !['Klgo.', 'Klga.', 'Prof.'].includes(part)).slice(0, 2).map((part) => part[0]).join('') || 'ST'}
                         </span>
                         <div className="min-w-0">
                           <p className="truncate font-semibold text-white">{person.name}</p>

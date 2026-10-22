@@ -2,11 +2,12 @@ import { addClinicalEvaluation, updateClinicalEvaluation, deleteClinicalEvaluati
 import { careAction } from '../../data/careStore';
 import { CarePanel } from '../shared/CarePanel';
 import { getUserBookings } from '../../data/gymStore';
-import { today } from '../../data/dates';
+import { today, calculatePlanCycle, formatDate } from '../../data/dates';
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Mail, Phone, Calendar, Ban, RefreshCw, Flame, Dumbbell, Check, Activity, AlertTriangle, Stethoscope, ChevronDown, PlusCircle, Edit3, Trash2, Plus, RotateCcw } from 'lucide-react';
-import { StatusBadge } from '../shared/StatusBadge';
-import { addActivity, ClinicalEvaluation, getMemberById, getMembers, GymMember, subscribeToMembers } from '../../data/gymStore';
+import { ArrowLeft, Mail, Phone, Calendar, Ban, RefreshCw, Flame, Dumbbell, Check, Activity, AlertTriangle, Stethoscope, ChevronDown, PlusCircle, Edit3, Trash2, Plus, RotateCcw, Clock, CreditCard, ShieldAlert, CheckCircle2, UserX } from 'lucide-react';
+import { addActivity, ClinicalEvaluation, getMemberById, getMembers, GymMember, subscribeToMembers, reactivateMemberBooking } from '../../data/gymStore';
+import { ProgressCharts } from '../charts/ProgressCharts';
+import { getMemberProgressAssessments, subscribeToProgress, ProgressAssessment } from '../../data/progressStore';
 
 interface MemberDetailProps {
   memberId: string;
@@ -15,7 +16,7 @@ interface MemberDetailProps {
   canEdit?: boolean;
 }
 
-type Tab = 'info' | 'clinical' | 'balance' | 'subscriptions' | 'notes';
+type Tab = 'clinical' | 'metrics' | 'info' | 'balance' | 'subscriptions' | 'notes';
 
 export function MemberDetail({ memberId, onBack, author = 'Profesional del centro', canEdit = true }: MemberDetailProps) {
   const [activeTab, setActiveTab] = useState<Tab>('clinical');
@@ -52,6 +53,15 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
     return unsub;
   }, [memberId]);
 
+  const [assessments, setAssessments] = useState<ProgressAssessment[]>(() => getMemberProgressAssessments(memberId));
+
+  useEffect(() => {
+    const unsub = subscribeToProgress(() => {
+      setAssessments(getMemberProgressAssessments(memberId));
+    });
+    return unsub;
+  }, [memberId]);
+
   const formatCLP = (amount: number) =>
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
 
@@ -72,6 +82,7 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
 
   const tabs: Array<{ id: Tab; label: string; icon?: any }> = [
     { id: 'clinical', label: 'Ficha Kinésica (SOAP & EVA)', icon: Stethoscope },
+    { id: 'metrics', label: '10 Ejercicios & Métricas de Salud', icon: Dumbbell },
     { id: 'info', label: 'Información personal' },
     { id: 'balance', label: 'Saldo de cuenta' },
     { id: 'subscriptions', label: 'Paquetes y Planes' },
@@ -83,6 +94,8 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
     setTimeout(() => setActionMessage(null), 3500);
   };
 
+  const cycle = calculatePlanCycle(member.joinDate, member.nextBilling);
+
   const handleRenew = async () => {
     const nextDate = new Date();
     nextDate.setDate(nextDate.getDate() + 30);
@@ -91,11 +104,22 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
       status: 'active',
       remainingSessions: total,
       nextBilling: nextDate.toISOString().slice(0, 10),
+      bookingSuspended: false,
+      consecutiveNoShows: 0,
+      suspensionReason: undefined
     });
     if (updated) {
       setMember(updated);
-      addActivity({ name: member.name, action: `renovó ${member.packName || 'su paquete de sesiones'}` });
-      showFeedback(`Paquete renovado al máximo con éxito (${total} sesiones acreditadas).`);
+      addActivity({ name: member.name, action: `renovó ${member.packName || 'su paquete de sesiones'} por 30 días` });
+      showFeedback(`Paquete renovado por 30 días con éxito (${total} sesiones acreditadas).`);
+    }
+  };
+
+  const handleReactivateBooking = async () => {
+    const updated = reactivateMemberBooking(member.id);
+    if (updated) {
+      setMember(updated);
+      showFeedback(`Permisos de agendamiento reactivados para ${member.name}.`);
     }
   };
 
@@ -332,7 +356,12 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-6">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#00E676]/20 flex items-center justify-center flex-shrink-0 border border-[#00E676]/40">
             <span className="text-2xl sm:text-3xl text-[#00E676] font-semibold">
-              {member.name.split(' ').map(n => n[0]).join('')}
+              {(member?.name || 'PF')
+                .split(' ')
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((n) => n[0])
+                .join('') || 'PF'}
             </span>
           </div>
           
@@ -826,32 +855,90 @@ export function MemberDetail({ memberId, onBack, author = 'Profesional del centr
             </div>
           )}
 
+          {/* TAB: 10 EJERCICIOS BASE & 5 MÉTRICAS DE SALUD */}
+          {activeTab === 'metrics' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Dumbbell className="w-5 h-5 text-[#00E676]" />
+                    <span>Control de Rendimiento & Métricas Antropométricas</span>
+                  </h3>
+                  <p className="text-xs text-white/60 mt-1">
+                    Control periódico de los 10 ejercicios base medibles y 5 métricas de salud (bioimpedancia) para {member.name}.
+                  </p>
+                </div>
+              </div>
+
+              <ProgressCharts
+                memberId={member.id}
+                memberName={member.name}
+                assessments={assessments}
+                canEdit={canEdit}
+                defaultTab="exercises"
+              />
+            </div>
+          )}
+
           {/* TAB 2: INFO PERSONAL */}
           {activeTab === 'info' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-sm text-white/60 mb-1 block">Nombre completo</label>
-                <p className="font-medium text-[#F7F7F7]">{member.name}</p>
-              </div>
-              <div>
-                <label className="text-sm text-white/60 mb-1 block">Correo electrónico</label>
-                <p className="font-medium text-[#F7F7F7]">{member.email}</p>
-              </div>
-              <div>
-                <label className="text-sm text-white/60 mb-1 block">Teléfono</label>
-                <p className="font-medium text-[#F7F7F7]">{member.phone || '+56 9 8765 4321'}</p>
-              </div>
-              <div>
-                <label className="text-sm text-white/60 mb-1 block">Fecha de ingreso</label>
-                <p className="font-medium text-[#F7F7F7]">{new Date(member.joinDate).toLocaleDateString('es-CL')}</p>
-              </div>
-              <div>
-                <label className="text-sm text-white/60 mb-1 block">Paquete Activo</label>
-                <p className="font-medium text-[#00E676]">{member.packName || `Pack ${member.plan}`}</p>
-              </div>
-              <div>
-                <label className="text-sm text-white/60 mb-1 block">Próximo vencimiento / renovación</label>
-                <p className="font-medium text-[#F7F7F7]">{new Date(member.nextBilling || '2025-02-15').toLocaleDateString('es-CL')}</p>
+            <div className="space-y-6">
+              {member.bookingSuspended && (
+                <div className="rounded-xl border border-rose-500/40 bg-rose-500/15 p-4 flex items-start justify-between gap-3 text-rose-200">
+                  <div className="flex items-start gap-2.5">
+                    <ShieldAlert className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-rose-300">Reservas Suspendidas por Inasistencias Reiteradas</p>
+                      <p className="text-xs sm:text-sm text-white/90 mt-0.5">
+                        {member.suspensionReason || 'El alumno acumuló faltas continuas sin avisar y sus cupos fueron liberados para otros asistentes.'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleReactivateBooking}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-[#021826] font-bold text-xs flex items-center gap-1.5 shrink-0 shadow-md"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    Reactivar Cupos
+                  </button>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm text-white/60 mb-1 block">Nombre completo</label>
+                  <p className="font-medium text-[#F7F7F7]">{member.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60 mb-1 block">Correo electrónico</label>
+                  <p className="font-medium text-[#F7F7F7]">{member.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60 mb-1 block">Teléfono</label>
+                  <p className="font-medium text-[#F7F7F7]">{member.phone || '+56 9 8765 4321'}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60 mb-1 block">Inscripción Original (Timestamp)</label>
+                  <p className="font-medium text-[#F7F7F7]">{formatDate(cycle.joinDate)}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60 mb-1 block">Vencimiento Plan (Ciclo 30 días)</label>
+                  <p className="font-medium text-[#00E676]">{formatDate(cycle.renewalDate)}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60 mb-1 block">Límite Pago (+5 días de gracia)</label>
+                  <p className="font-medium text-amber-300">{formatDate(cycle.gracePeriodEndDate)}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60 mb-1 block">Paquete Activo</label>
+                  <p className="font-medium text-[#00E676]">{member.packName || `Pack ${member.plan}`}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-white/60 mb-1 block">Inasistencias consecutivas registradas</label>
+                  <p className={`font-bold ${(member.consecutiveNoShows || 0) >= 3 ? 'text-rose-400' : 'text-white'}`}>
+                    {member.consecutiveNoShows || 0} {(member.consecutiveNoShows || 0) >= 3 ? '(Riesgo de corte activo)' : ''}
+                  </p>
+                </div>
               </div>
             </div>
           )}
