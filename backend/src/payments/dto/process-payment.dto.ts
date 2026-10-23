@@ -30,6 +30,11 @@ export class ProcessPaymentDto {
   @IsString()
   payment_type_id?: string;
 
+  @ApiProperty({ description: 'Device ID de seguridad del frontend', required: false })
+  @IsOptional()
+  @IsString()
+  deviceId?: string;
+
   @ApiProperty({ description: 'Descripción de la compra' })
   @IsString()
   @IsNotEmpty()

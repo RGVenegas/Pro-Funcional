@@ -94,6 +94,7 @@ export class PaymentsService {
           'User-Agent': 'MercadoPago Node.js SDK v3.6.1 (node v24.15.0-x64-win32)',
           'X-Product-Id': 'bc32b6ntrpp001u8nhkg',
           'X-Tracking-Id': 'platform:v24|v24.15.0,type:SDK3.6.1,so;',
+          ...(dto.deviceId ? { 'X-Meli-Session-Id': dto.deviceId } : {}),
         },
         body: JSON.stringify(orderPayload),
       });
