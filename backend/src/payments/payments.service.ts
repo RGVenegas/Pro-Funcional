@@ -1,5 +1,4 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
 import { MembershipPlan } from '@prisma/client';
@@ -7,57 +6,90 @@ import { MembershipPlan } from '@prisma/client';
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
-  private client: MercadoPagoConfig;
-  private paymentClient: Payment;
+  private readonly accessToken: string;
 
   constructor(private readonly prisma: PrismaService) {
-    const accessToken = process.env.MP_ACCESS_TOKEN || '';
-    if (!accessToken) {
+    this.accessToken = process.env.MP_ACCESS_TOKEN || '';
+    if (!this.accessToken) {
       this.logger.warn('⚠️ MP_ACCESS_TOKEN no está definido en variables de entorno.');
     }
-    this.client = new MercadoPagoConfig({ accessToken });
-    this.paymentClient = new Payment(this.client);
   }
 
   async processPayment(dto: ProcessPaymentDto, authUserId?: string) {
     try {
-      this.logger.log(`Iniciando cobro Mercado Pago por $${dto.transaction_amount} CLP para ${dto.payer.email}`);
+      this.logger.log(`Iniciando cobro vía Orders API Mercado Pago por $${dto.transaction_amount} CLP para ${dto.payer.email}`);
 
-      const body: any = {
-        token: dto.token,
-        payment_method_id: dto.payment_method_id,
-        transaction_amount: Number(dto.transaction_amount),
-        installments: Number(dto.installments) || 1,
-        description: dto.description || 'Servicio ProFuncional',
+      const orderPayload = {
+        type: 'online',
+        processing_mode: 'automatic',
+        external_reference: `PROFUNCIONAL-${Date.now()}`,
+        total_amount: String(Math.round(dto.transaction_amount)),
+        items: [
+          {
+            title: dto.description || 'Servicio ProFuncional',
+            unit_price: String(Math.round(dto.transaction_amount)),
+            quantity: 1,
+          },
+        ],
+        transactions: {
+          payments: [
+            {
+              payment_method: {
+                id: dto.payment_method_id,
+                type: 'credit_card',
+                token: dto.token,
+                installments: Number(dto.installments) || 1,
+              },
+              amount: String(Math.round(dto.transaction_amount)),
+            },
+          ],
+        },
         payer: {
-          email: dto.payer.email,
+          email: dto.payer.email || 'test_user_7198116789143971735@testuser.com',
         },
       };
 
-      if (dto.issuer_id) {
-        body.issuer_id = dto.issuer_id;
+      const res = await fetch('https://api.mercadopago.com/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.accessToken}`,
+          'X-Idempotency-Key': `order-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        },
+        body: JSON.stringify(orderPayload),
+      });
+
+      const orderResponse = await res.json();
+
+      if (!res.ok) {
+        this.logger.error('Respuesta de error de Mercado Pago Orders API:', JSON.stringify(orderResponse));
+        const errDetail = orderResponse.message || orderResponse.errors?.[0]?.message || 'Error procesando la orden en Mercado Pago.';
+        throw new BadRequestException(errDetail);
       }
 
-      if (dto.payer.identification?.number) {
-        body.payer.identification = dto.payer.identification;
-      }
+      this.logger.log(`Orden procesada en Mercado Pago: ID=${orderResponse.id}, status=${orderResponse.status}`);
 
-      const paymentResponse = await this.paymentClient.create({ body });
-      this.logger.log(`Respuesta de Mercado Pago: status=${paymentResponse.status}, id=${paymentResponse.id}`);
+      const paymentResult = orderResponse.transactions?.payments?.[0];
+      const isApproved =
+        orderResponse.status === 'processed' ||
+        paymentResult?.status === 'processed' ||
+        paymentResult?.status === 'approved';
+
+      const paymentId = paymentResult?.id || orderResponse.id;
 
       // Si el pago fue aprobado, acreditar sesiones en Neon
-      if (paymentResponse.status === 'approved') {
+      if (isApproved) {
         await this.accreditSessions(dto, authUserId);
       }
 
       return {
-        success: paymentResponse.status === 'approved',
-        status: paymentResponse.status,
-        status_detail: paymentResponse.status_detail,
-        id: paymentResponse.id,
-        payment_method_id: paymentResponse.payment_method_id,
-        transaction_amount: paymentResponse.transaction_amount,
-        installments: paymentResponse.installments,
+        success: isApproved,
+        status: isApproved ? 'approved' : orderResponse.status,
+        status_detail: paymentResult?.status_detail || orderResponse.status_detail || 'accredited',
+        id: paymentId,
+        payment_method_id: dto.payment_method_id,
+        transaction_amount: dto.transaction_amount,
+        installments: dto.installments,
       };
     } catch (error: any) {
       this.logger.error('Error procesando pago con Mercado Pago:', error);
