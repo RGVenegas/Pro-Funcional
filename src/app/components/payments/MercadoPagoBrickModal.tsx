@@ -50,7 +50,7 @@ export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
   useEffect(() => {
     if (MP_PUBLIC_KEY) {
       try {
-        initMercadoPago(MP_PUBLIC_KEY, { locale: 'es-CL' });
+        initMercadoPago(MP_PUBLIC_KEY, { locale: 'es-CL', advancedFraudPrevention: true });
       } catch (err) {
         console.warn('Error al inicializar SDK de Mercado Pago:', err);
       }
