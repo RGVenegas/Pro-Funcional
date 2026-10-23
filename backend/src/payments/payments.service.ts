@@ -34,6 +34,17 @@ export class PaymentsService {
       const paymentMethodType = isDebit ? 'debit_card' : (dto.payment_type_id || 'credit_card');
       const installmentsCount = isDebit ? 1 : (Number(dto.installments) || 1);
 
+      const paymentMethodObj: Record<string, any> = {
+        id: paymentMethodId,
+        type: paymentMethodType,
+        token: dto.token,
+      };
+
+      // En Mercado Pago Orders API, prepaid_card prohíbe la propiedad installments
+      if (paymentMethodType !== 'prepaid_card') {
+        paymentMethodObj.installments = installmentsCount;
+      }
+
       const orderPayload = {
         type: 'online',
         processing_mode: 'automatic',
@@ -49,12 +60,7 @@ export class PaymentsService {
         transactions: {
           payments: [
             {
-              payment_method: {
-                id: paymentMethodId,
-                type: paymentMethodType,
-                token: dto.token,
-                installments: installmentsCount,
-              },
+              payment_method: paymentMethodObj,
               amount: String(Math.round(dto.transaction_amount)),
             },
           ],

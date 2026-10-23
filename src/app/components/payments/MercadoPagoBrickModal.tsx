@@ -44,7 +44,6 @@ export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
 }) => {
   const [isReady, setIsReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [copiedCard, setCopiedCard] = useState(false);
 
   useEffect(() => {
     if (MP_PUBLIC_KEY) {
@@ -58,12 +57,22 @@ export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
 
   if (!isOpen) return null;
 
-  const testCardNumber = '5416 7526 0258 2580';
+  const TEST_CARDS = [
+    { label: 'Mastercard Crédito', number: '5416 7526 0258 2580', raw: '5416752602582580', cvv: '123' },
+    { label: 'Visa Oficial', number: '4168 8188 4444 7115', raw: '4168818844447115', cvv: '123' },
+    { label: 'Amex Crédito', number: '3757 7817 4461 804', raw: '375778174461804', cvv: '1234' },
+    { label: 'Mastercard Débito', number: '5241 0198 2664 6950', raw: '5241019826646950', cvv: '123' },
+    { label: 'Visa Débito', number: '4023 6535 2391 4373', raw: '4023653523914373', cvv: '123' },
+  ];
 
-  const copyTestCard = () => {
-    navigator.clipboard.writeText('5416752602582580');
-    setCopiedCard(true);
-    setTimeout(() => setCopiedCard(false), 2500);
+  const [activeCardIdx, setActiveCardIdx] = useState(0);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const copyCurrentCard = () => {
+    const card = TEST_CARDS[activeCardIdx];
+    navigator.clipboard.writeText(card.raw);
+    setCopiedKey(card.label);
+    setTimeout(() => setCopiedKey(null), 2500);
   };
 
   const payerEmail = member.email || 'paciente.prueba@profuncional.cl';
@@ -144,39 +153,62 @@ export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
             </div>
           </div>
 
-          {/* Banner de Tarjeta de Prueba (Sandbox Helper) */}
-          <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2">
+          {/* Banner de Tarjeta de Prueba (Sandbox Helper con Selector) */}
+          <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2.5">
             <div className="flex items-center justify-between font-bold">
               <span className="flex items-center gap-1.5 text-amber-300">
                 <Sparkles className="w-4 h-4" />
-                Modo Sandbox (Datos de Prueba)
+                Tarjetas Sandbox Oficiales ({activeCardIdx + 1}/5)
               </span>
               <button
                 type="button"
-                onClick={copyTestCard}
+                onClick={copyCurrentCard}
                 className="text-[11px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 px-2 py-1 rounded flex items-center gap-1 font-mono transition-colors"
               >
-                {copiedCard ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                {copiedCard ? '¡Copiado!' : 'Copiar Tarjeta'}
+                {copiedKey === TEST_CARDS[activeCardIdx].label ? (
+                  <Check className="w-3 h-3 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3 h-3" />
+                )}
+                {copiedKey === TEST_CARDS[activeCardIdx].label ? '¡Copiado!' : 'Copiar Tarjeta'}
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-2 font-mono text-[11px] text-white/90">
-              <div>
-                <span className="text-amber-300/70 block text-[9px] uppercase">Número</span>
-                {testCardNumber}
+
+            {/* Selector de tarjetas */}
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              {TEST_CARDS.map((c, i) => (
+                <button
+                  key={c.label}
+                  type="button"
+                  onClick={() => setActiveCardIdx(i)}
+                  className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
+                    activeCardIdx === i
+                      ? 'bg-amber-400 text-black font-bold shadow-sm'
+                      : 'bg-white/5 hover:bg-white/10 text-white/80'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 font-mono text-[11px] text-white/90 bg-black/30 p-2.5 rounded-lg border border-white/5">
+              <div className="col-span-2">
+                <span className="text-amber-300/70 block text-[9px] uppercase font-sans">
+                  {TEST_CARDS[activeCardIdx].label}
+                </span>
+                <span className="text-[#00E676] font-bold">{TEST_CARDS[activeCardIdx].number}</span>
               </div>
               <div>
-                <span className="text-amber-300/70 block text-[9px] uppercase">Vencimiento / CVV</span>
-                11/30 · 123
-              </div>
-              <div>
-                <span className="text-amber-300/70 block text-[9px] uppercase">RUT Chileno Válido</span>
-                11.111.111-1
+                <span className="text-amber-300/70 block text-[9px] uppercase font-sans">CVV / Vencimiento</span>
+                {TEST_CARDS[activeCardIdx].cvv} · 11/30
               </div>
             </div>
-            <p className="text-[11px] text-amber-300/90 leading-tight pt-1 border-t border-amber-500/20">
-              💡 <strong>Regla de Mercado Pago:</strong> Realiza la prueba en una <strong>Ventana de Incógnito</strong>. Si tienes abierta tu sesión de vendedor de Mercado Pago en esta misma ventana, el sistema bloqueará la compra con <em>"Unauthorized use of live credentials"</em>.
-            </p>
+
+            <div className="flex items-center justify-between text-[10px] text-amber-200/80 pt-1 border-t border-amber-500/20">
+              <span>Titular: <strong className="text-white">APRO</strong> (o OTHE/FUND/CALL)</span>
+              <span>Doc: <strong className="text-white">Otro: 123456789</strong></span>
+            </div>
           </div>
 
           {/* Mensaje de Error si ocurre */}
