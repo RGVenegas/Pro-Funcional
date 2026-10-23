@@ -19,6 +19,14 @@ export class PaymentsService {
     try {
       this.logger.log(`Iniciando cobro vía Orders API Mercado Pago por $${dto.transaction_amount} CLP para ${dto.payer.email}`);
 
+      // Detectar automáticamente si es tarjeta de débito o crédito
+      const isDebit =
+        dto.payment_method_id?.toLowerCase().includes('deb') ||
+        (dto as any).payment_type_id === 'debit_card';
+
+      const paymentMethodType = isDebit ? 'debit_card' : 'credit_card';
+      const installmentsCount = isDebit ? 1 : (Number(dto.installments) || 1);
+
       const orderPayload = {
         type: 'online',
         processing_mode: 'automatic',
@@ -36,9 +44,9 @@ export class PaymentsService {
             {
               payment_method: {
                 id: dto.payment_method_id,
-                type: 'credit_card',
+                type: paymentMethodType,
                 token: dto.token,
-                installments: Number(dto.installments) || 1,
+                installments: installmentsCount,
               },
               amount: String(Math.round(dto.transaction_amount)),
             },
