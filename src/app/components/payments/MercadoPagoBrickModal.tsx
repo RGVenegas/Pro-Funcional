@@ -81,6 +81,10 @@ export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
 
   const handleSubmit = async (param: any) => {
     setErrorMessage(null);
+    const nameParts = (member.name || 'Paciente ProFuncional').trim().split(' ');
+    const firstName = nameParts[0] || 'Paciente';
+    const lastName = nameParts.slice(1).join(' ') || 'ProFuncional';
+
     try {
       const response = await fetch('/api/payments/process', {
         method: 'POST',
@@ -89,6 +93,16 @@ export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
         },
         body: JSON.stringify({
           ...param.formData,
+          payer: {
+            ...param.formData.payer,
+            email: param.formData.payer?.email || payerEmail,
+            first_name: firstName,
+            last_name: lastName,
+            phone: {
+              area_code: '56',
+              number: '912345678',
+            },
+          },
           description: pack.name,
           serviceId: pack.id,
           sessions: pack.sessions,

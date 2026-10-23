@@ -38,6 +38,7 @@ export class PaymentsService {
         id: paymentMethodId,
         type: paymentMethodType,
         token: dto.token,
+        statement_descriptor: 'PROFUNCIONAL',
       };
 
       // En Mercado Pago Orders API, prepaid_card prohíbe la propiedad installments
@@ -55,6 +56,8 @@ export class PaymentsService {
             title: dto.description || 'Servicio ProFuncional',
             unit_price: String(Math.round(dto.transaction_amount)),
             quantity: 1,
+            category_id: 'services',
+            external_code: dto.serviceId || 'PROFUNCIONAL-PACK',
           },
         ],
         transactions: {
@@ -67,6 +70,18 @@ export class PaymentsService {
         },
         payer: {
           email: dto.payer.email || 'test_user_7198116789143971735@testuser.com',
+          first_name: dto.payer.first_name || 'Paciente',
+          last_name: dto.payer.last_name || 'ProFuncional',
+          phone: dto.payer.phone || {
+            area_code: '56',
+            number: '912345678',
+          },
+          identification: dto.payer.identification?.number
+            ? dto.payer.identification
+            : {
+                type: 'RUT',
+                number: '111111111',
+              },
         },
       };
 

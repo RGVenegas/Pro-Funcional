@@ -39,6 +39,12 @@ export class ProcessPaymentDto {
   @IsNotEmpty()
   payer: {
     email: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: {
+      area_code?: string;
+      number?: string;
+    };
     identification?: {
       type: string;
       number: string;
