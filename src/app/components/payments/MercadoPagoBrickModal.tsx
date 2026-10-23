@@ -33,6 +33,8 @@ const STATUS_DETAIL_MAP: Record<string, string> = {
   cc_rejected_other_reason: 'Rechazo general por error del emisor (Simulación OTE).',
   cc_rejected_card_disabled: 'La tarjeta está deshabilitada.',
   in_process: 'Pago pendiente / en proceso de acreditación (Simulación CONT).',
+  max_attempts_exceeded: 'Superaste el límite de intentos permitidos con esta tarjeta. Intenta con otra tarjeta.',
+  cc_rejected_max_attempts: 'Superaste el límite de intentos permitidos con esta tarjeta. Intenta con otra tarjeta.',
 };
 
 export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
