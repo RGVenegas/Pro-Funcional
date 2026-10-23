@@ -35,7 +35,7 @@ export const OfflineStatusBanner: React.FC = () => {
       setOnline(false);
       setSyncedMessage(null);
       setSyncState('failed');
-      setErrorMessage('Se perdió la conexión con Supabase — Operando en Modo Offline');
+      setErrorMessage('Se perdió la conexión con la Base de Datos — Operando en Modo Offline');
       updateQueue();
     };
 
@@ -48,7 +48,7 @@ export const OfflineStatusBanner: React.FC = () => {
         evalTimerRef.current = setTimeout(() => {
           setOnline(true);
           setErrorMessage(null);
-          showTemporarySuccess('Conexión exitosa con Supabase — Todos los datos están al día');
+          showTemporarySuccess('Conexión exitosa con la Base de Datos — Todos los datos están al día');
         }, 1200);
       } else {
         setOnline(true);
@@ -69,7 +69,7 @@ export const OfflineStatusBanner: React.FC = () => {
       if (!alive) {
         wasOfflineRef.current = true;
         setSyncState('failed');
-        setErrorMessage('Se perdió la conexión con Supabase — Operando en Modo Offline');
+        setErrorMessage('Se perdió la conexión con la Base de Datos — Operando en Modo Offline');
       }
     })();
 
@@ -111,14 +111,14 @@ export const OfflineStatusBanner: React.FC = () => {
         <div className="flex items-center space-x-2 text-sky-300">
           <Loader2 className="w-4 h-4 animate-spin text-sky-400 shrink-0" />
           <span>
-            <strong>Evaluando conexión con Supabase...</strong> Verificando disponibilidad del backend
+            <strong>Evaluando conexión con la Base de Datos...</strong> Verificando disponibilidad del backend
           </span>
         </div>
       ) : !online || syncState === 'failed' ? (
         <div className="flex items-center space-x-2 text-amber-300">
           <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
           <span>
-            <strong>{errorMessage || 'Se perdió la conexión con Supabase — Operando en Modo Offline'}</strong>
+            <strong>{errorMessage || 'Se perdió la conexión con la Base de Datos — Operando en Modo Offline'}</strong>
             {queueCount > 0 && ` (${queueCount} ${queueCount === 1 ? 'operación pendiente' : 'operaciones pendientes'})`}
           </span>
         </div>
@@ -131,7 +131,7 @@ export const OfflineStatusBanner: React.FC = () => {
         <div className="flex items-center space-x-2 text-sky-400">
           <Wifi className="w-4 h-4 text-sky-400 shrink-0" />
           <span>
-            {queueCount} {queueCount === 1 ? 'operación pendiente' : 'operaciones pendientes'} por sincronizar con Supabase
+            {queueCount} {queueCount === 1 ? 'operación pendiente' : 'operaciones pendientes'} por sincronizar con la Base de Datos
           </span>
         </div>
       ) : null}

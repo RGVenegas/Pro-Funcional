@@ -115,7 +115,7 @@ export async function syncAndRefresh(): Promise<{ success: boolean; message: str
 
   window.dispatchEvent(new Event('profuncional-network-online'));
   window.dispatchEvent(new Event('profuncional-queue-synced'));
-  return { success: true, message: 'Conexión exitosa con Supabase' };
+  return { success: true, message: 'Conexión exitosa con la Base de Datos' };
 }
 
 
