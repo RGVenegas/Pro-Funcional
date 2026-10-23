@@ -23,6 +23,18 @@ interface MercadoPagoBrickModalProps {
 const MP_PUBLIC_KEY =
   (import.meta as any).env?.VITE_MP_PUBLIC_KEY || 'APP_USR-94b0da71-7536-48d0-979f-764848198412';
 
+const STATUS_DETAIL_MAP: Record<string, string> = {
+  cc_rejected_bad_filled_card_number: 'Número de tarjeta incorrecto.',
+  cc_rejected_bad_filled_date: 'Fecha de vencimiento incorrecta o tarjeta expirada (Simulación EXPI).',
+  cc_rejected_bad_filled_security_code: 'Código de seguridad (CVV) incorrecto (Simulación SECU).',
+  cc_rejected_bad_filled_other: 'Error en el formulario de pago (Simulación FORM).',
+  cc_rejected_call_for_authorize: 'El banco requiere autorización telefónica (Simulación CALL).',
+  cc_rejected_insufficient_amount: 'Fondos insuficientes en la tarjeta (Simulación FONT).',
+  cc_rejected_other_reason: 'Rechazo general por error del emisor (Simulación OTE).',
+  cc_rejected_card_disabled: 'La tarjeta está deshabilitada.',
+  in_process: 'Pago pendiente / en proceso de acreditación (Simulación CONT).',
+};
+
 export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
   isOpen,
   onClose,
@@ -82,9 +94,8 @@ export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
       if (data.status === 'approved' || data.success) {
         onSuccess(data);
       } else {
-        setErrorMessage(
-          `El pago fue rechazado (${data.status_detail || data.status || 'Rechazado'}). Por favor prueba nuevamente.`
-        );
+        const detailMsg = STATUS_DETAIL_MAP[data.status_detail] || data.status_detail || data.status || 'Rechazado';
+        setErrorMessage(`El pago fue rechazado: ${detailMsg}`);
       }
     } catch (err: any) {
       console.error('Error al procesar el pago con el backend:', err);
@@ -134,11 +145,11 @@ export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
           </div>
 
           {/* Banner de Tarjeta de Prueba (Sandbox Helper) */}
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-1.5">
+          <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2">
             <div className="flex items-center justify-between font-bold">
               <span className="flex items-center gap-1.5 text-amber-300">
                 <Sparkles className="w-4 h-4" />
-                Modo Sandbox (Tarjeta de Prueba)
+                Modo Sandbox (Datos de Prueba)
               </span>
               <button
                 type="button"
@@ -149,20 +160,23 @@ export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
                 {copiedCard ? '¡Copiado!' : 'Copiar Tarjeta'}
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-1 font-mono text-[11px] pt-1 text-white/80">
+            <div className="grid grid-cols-3 gap-2 font-mono text-[11px] text-white/90">
               <div>
                 <span className="text-amber-300/70 block text-[9px] uppercase">Número</span>
                 {testCardNumber}
               </div>
               <div>
-                <span className="text-amber-300/70 block text-[9px] uppercase">Vencimiento</span>
-                11/30
+                <span className="text-amber-300/70 block text-[9px] uppercase">Vencimiento / CVV</span>
+                11/30 · 123
               </div>
               <div>
-                <span className="text-amber-300/70 block text-[9px] uppercase">CVV / RUT</span>
-                123 · 12345678-9
+                <span className="text-amber-300/70 block text-[9px] uppercase">RUT Chileno Válido</span>
+                11.111.111-1
               </div>
             </div>
+            <p className="text-[11px] text-amber-300/90 leading-tight pt-1 border-t border-amber-500/20">
+              💡 <strong>Regla de Mercado Pago:</strong> Realiza la prueba en una <strong>Ventana de Incógnito</strong>. Si tienes abierta tu sesión de vendedor de Mercado Pago en esta misma ventana, el sistema bloqueará la compra con <em>"Unauthorized use of live credentials"</em>.
+            </p>
           </div>
 
           {/* Mensaje de Error si ocurre */}
