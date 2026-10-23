@@ -8,6 +8,7 @@ import {
   formatCLP,
   PaymentTransaction
 } from '../../data/paymentStore';
+import { MercadoPagoBrickModal } from '../payments/MercadoPagoBrickModal';
 import React, { useState, useEffect } from 'react';
 import {
   Check,
@@ -61,6 +62,7 @@ export function UserPlan({ plan: selectedPlan = 'Standard', memberName, onUpdate
   const [checkoutInstallments, setCheckoutInstallments] = useState(1);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [completedTransaction, setCompletedTransaction] = useState<PaymentTransaction | null>(null);
+  const [isBrickModalOpen, setIsBrickModalOpen] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeToMembers(() => {
@@ -241,30 +243,56 @@ export function UserPlan({ plan: selectedPlan = 'Standard', memberName, onUpdate
 
   const handleExecutePayment = async () => {
     if (!member || !selectedPackForPayment) return;
+
+    if (checkoutMethod === 'mp_checkout_api') {
+      setIsBrickModalOpen(true);
+      return;
+    }
+
     setIsProcessingPayment(true);
-
     try {
-      // Simulate gateway authorization latency
-      await new Promise((r) => setTimeout(r, 900));
-
+      // Flujo para POS Point en recepción
       const res = await processPaymentTransaction({
         memberId: member.id,
         serviceId: selectedPackForPayment.id,
         method: checkoutMethod,
         installments: checkoutInstallments,
-        notes: `Pago autónomo por el alumno vía ${checkoutMethod === 'mp_checkout_api' ? 'Checkout Mercado Pago Online' : 'Solicitud POS Point en recepción'}.`,
+        notes: 'Solicitud de pago presencial con máquina POS Point en recepción.',
         operatorName: member.name,
       });
 
       if (res.success && res.transaction) {
         setCompletedTransaction(res.transaction);
         setSelectedPackForPayment(null);
-        showFeedback(`¡Pago exitoso! Se acreditaron ${selectedPackForPayment.sessions} sesiones a tu cuenta.`);
+        showFeedback(`¡Solicitud registrada! Paga en recepción para activar tus ${selectedPackForPayment.sessions} sesiones.`);
       } else {
         showFeedback(res.message);
       }
     } finally {
       setIsProcessingPayment(false);
+    }
+  };
+
+  const handleBrickSuccess = async (paymentResult: any) => {
+    setIsBrickModalOpen(false);
+    if (!member || !selectedPackForPayment) return;
+
+    const res = await processPaymentTransaction({
+      memberId: member.id,
+      serviceId: selectedPackForPayment.id,
+      method: 'mp_checkout_api',
+      installments: paymentResult.installments || 1,
+      notes: `Pago aprobado en Mercado Pago (ID: ${paymentResult.id}). Método: ${paymentResult.payment_method_id}.`,
+      operatorName: member.name,
+    });
+
+    if (res.success && res.transaction) {
+      setCompletedTransaction({
+        ...res.transaction,
+        mpPaymentId: String(paymentResult.id),
+      });
+      setSelectedPackForPayment(null);
+      showFeedback(`¡Pago exitoso con Mercado Pago! Se acreditaron ${selectedPackForPayment.sessions} sesiones a tu cuenta.`);
     }
   };
 
@@ -596,16 +624,32 @@ export function UserPlan({ plan: selectedPlan = 'Standard', memberName, onUpdate
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     <span>Conectando con Mercado Pago...</span>
                   </>
+                ) : checkoutMethod === 'mp_checkout_api' ? (
+                  <>
+                    <CreditCard className="w-4 h-4" />
+                    <span>Pagar con Tarjeta (Mercado Pago Bricks) →</span>
+                  </>
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4" />
-                    <span>Confirmar Pago de {formatCLP(selectedPackForPayment.price)}</span>
+                    <span>Confirmar Solicitud POS Point</span>
                   </>
                 )}
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal Payment Brick Mercado Pago Oficial (Checkout API) */}
+      {isBrickModalOpen && selectedPackForPayment && member && (
+        <MercadoPagoBrickModal
+          isOpen={isBrickModalOpen}
+          onClose={() => setIsBrickModalOpen(false)}
+          pack={selectedPackForPayment}
+          member={member}
+          onSuccess={handleBrickSuccess}
+        />
       )}
 
       {/* Modal Comprobante Digital para el Alumno */}
