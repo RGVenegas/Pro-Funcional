@@ -208,6 +208,7 @@ export const MercadoPagoBrickModal: React.FC<MercadoPagoBrickModalProps> = ({
                 paymentMethods: {
                   creditCard: 'all',
                   debitCard: 'all',
+                  prepaidCard: 'all',
                   ticket: 'all',
                   bankTransfer: 'all',
                   mercadoPago: 'all',

@@ -25,6 +25,11 @@ export class ProcessPaymentDto {
   @IsString()
   issuer_id?: string;
 
+  @ApiProperty({ description: 'Tipo de método de pago (credit_card, debit_card, prepaid_card)', required: false })
+  @IsOptional()
+  @IsString()
+  payment_type_id?: string;
+
   @ApiProperty({ description: 'Descripción de la compra' })
   @IsString()
   @IsNotEmpty()

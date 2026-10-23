@@ -22,9 +22,16 @@ export class PaymentsService {
       // Detectar automáticamente si es tarjeta de débito o crédito
       const isDebit =
         dto.payment_method_id?.toLowerCase().includes('deb') ||
-        (dto as any).payment_type_id === 'debit_card';
+        dto.payment_type_id === 'debit_card';
 
-      const paymentMethodType = isDebit ? 'debit_card' : 'credit_card';
+      // En Chile, Mercado Pago requiere 'debvisa' o 'debmaster' para débito
+      let paymentMethodId = dto.payment_method_id;
+      if (isDebit) {
+        if (paymentMethodId === 'visa') paymentMethodId = 'debvisa';
+        if (paymentMethodId === 'master') paymentMethodId = 'debmaster';
+      }
+
+      const paymentMethodType = isDebit ? 'debit_card' : (dto.payment_type_id || 'credit_card');
       const installmentsCount = isDebit ? 1 : (Number(dto.installments) || 1);
 
       const orderPayload = {
@@ -43,7 +50,7 @@ export class PaymentsService {
           payments: [
             {
               payment_method: {
-                id: dto.payment_method_id,
+                id: paymentMethodId,
                 type: paymentMethodType,
                 token: dto.token,
                 installments: installmentsCount,
@@ -71,7 +78,26 @@ export class PaymentsService {
 
       if (!res.ok) {
         this.logger.error('Respuesta de error de Mercado Pago Orders API:', JSON.stringify(orderResponse));
-        const errDetail = orderResponse.message || orderResponse.errors?.[0]?.message || 'Error procesando la orden en Mercado Pago.';
+
+        // Si la orden fue evaluada pero el pago fue rechazado por simulación (OTHE, CALL, FUND, SECU, etc.)
+        const failedPayment = orderResponse.data?.transactions?.payments?.[0];
+        if (failedPayment) {
+          return {
+            success: false,
+            status: failedPayment.status || 'rejected',
+            status_detail: failedPayment.status_detail || orderResponse.errors?.[0]?.details?.[0] || 'cc_rejected_other_reason',
+            id: failedPayment.id || orderResponse.data?.id,
+            payment_method_id: paymentMethodId,
+            transaction_amount: dto.transaction_amount,
+            installments: installmentsCount,
+          };
+        }
+
+        const errDetail =
+          orderResponse.errors?.[0]?.details?.join(' | ') ||
+          orderResponse.errors?.[0]?.message ||
+          orderResponse.message ||
+          'Error procesando la orden en Mercado Pago.';
         throw new BadRequestException(errDetail);
       }
 
