@@ -62,6 +62,16 @@ Ecosistema digital integral compuesto por un **Programa de Escritorio (PC)** par
 - **HU-18 · Interacciones Táctiles y Accesibilidad (a11y)**: Targets táctiles ≥44x44px (`.touch-target-44`), focus rings visuales y semántica ARIA completa (`role="dialog"`, `role="alert"`).
 - **HU-19 · Cuadrícula de Horarios Responsiva**: Conmutador táctil de vistas entre **"Vista Carrusel de Días"** (grid horizontal) y **"Vista Lista Compacta"** (stream vertical para smartphones de 360px).
 
+### 💳 Sprint 4 — Pasarela de Pagos Mercado Pago Checkout API (HU-20 a HU-26)
+
+- **HU-20 · Checkout API On-Site (Payment Bricks)**: Modal nativo de pago embebido (`@mercadopago/sdk-react`) con selector interactivo de tarjetas sandbox y sin redirecciones externas.
+- **HU-21 · Procesamiento Transaccional vía Orders API en Backend**: Cobro automatizado en NestJS con endpoint oficial `POST /v1/orders`, idempotencia garantizada (`X-Idempotency-Key`) y autenticación segura con Access Token.
+- **HU-22 · Soporte Dinámico Multitarjeta (Crédito, Débito y Prepago)**: Mapeo automático de métodos a `debvisa` / `debmaster` fijando 1 cuota para débito/prepago y soporte de 1 a 12 cuotas para tarjetas de crédito.
+- **HU-23 · Homologación y Simulación de Pruebas de Calidad**: Validación y mapeo amigable en español de escenarios oficiales de prueba (`APRO`, `OTHE`, `CONT`, `CALL`, `FUND`, `SECU`, etc.) alcanzando 98/100 de calidad técnica.
+- **HU-24 · Perfilamiento de Seguridad y Device Fingerprinting**: Captura de `MP_DEVICE_SESSION_ID` con `security.js` y cabecera oficial `X-Meli-Session-Id` para prevención de fraude y certificación de SDK Frontend.
+- **HU-25 · Sincronización de Webhooks y Notificaciones**: Endpoint de recepción `/api/payments/webhook` con firma criptográfica `MP_WEBHOOK_SECRET` y respuestas HTTP 200 OK.
+- **HU-26 · Acreditación Automática de Sesiones y Auditoría en BD**: Creación inmediata de paquetes de sesiones en PostgreSQL (Neon) y registro de trazabilidad en `ActivityLog` tras aprobación de pago.
+
 ---
 
 ---
