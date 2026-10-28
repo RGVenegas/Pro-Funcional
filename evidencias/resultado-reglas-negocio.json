@@ -1,0 +1,351 @@
+{
+  "metadata": {
+    "generatedAt": "2026-10-28T00:28:23.406Z",
+    "type": "Pruebas de Reglas de Negocio, Agendamiento y Saldos",
+    "apiBase": "http://localhost:3001/api",
+    "totalTests": 5,
+    "passed": 5,
+    "failed": 0,
+    "successRate": "100.0%"
+  },
+  "results": [
+    {
+      "id": "BR-01",
+      "hu": "HU-04 / HU-08",
+      "name": "Consulta de Paquete Activo y Sesiones Restantes",
+      "method": "GET",
+      "endpoint": "/packages/my",
+      "expectedStatus": 200,
+      "obtainedStatus": 200,
+      "durationMs": 620,
+      "passed": true,
+      "description": "El alumno consulta su saldo real de sesiones vigentes.",
+      "responseSummary": {
+        "hasActivePackage": true,
+        "id": "6a9e94f4-94e9-44b0-8faf-ea0462801eb3",
+        "userId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+        "plan": "PREMIUM",
+        "packName": "Pack Readaptación Total (12 ses)",
+        "totalSessions": 12,
+        "remainingSessions": 7,
+        "price": 99000,
+        "isActive": true,
+        "expiresAt": null,
+        "createdAt": "2026-10-23T18:28:10.771Z",
+        "updatedAt": "2026-10-23T18:28:10.771Z"
+      }
+    },
+    {
+      "id": "BR-02",
+      "hu": "HU-03",
+      "name": "Regla de Validación: Rechazo de agendamiento en fecha pasada",
+      "method": "POST",
+      "endpoint": "/bookings",
+      "expectedStatus": 400,
+      "obtainedStatus": 400,
+      "durationMs": 1201,
+      "passed": true,
+      "description": "Bloquea reservas en el pasado garantizando coherencia temporal.",
+      "responseSummary": {
+        "message": "Selecciona una fecha futura correspondiente a este horario.",
+        "error": "Bad Request",
+        "statusCode": 400
+      }
+    },
+    {
+      "id": "BR-03",
+      "hu": "HU-01",
+      "name": "Regla de Horarios Oficiales: Integridad de Bloques Semanales",
+      "method": "GET",
+      "endpoint": "/schedule/blocks?onlyActive=true",
+      "expectedStatus": 200,
+      "obtainedStatus": 200,
+      "durationMs": 153,
+      "passed": true,
+      "description": "Comprueba que cada bloque horario cumpla con capacidad y límites válidos.",
+      "responseSummary": [
+        {
+          "id": "block-9",
+          "dayOfWeek": "Friday",
+          "startTime": "08:00",
+          "endTime": "09:00",
+          "title": "Kinesiología Preventiva",
+          "instructor": "Klga. Valeria Reyes",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.470Z",
+          "updatedAt": "2026-10-23T18:28:15.470Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-10",
+          "dayOfWeek": "Friday",
+          "startTime": "17:00",
+          "endTime": "18:00",
+          "title": "Readaptación Funcional Total",
+          "instructor": "Prof. Carlos Vega",
+          "type": "FUNCTIONAL",
+          "capacity": 10,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.621Z",
+          "updatedAt": "2026-10-23T18:28:15.621Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-1",
+          "dayOfWeek": "Monday",
+          "startTime": "08:00",
+          "endTime": "09:00",
+          "title": "Box Clínico Kinesiología 1",
+          "instructor": "Klgo. Andrés Morales",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:14.097Z",
+          "updatedAt": "2026-10-23T18:28:14.097Z",
+          "_count": {
+            "bookings": 1
+          }
+        },
+        {
+          "id": "block-2",
+          "dayOfWeek": "Monday",
+          "startTime": "18:00",
+          "endTime": "19:00",
+          "title": "Entrenamiento Funcional HIIT",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 12,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:14.401Z",
+          "updatedAt": "2026-10-23T18:28:14.401Z",
+          "_count": {
+            "bookings": 1
+          }
+        },
+        {
+          "id": "block-11",
+          "dayOfWeek": "Saturday",
+          "startTime": "09:00",
+          "endTime": "10:00",
+          "title": "Evaluación & Readaptación Sabatina",
+          "instructor": "Klgo. Andrés Morales",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.782Z",
+          "updatedAt": "2026-10-23T18:28:15.782Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-12",
+          "dayOfWeek": "Saturday",
+          "startTime": "10:30",
+          "endTime": "11:30",
+          "title": "Entrenamiento Funcional Fin de Semana",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 10,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.933Z",
+          "updatedAt": "2026-10-23T18:28:15.933Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-13",
+          "dayOfWeek": "Sunday",
+          "startTime": "09:30",
+          "endTime": "10:30",
+          "title": "Box Kinésico Matinal Dominical",
+          "instructor": "Klgo. Andrés Morales",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:16.085Z",
+          "updatedAt": "2026-10-23T18:28:16.085Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-14",
+          "dayOfWeek": "Sunday",
+          "startTime": "10:30",
+          "endTime": "11:30",
+          "title": "Movilidad & Recuperación Guiada",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 10,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:16.236Z",
+          "updatedAt": "2026-10-23T18:28:16.236Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-7",
+          "dayOfWeek": "Thursday",
+          "startTime": "10:00",
+          "endTime": "11:00",
+          "title": "Evaluación Kinésica & ROM",
+          "instructor": "Klgo. Andrés Morales",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.167Z",
+          "updatedAt": "2026-10-23T18:28:15.167Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-8",
+          "dayOfWeek": "Thursday",
+          "startTime": "18:00",
+          "endTime": "19:00",
+          "title": "Entrenamiento Funcional Carga Progresiva",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 12,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.318Z",
+          "updatedAt": "2026-10-23T18:28:15.318Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-3",
+          "dayOfWeek": "Tuesday",
+          "startTime": "09:00",
+          "endTime": "10:00",
+          "title": "Kinesiología & Terapia Manual",
+          "instructor": "Klga. Valeria Reyes",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:14.553Z",
+          "updatedAt": "2026-10-23T18:28:14.553Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-4",
+          "dayOfWeek": "Tuesday",
+          "startTime": "18:00",
+          "endTime": "19:00",
+          "title": "Entrenamiento Funcional y Core",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 12,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:14.705Z",
+          "updatedAt": "2026-10-23T18:28:14.705Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-5",
+          "dayOfWeek": "Wednesday",
+          "startTime": "09:00",
+          "endTime": "10:00",
+          "title": "Entrenamiento Funcional HIIT",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 12,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:14.856Z",
+          "updatedAt": "2026-10-23T18:28:14.856Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-6",
+          "dayOfWeek": "Wednesday",
+          "startTime": "18:00",
+          "endTime": "19:00",
+          "title": "Funcional & Control Motor",
+          "instructor": "Prof. Carlos Vega",
+          "type": "FUNCTIONAL",
+          "capacity": 10,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.007Z",
+          "updatedAt": "2026-10-23T18:28:15.007Z",
+          "_count": {
+            "bookings": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "BR-04",
+      "hu": "HU-04",
+      "name": "Regla de Cancelación: Manejo controlado de reserva inexistente",
+      "method": "PATCH",
+      "endpoint": "/bookings/non-existent-id-0000000000/cancel",
+      "expectedStatus": "400 / 404",
+      "obtainedStatus": 404,
+      "durationMs": 1603,
+      "passed": true,
+      "description": "Comprueba que no se generen reembolsos ilegítimos por IDs inválidos.",
+      "responseSummary": {
+        "message": "Reserva no encontrada.",
+        "error": "Not Found",
+        "statusCode": 404
+      }
+    },
+    {
+      "id": "BR-05",
+      "hu": "HU-03 / HU-11",
+      "name": "Consulta de Próximas Citas e Historial del Alumno",
+      "method": "GET",
+      "endpoint": "/bookings/my",
+      "expectedStatus": 200,
+      "obtainedStatus": 200,
+      "durationMs": 1882,
+      "passed": true,
+      "description": "Permite al paciente monitorear sus reservas activas y asistencias.",
+      "responseSummary": [
+        {
+          "packageId": null,
+          "confirmedAt": null,
+          "id": "c6824710-222f-47bf-9fce-2d3dcae55b6b",
+          "scheduleBlockId": "block-1",
+          "userId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+          "bookingDate": "2026-10-26T18:28:16.836Z",
+          "status": "RESERVED",
+          "isRefunded": false,
+          "cancelledAt": null,
+          "createdAt": "2026-10-23T18:28:16.840Z",
+          "updatedAt": "2026-10-23T18:28:16.840Z",
+          "scheduleBlock": {
+            "id": "block-1",
+            "dayOfWeek": "Monday",
+            "startTime": "08:00",
+            "endTime": "09:00",
+            "title": "Box Clínico Kinesiología 1",
+            "instructor": "Klgo. Andrés Morales",
+            "type": "KINE_BOX",
+            "capacity": 1,
+            "isActive": true,
+            "createdAt": "2026-10-23T18:28:14.097Z",
+            "updatedAt": "2026-10-23T18:28:14.097Z"
+          }
+        }
+      ]
+    }
+  ]
+}

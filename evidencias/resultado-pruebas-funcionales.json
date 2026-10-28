@@ -1,0 +1,379 @@
+{
+  "metadata": {
+    "generatedAt": "2026-10-28T00:28:10.042Z",
+    "environment": "Backend NestJS + PostgreSQL (Neon)",
+    "apiBase": "http://localhost:3001/api",
+    "totalTests": 6,
+    "passed": 6,
+    "failed": 0,
+    "successRate": "100.0%"
+  },
+  "results": [
+    {
+      "id": "PF-01a",
+      "hu": "HU-01 / HU-03",
+      "name": "Autenticación Staff con credenciales válidas",
+      "method": "POST",
+      "endpoint": "/auth/login",
+      "expectedStatus": "200 / 201",
+      "obtainedStatus": 201,
+      "durationMs": 2474,
+      "passed": true,
+      "description": "Valida emisión de token JWT y rol ADMIN en base de datos real.",
+      "responseSummary": {
+        "user": {
+          "care": {},
+          "id": "0d0decae-e788-42af-b161-bd1de10eccfe",
+          "email": "admin@profuncional.cl",
+          "name": "Personal del Gimnasio (Admin/Staff)",
+          "phone": "+56 9 9999 8888",
+          "role": "ADMIN",
+          "status": "ACTIVE",
+          "balance": 0,
+          "physicalRestrictions": null,
+          "joinDate": "2026-10-23T18:28:10.311Z",
+          "nextBilling": null,
+          "createdAt": "2026-10-23T18:28:10.311Z",
+          "updatedAt": "2026-10-23T18:28:10.311Z",
+          "packages": []
+        },
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZDBkZWNhZS1lNzg4LTQyYWYtYjE2MS1iZDFkZTEwZWNjZmUiLCJlbWFpbCI6ImFkbWluQHByb2Z1bmNpb25hbC5jbCIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc5MzE0NzI4OCwiZXhwIjoxNzkzNzUyMDg4fQ.UqMJ3eKiRj1MU0ZVWiJQ0E-DnF558yNWOQojUIvwQeg"
+      }
+    },
+    {
+      "id": "PF-01b",
+      "hu": "HU-01 / HU-03",
+      "name": "Autenticación con password incorrecto (Caso inválido)",
+      "method": "POST",
+      "endpoint": "/auth/login",
+      "expectedStatus": 401,
+      "obtainedStatus": 401,
+      "durationMs": 372,
+      "passed": true,
+      "description": "Valida rechazo 401 Unauthorized sin fuga de datos.",
+      "responseSummary": {
+        "message": "Credenciales inválidas: contraseña incorrecta",
+        "error": "Unauthorized",
+        "statusCode": 401
+      }
+    },
+    {
+      "id": "PF-01c",
+      "hu": "HU-03",
+      "name": "Autenticación de Paciente (Juan Pérez)",
+      "method": "POST",
+      "endpoint": "/auth/login",
+      "expectedStatus": "200 / 201",
+      "obtainedStatus": 201,
+      "durationMs": 376,
+      "passed": true,
+      "description": "Valida token para paciente con rol PATIENT.",
+      "responseSummary": {
+        "user": {
+          "care": {},
+          "id": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+          "email": "juan.perez@gmail.com",
+          "name": "Juan Perez",
+          "phone": "+56 9 8765 4321",
+          "role": "PATIENT",
+          "status": "ACTIVE",
+          "balance": 0,
+          "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+          "joinDate": "2026-10-23T18:28:10.771Z",
+          "nextBilling": null,
+          "createdAt": "2026-10-23T18:28:10.771Z",
+          "updatedAt": "2026-10-28T00:01:51.116Z",
+          "packages": [
+            {
+              "id": "6a9e94f4-94e9-44b0-8faf-ea0462801eb3",
+              "userId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+              "plan": "PREMIUM",
+              "packName": "Pack Readaptación Total (12 ses)",
+              "totalSessions": 12,
+              "remainingSessions": 7,
+              "price": 99000,
+              "isActive": true,
+              "expiresAt": null,
+              "createdAt": "2026-10-23T18:28:10.771Z",
+              "updatedAt": "2026-10-23T18:28:10.771Z"
+            }
+          ]
+        },
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjNjBhMTgxNy1kMmVjLTQxZWUtOGI0Yy04MTU1ZDljYzcwMjMiLCJlbWFpbCI6Imp1YW4ucGVyZXpAZ21haWwuY29tIiwicm9sZSI6IlBBVElFTlQiLCJpYXQiOjE3OTMxNDcyODksImV4cCI6MTc5Mzc1MjA4OX0.sFM42xzsiP8bTrvEu_rFTbzVzLUrmuzrjtGL6kkL8QY"
+      }
+    },
+    {
+      "id": "PF-02",
+      "hu": "HU-01",
+      "name": "Consulta de bloques horarios activos de agenda",
+      "method": "GET",
+      "endpoint": "/schedule/blocks?onlyActive=true",
+      "expectedStatus": 200,
+      "obtainedStatus": 200,
+      "durationMs": 331,
+      "passed": true,
+      "description": "Verifica disponibilidad de bloques en PostgreSQL para agendamiento.",
+      "responseSummary": [
+        {
+          "id": "block-9",
+          "dayOfWeek": "Friday",
+          "startTime": "08:00",
+          "endTime": "09:00",
+          "title": "Kinesiología Preventiva",
+          "instructor": "Klga. Valeria Reyes",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.470Z",
+          "updatedAt": "2026-10-23T18:28:15.470Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-10",
+          "dayOfWeek": "Friday",
+          "startTime": "17:00",
+          "endTime": "18:00",
+          "title": "Readaptación Funcional Total",
+          "instructor": "Prof. Carlos Vega",
+          "type": "FUNCTIONAL",
+          "capacity": 10,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.621Z",
+          "updatedAt": "2026-10-23T18:28:15.621Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-1",
+          "dayOfWeek": "Monday",
+          "startTime": "08:00",
+          "endTime": "09:00",
+          "title": "Box Clínico Kinesiología 1",
+          "instructor": "Klgo. Andrés Morales",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:14.097Z",
+          "updatedAt": "2026-10-23T18:28:14.097Z",
+          "_count": {
+            "bookings": 1
+          }
+        },
+        {
+          "id": "block-2",
+          "dayOfWeek": "Monday",
+          "startTime": "18:00",
+          "endTime": "19:00",
+          "title": "Entrenamiento Funcional HIIT",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 12,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:14.401Z",
+          "updatedAt": "2026-10-23T18:28:14.401Z",
+          "_count": {
+            "bookings": 1
+          }
+        },
+        {
+          "id": "block-11",
+          "dayOfWeek": "Saturday",
+          "startTime": "09:00",
+          "endTime": "10:00",
+          "title": "Evaluación & Readaptación Sabatina",
+          "instructor": "Klgo. Andrés Morales",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.782Z",
+          "updatedAt": "2026-10-23T18:28:15.782Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-12",
+          "dayOfWeek": "Saturday",
+          "startTime": "10:30",
+          "endTime": "11:30",
+          "title": "Entrenamiento Funcional Fin de Semana",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 10,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.933Z",
+          "updatedAt": "2026-10-23T18:28:15.933Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-13",
+          "dayOfWeek": "Sunday",
+          "startTime": "09:30",
+          "endTime": "10:30",
+          "title": "Box Kinésico Matinal Dominical",
+          "instructor": "Klgo. Andrés Morales",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:16.085Z",
+          "updatedAt": "2026-10-23T18:28:16.085Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-14",
+          "dayOfWeek": "Sunday",
+          "startTime": "10:30",
+          "endTime": "11:30",
+          "title": "Movilidad & Recuperación Guiada",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 10,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:16.236Z",
+          "updatedAt": "2026-10-23T18:28:16.236Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-7",
+          "dayOfWeek": "Thursday",
+          "startTime": "10:00",
+          "endTime": "11:00",
+          "title": "Evaluación Kinésica & ROM",
+          "instructor": "Klgo. Andrés Morales",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.167Z",
+          "updatedAt": "2026-10-23T18:28:15.167Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-8",
+          "dayOfWeek": "Thursday",
+          "startTime": "18:00",
+          "endTime": "19:00",
+          "title": "Entrenamiento Funcional Carga Progresiva",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 12,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.318Z",
+          "updatedAt": "2026-10-23T18:28:15.318Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-3",
+          "dayOfWeek": "Tuesday",
+          "startTime": "09:00",
+          "endTime": "10:00",
+          "title": "Kinesiología & Terapia Manual",
+          "instructor": "Klga. Valeria Reyes",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:14.553Z",
+          "updatedAt": "2026-10-23T18:28:14.553Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-4",
+          "dayOfWeek": "Tuesday",
+          "startTime": "18:00",
+          "endTime": "19:00",
+          "title": "Entrenamiento Funcional y Core",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 12,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:14.705Z",
+          "updatedAt": "2026-10-23T18:28:14.705Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-5",
+          "dayOfWeek": "Wednesday",
+          "startTime": "09:00",
+          "endTime": "10:00",
+          "title": "Entrenamiento Funcional HIIT",
+          "instructor": "Prof. Mike R.",
+          "type": "FUNCTIONAL",
+          "capacity": 12,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:14.856Z",
+          "updatedAt": "2026-10-23T18:28:14.856Z",
+          "_count": {
+            "bookings": 0
+          }
+        },
+        {
+          "id": "block-6",
+          "dayOfWeek": "Wednesday",
+          "startTime": "18:00",
+          "endTime": "19:00",
+          "title": "Funcional & Control Motor",
+          "instructor": "Prof. Carlos Vega",
+          "type": "FUNCTIONAL",
+          "capacity": 10,
+          "isActive": true,
+          "createdAt": "2026-10-23T18:28:15.007Z",
+          "updatedAt": "2026-10-23T18:28:15.007Z",
+          "_count": {
+            "bookings": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "PF-03",
+      "hu": "HU-03 / HU-08",
+      "name": "Protección de rutas de Staff ante token ausente (RBAC Guard)",
+      "method": "GET",
+      "endpoint": "/schedule/grid?date=2026-11-02",
+      "expectedStatus": 401,
+      "obtainedStatus": 401,
+      "durationMs": 2,
+      "passed": true,
+      "description": "Confirma que sin token no se puede acceder a la parrilla.",
+      "responseSummary": {
+        "message": "Unauthorized",
+        "statusCode": 401
+      }
+    },
+    {
+      "id": "PF-04",
+      "hu": "HU-05 / HU-06",
+      "name": "Health Check del Sistema (ALB / Disponibilidad)",
+      "method": "GET",
+      "endpoint": "/v1/health",
+      "expectedStatus": 200,
+      "obtainedStatus": 200,
+      "durationMs": 2,
+      "passed": true,
+      "description": "Verifica estado operativo general de la API NestJS.",
+      "responseSummary": {
+        "status": "ok",
+        "timestamp": "2026-10-28T00:28:10.040Z",
+        "uptime": 2062.8795844,
+        "service": "pro-funcional-backend",
+        "environment": "development"
+      }
+    }
+  ]
+}

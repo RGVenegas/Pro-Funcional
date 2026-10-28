@@ -1,0 +1,386 @@
+{
+  "metadata": {
+    "generatedAt": "2026-10-28T00:28:17.323Z",
+    "type": "Pruebas de Ficha Clínica Kinésica (SOAP, EVA & ROM)",
+    "apiBase": "http://localhost:3001/api",
+    "totalTests": 5,
+    "passed": 5,
+    "failed": 0,
+    "successRate": "100.0%"
+  },
+  "results": [
+    {
+      "id": "CLN-01",
+      "name": "Kinesiólogo consulta historial clínico del paciente",
+      "method": "GET",
+      "endpoint": "/clinical/history/c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+      "expectedStatus": 200,
+      "obtainedStatus": 200,
+      "durationMs": 609,
+      "passed": true,
+      "description": "Acceso autorizado a evoluciones previas y curvas Recharts.",
+      "responseSummary": {
+        "history": [
+          {
+            "id": "f468f50e-69d9-4aca-9b5c-2a6836284cd6",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": "33c9c3cd-6ec9-4308-b363-c1fc602e21b9",
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-28T00:01:50.661Z",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente refiere menor dolor matutino (EVA 4/10).",
+            "objective": "Flexión de rodilla a 115° sin signos de derrame.",
+            "assessment": "Evolución satisfactoria de tendinopatía rotuliana.",
+            "plan": "Inicio de sentadillas excéntricas en polea cónica.",
+            "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+            "createdAt": "2026-10-28T00:01:50.661Z",
+            "updatedAt": "2026-10-28T00:01:50.661Z"
+          },
+          {
+            "id": "90e2b9a7-a769-4162-b14e-451bf9d50aeb",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": "33c9c3cd-6ec9-4308-b363-c1fc602e21b9",
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-27T23:58:08.756Z",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente refiere menor dolor matutino (EVA 4/10).",
+            "objective": "Flexión de rodilla a 115° sin signos de derrame.",
+            "assessment": "Evolución satisfactoria de tendinopatía rotuliana.",
+            "plan": "Inicio de sentadillas excéntricas en polea cónica.",
+            "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+            "createdAt": "2026-10-27T23:58:08.756Z",
+            "updatedAt": "2026-10-27T23:58:08.756Z"
+          },
+          {
+            "id": "aad55537-20d2-4880-9c4a-038c5c3b604f",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": "33c9c3cd-6ec9-4308-b363-c1fc602e21b9",
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-27T23:56:39.279Z",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente refiere menor dolor matutino (EVA 4/10).",
+            "objective": "Flexión de rodilla a 115° sin signos de derrame.",
+            "assessment": "Evolución satisfactoria de tendinopatía rotuliana.",
+            "plan": "Inicio de sentadillas excéntricas en polea cónica.",
+            "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+            "createdAt": "2026-10-27T23:56:39.279Z",
+            "updatedAt": "2026-10-27T23:56:39.279Z"
+          },
+          {
+            "id": "9ac0abae-5fd8-423f-9685-cec13c7e5584",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": null,
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-23T18:28:10.771Z",
+            "evaPain": 7,
+            "romDegrees": 90,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente refiere dolor punzante en cara anterior de rodilla al subir escaleras.",
+            "objective": "Edema leve peri-rotuliano. ROM flexión 90°, extensión completa.",
+            "assessment": "Tendinopatía rotuliana en fase subaguda.",
+            "plan": "Crioterapia, electroanalgesia, descarga miofascial y ejercicios isométricos.",
+            "physicalRestrictions": "Evitar sentadillas profundas >90°",
+            "createdAt": "2026-10-23T18:28:10.771Z",
+            "updatedAt": "2026-10-23T18:28:10.771Z"
+          },
+          {
+            "id": "c87b10ed-aeed-4489-8883-390d2049cfc5",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": null,
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-23T18:28:10.771Z",
+            "evaPain": 3,
+            "romDegrees": 130,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente asintomático en AVD. Buena sensación de fuerza y estabilidad.",
+            "objective": "ROM flexión 130° sin dolor. Test de salto bipodal simétrico.",
+            "assessment": "Fase de reintegro funcional al gimnasio.",
+            "plan": "Derivación a entrenamiento funcional adaptado sin carga extrema.",
+            "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+            "createdAt": "2026-10-23T18:28:10.771Z",
+            "updatedAt": "2026-10-23T18:28:10.771Z"
+          }
+        ],
+        "chartData": [
+          {
+            "session": "Sesión 1",
+            "date": "23-oct",
+            "evaPain": 3,
+            "romDegrees": 130,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Fase de reintegro funcional al gimnasio."
+          },
+          {
+            "session": "Sesión 2",
+            "date": "23-oct",
+            "evaPain": 7,
+            "romDegrees": 90,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Tendinopatía rotuliana en fase subaguda."
+          },
+          {
+            "session": "Sesión 3",
+            "date": "27-oct",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Evolución satisfactoria de tendinopatía rotuliana."
+          },
+          {
+            "session": "Sesión 4",
+            "date": "27-oct",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Evolución satisfactoria de tendinopatía rotuliana."
+          },
+          {
+            "session": "Sesión 5",
+            "date": "27-oct",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Evolución satisfactoria de tendinopatía rotuliana."
+          }
+        ]
+      }
+    },
+    {
+      "id": "CLN-02",
+      "name": "Registro exitoso de Ficha Clínica SOAP (Datos válidos)",
+      "method": "POST",
+      "endpoint": "/clinical/evaluations/c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+      "expectedStatus": "200 / 201",
+      "obtainedStatus": 201,
+      "durationMs": 1977,
+      "passed": true,
+      "description": "Persistencia íntegra de notas SOAP, EVA y ROM en PostgreSQL.",
+      "responseSummary": {
+        "id": "4d1c4334-a6da-473c-b00a-8ae72eea0a27",
+        "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+        "professionalId": "33c9c3cd-6ec9-4308-b363-c1fc602e21b9",
+        "professionalName": "Klgo. Andrés Morales",
+        "date": "2026-10-28T00:28:15.041Z",
+        "evaPain": 4,
+        "romDegrees": 115,
+        "jointOrArea": "Rodilla derecha",
+        "subjective": "Paciente refiere menor dolor matutino (EVA 4/10).",
+        "objective": "Flexión de rodilla a 115° sin signos de derrame.",
+        "assessment": "Evolución satisfactoria de tendinopatía rotuliana.",
+        "plan": "Inicio de sentadillas excéntricas en polea cónica.",
+        "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+        "createdAt": "2026-10-28T00:28:15.041Z",
+        "updatedAt": "2026-10-28T00:28:15.041Z"
+      }
+    },
+    {
+      "id": "CLN-03",
+      "name": "Caso Límite: Intento de ingresar escala de dolor fuera de rango (EVA = 15)",
+      "method": "POST",
+      "endpoint": "/clinical/evaluations/c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+      "expectedStatus": 400,
+      "obtainedStatus": 400,
+      "durationMs": 308,
+      "passed": true,
+      "description": "Validador @Max(10) rechaza dolor superior a la escala clínica internacional.",
+      "responseSummary": {
+        "message": [
+          "El valor de EVA debe ser entre 1 y 10"
+        ],
+        "error": "Bad Request",
+        "statusCode": 400
+      }
+    },
+    {
+      "id": "CLN-04",
+      "name": "Caso Límite: Intento de ingresar Rango Articular negativo (ROM = -20°)",
+      "method": "POST",
+      "endpoint": "/clinical/evaluations/c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+      "expectedStatus": 400,
+      "obtainedStatus": 400,
+      "durationMs": 299,
+      "passed": true,
+      "description": "Validador @Min(0) impide ángulos biomecánicos negativos erróneos.",
+      "responseSummary": {
+        "message": [
+          "Los grados ROM deben ser mayores o iguales a 0"
+        ],
+        "error": "Bad Request",
+        "statusCode": 400
+      }
+    },
+    {
+      "id": "CLN-05",
+      "name": "Paciente consulta su propio avance clínico (Curvas de progreso HU-06)",
+      "method": "GET",
+      "endpoint": "/clinical/my-history",
+      "expectedStatus": 200,
+      "obtainedStatus": 200,
+      "durationMs": 451,
+      "passed": true,
+      "description": "Retorno seguro de registros del propio paciente para visualización gráfica.",
+      "responseSummary": {
+        "history": [
+          {
+            "id": "4d1c4334-a6da-473c-b00a-8ae72eea0a27",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": "33c9c3cd-6ec9-4308-b363-c1fc602e21b9",
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-28T00:28:15.041Z",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente refiere menor dolor matutino (EVA 4/10).",
+            "objective": "Flexión de rodilla a 115° sin signos de derrame.",
+            "assessment": "Evolución satisfactoria de tendinopatía rotuliana.",
+            "plan": "Inicio de sentadillas excéntricas en polea cónica.",
+            "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+            "createdAt": "2026-10-28T00:28:15.041Z",
+            "updatedAt": "2026-10-28T00:28:15.041Z"
+          },
+          {
+            "id": "f468f50e-69d9-4aca-9b5c-2a6836284cd6",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": "33c9c3cd-6ec9-4308-b363-c1fc602e21b9",
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-28T00:01:50.661Z",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente refiere menor dolor matutino (EVA 4/10).",
+            "objective": "Flexión de rodilla a 115° sin signos de derrame.",
+            "assessment": "Evolución satisfactoria de tendinopatía rotuliana.",
+            "plan": "Inicio de sentadillas excéntricas en polea cónica.",
+            "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+            "createdAt": "2026-10-28T00:01:50.661Z",
+            "updatedAt": "2026-10-28T00:01:50.661Z"
+          },
+          {
+            "id": "90e2b9a7-a769-4162-b14e-451bf9d50aeb",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": "33c9c3cd-6ec9-4308-b363-c1fc602e21b9",
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-27T23:58:08.756Z",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente refiere menor dolor matutino (EVA 4/10).",
+            "objective": "Flexión de rodilla a 115° sin signos de derrame.",
+            "assessment": "Evolución satisfactoria de tendinopatía rotuliana.",
+            "plan": "Inicio de sentadillas excéntricas en polea cónica.",
+            "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+            "createdAt": "2026-10-27T23:58:08.756Z",
+            "updatedAt": "2026-10-27T23:58:08.756Z"
+          },
+          {
+            "id": "aad55537-20d2-4880-9c4a-038c5c3b604f",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": "33c9c3cd-6ec9-4308-b363-c1fc602e21b9",
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-27T23:56:39.279Z",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente refiere menor dolor matutino (EVA 4/10).",
+            "objective": "Flexión de rodilla a 115° sin signos de derrame.",
+            "assessment": "Evolución satisfactoria de tendinopatía rotuliana.",
+            "plan": "Inicio de sentadillas excéntricas en polea cónica.",
+            "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+            "createdAt": "2026-10-27T23:56:39.279Z",
+            "updatedAt": "2026-10-27T23:56:39.279Z"
+          },
+          {
+            "id": "9ac0abae-5fd8-423f-9685-cec13c7e5584",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": null,
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-23T18:28:10.771Z",
+            "evaPain": 7,
+            "romDegrees": 90,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente refiere dolor punzante en cara anterior de rodilla al subir escaleras.",
+            "objective": "Edema leve peri-rotuliano. ROM flexión 90°, extensión completa.",
+            "assessment": "Tendinopatía rotuliana en fase subaguda.",
+            "plan": "Crioterapia, electroanalgesia, descarga miofascial y ejercicios isométricos.",
+            "physicalRestrictions": "Evitar sentadillas profundas >90°",
+            "createdAt": "2026-10-23T18:28:10.771Z",
+            "updatedAt": "2026-10-23T18:28:10.771Z"
+          },
+          {
+            "id": "c87b10ed-aeed-4489-8883-390d2049cfc5",
+            "patientId": "c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+            "professionalId": null,
+            "professionalName": "Klgo. Andrés Morales",
+            "date": "2026-10-23T18:28:10.771Z",
+            "evaPain": 3,
+            "romDegrees": 130,
+            "jointOrArea": "Rodilla derecha",
+            "subjective": "Paciente asintomático en AVD. Buena sensación de fuerza y estabilidad.",
+            "objective": "ROM flexión 130° sin dolor. Test de salto bipodal simétrico.",
+            "assessment": "Fase de reintegro funcional al gimnasio.",
+            "plan": "Derivación a entrenamiento funcional adaptado sin carga extrema.",
+            "physicalRestrictions": "Evitar impacto alto en salto / Cuidado en aterrizaje",
+            "createdAt": "2026-10-23T18:28:10.771Z",
+            "updatedAt": "2026-10-23T18:28:10.771Z"
+          }
+        ],
+        "chartData": [
+          {
+            "session": "Sesión 1",
+            "date": "23-oct",
+            "evaPain": 3,
+            "romDegrees": 130,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Fase de reintegro funcional al gimnasio."
+          },
+          {
+            "session": "Sesión 2",
+            "date": "23-oct",
+            "evaPain": 7,
+            "romDegrees": 90,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Tendinopatía rotuliana en fase subaguda."
+          },
+          {
+            "session": "Sesión 3",
+            "date": "27-oct",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Evolución satisfactoria de tendinopatía rotuliana."
+          },
+          {
+            "session": "Sesión 4",
+            "date": "27-oct",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Evolución satisfactoria de tendinopatía rotuliana."
+          },
+          {
+            "session": "Sesión 5",
+            "date": "27-oct",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Evolución satisfactoria de tendinopatía rotuliana."
+          },
+          {
+            "session": "Sesión 6",
+            "date": "27-oct",
+            "evaPain": 4,
+            "romDegrees": 115,
+            "jointOrArea": "Rodilla derecha",
+            "note": "Evolución satisfactoria de tendinopatía rotuliana."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "generatedAt": "2026-10-28T00:28:12.687Z",
+    "type": "Pruebas de Seguridad y RBAC",
+    "apiBase": "http://localhost:3001/api",
+    "totalTests": 5,
+    "passed": 5,
+    "failed": 0,
+    "successRate": "100.0%"
+  },
+  "results": [
+    {
+      "id": "SEC-01",
+      "name": "Intento de consulta a Parrilla Staff sin Token (No autenticado)",
+      "method": "GET",
+      "endpoint": "/schedule/grid?date=2026-11-02",
+      "expectedStatus": 401,
+      "obtainedStatus": 401,
+      "durationMs": 2,
+      "passed": true,
+      "description": "El JwtAuthGuard bloquea peticiones sin cabecera Bearer.",
+      "responseSummary": {
+        "message": "Unauthorized",
+        "statusCode": 401
+      }
+    },
+    {
+      "id": "SEC-02",
+      "name": "Paciente intentando crear Bloque Horario en la Agenda (Escalamiento)",
+      "method": "POST",
+      "endpoint": "/schedule/blocks",
+      "expectedStatus": 403,
+      "obtainedStatus": 403,
+      "durationMs": 462,
+      "passed": true,
+      "description": "El RolesGuard intercepta el rol PATIENT y niega acceso administrativo.",
+      "responseSummary": {
+        "message": "Forbidden resource",
+        "error": "Forbidden",
+        "statusCode": 403
+      }
+    },
+    {
+      "id": "SEC-03",
+      "name": "Paciente intentando registrar Ficha Clínica SOAP (Privacidad médica)",
+      "method": "POST",
+      "endpoint": "/clinical/evaluations/c60a1817-d2ec-41ee-8b4c-8155d9cc7023",
+      "expectedStatus": 403,
+      "obtainedStatus": 403,
+      "durationMs": 305,
+      "passed": true,
+      "description": "Solo roles ADMIN o KINESIOLOGO pueden emitir evaluaciones SOAP.",
+      "responseSummary": {
+        "message": "Forbidden resource",
+        "error": "Forbidden",
+        "statusCode": 403
+      }
+    },
+    {
+      "id": "SEC-04",
+      "name": "Intento de Inyección de campos prohibidos (Mass Assignment / Whitelist)",
+      "method": "POST",
+      "endpoint": "/auth/login",
+      "expectedStatus": 400,
+      "obtainedStatus": 400,
+      "durationMs": 3,
+      "passed": true,
+      "description": "ValidationPipe con forbidNonWhitelisted rechaza campos no autorizados.",
+      "responseSummary": {
+        "message": [
+          "property isAdminInjected should not exist",
+          "property extraForbiddenField should not exist"
+        ],
+        "error": "Bad Request",
+        "statusCode": 400
+      }
+    },
+    {
+      "id": "SEC-05",
+      "name": "Acceso autorizado de Staff con privilegios válidos",
+      "method": "GET",
+      "endpoint": "/schedule/grid?date=2026-11-02",
+      "expectedStatus": "200 / 201",
+      "obtainedStatus": 200,
+      "durationMs": 900,
+      "passed": true,
+      "description": "Staff autenticado accede correctamente a la parrilla y alertas médicas.",
+      "responseSummary": [
+        {
+          "id": "block-1",
+          "title": "Box Clínico Kinesiología 1",
+          "instructor": "Klgo. Andrés Morales",
+          "time": "08:00 - 09:00",
+          "type": "KINE_BOX",
+          "capacity": 1,
+          "bookedCount": 0,
+          "students": []
+        },
+        {
+          "id": "block-2",
+          "title": "Entrenamiento Funcional HIIT",
+          "instructor": "Prof. Mike R.",
+          "time": "18:00 - 19:00",
+          "type": "FUNCTIONAL",
+          "capacity": 12,
+          "bookedCount": 0,
+          "students": []
+        }
+      ]
+    }
+  ]
+}

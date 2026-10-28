@@ -172,7 +172,37 @@ Al realizar un `git push` a `main`, GitHub Actions ejecuta los pipelines en `.gi
 
 ---
 
-## 🔐 Credenciales de Prueba y Demostración
+## 🧪 Pruebas y Validación — Hito 3 UNAB
+
+Para ejecutar las pruebas en vivo, primero levanta el backend (`cd backend && npm run start:dev`) y luego ejecuta cualquiera de los siguientes comandos desde la raíz del proyecto:
+
+```bash
+# 🌟 Ejecutar TODAS las suites juntas (Orquestador Maestro en 15s):
+node scripts/run-all-tests.mjs
+
+# 🧪 Pruebas Funcionales Generales (Logins, JWT, Health):
+node scripts/run-functional-tests.mjs
+
+# 🛡️ Pruebas de Seguridad y Privilegios RBAC (Guards, 403 Forbidden):
+node scripts/run-security-rbac-tests.mjs
+
+# 🩺 Pruebas de Ficha Clínica Kinésica (SOAP, dolor EVA 1-10 y ROM °):
+node scripts/run-clinical-tests.mjs
+
+# 📋 Pruebas de Reglas de Negocio, Cancelaciones 24h y Saldos:
+node scripts/run-business-rules-tests.mjs
+
+# 💳 Pruebas de Pasarela de Pagos Mercado Pago y Webhooks:
+node scripts/run-payments-tests.mjs
+
+# 🚀 Pruebas No Funcionales (Carga con 50 usuarios concurrentes):
+node scripts/run-load-tests.mjs
+```
+
+> 📄 **Guía detallada:** Consulta [COMANDOS_PRUEBAS.md](file:///d:/Codigos%20de%20prueba/Pro-Funcional/COMANDOS_PRUEBAS.md).  
+> 📂 **Evidencias generadas:** Se guardan automáticamente en [evidencias/](file:///d:/Codigos%20de%20prueba/Pro-Funcional/evidencias/).
+
+---
 
 El sistema incluye perfiles preconfigurados para pruebas de evaluación:
 

@@ -8,6 +8,6 @@ backend/dist/
 .env.*
 backend/.env
 archivos de carga/
-presentaciones_e_informes/
-docs/
+presentaciones_e_informes
+docs
 

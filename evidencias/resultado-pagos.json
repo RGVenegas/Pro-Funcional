@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "generatedAt": "2026-10-28T00:28:23.791Z",
+    "type": "Pruebas de Integración Pasarela Mercado Pago",
+    "apiBase": "http://localhost:3001/api",
+    "totalTests": 3,
+    "passed": 3,
+    "failed": 0,
+    "successRate": "100.0%"
+  },
+  "results": [
+    {
+      "id": "PAY-01",
+      "hu": "HU-25",
+      "name": "Recepción asíncrona de Webhook IPN de Mercado Pago",
+      "method": "POST",
+      "endpoint": "/payments/webhook",
+      "expectedStatus": "200 / 201",
+      "obtainedStatus": 201,
+      "durationMs": 23,
+      "passed": true,
+      "description": "El webhook procesa la notificación asíncrona retornando confirmación inmediata.",
+      "responseSummary": {
+        "received": true
+      }
+    },
+    {
+      "id": "PAY-02",
+      "hu": "HU-21",
+      "name": "Validación de Seguridad: Rechazo de pago con datos vacíos o sin token",
+      "method": "POST",
+      "endpoint": "/payments/process",
+      "expectedStatus": "400 / 422",
+      "obtainedStatus": 400,
+      "durationMs": 3,
+      "passed": true,
+      "description": "ValidationPipe bloquea transacciones vacías antes de consultar la pasarela.",
+      "responseSummary": {
+        "message": [
+          "token should not be empty",
+          "token must be a string",
+          "payment_method_id should not be empty",
+          "payment_method_id must be a string",
+          "transaction_amount must be a number conforming to the specified constraints",
+          "installments must be a number conforming to the specified constraints",
+          "description should not be empty",
+          "description must be a string",
+          "payer should not be empty"
+        ],
+        "error": "Bad Request",
+        "statusCode": 400
+      }
+    },
+    {
+      "id": "PAY-03",
+      "hu": "HU-21 / HU-24",
+      "name": "Control de Idempotencia y Prevención de Doble Cobro",
+      "method": "POST",
+      "endpoint": "/payments/process",
+      "expectedStatus": "400 / 500 / 502",
+      "obtainedStatus": 400,
+      "durationMs": 2,
+      "passed": true,
+      "description": "La cabecera de idempotencia es registrada y el token inválido es capturado sin crashear.",
+      "responseSummary": {
+        "message": [
+          "installments must be a number conforming to the specified constraints"
+        ],
+        "error": "Bad Request",
+        "statusCode": 400
+      }
+    }
+  ]
+}
