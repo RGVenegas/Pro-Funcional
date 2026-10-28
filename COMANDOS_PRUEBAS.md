@@ -22,9 +22,10 @@ npm run start:dev
 Abre **otra terminal** en la carpeta principal del proyecto (`Pro-Funcional`) y ejecuta cualquiera de los siguientes comandos según lo que desees probar:
 
 #### 1. 🌟 Correr TODO Junto (Orquestador Maestro)
-Ejecuta las 5 suites en cascada (24 pruebas) y genera el informe consolidado final en 15 segundos:
+Ejecuta las 6 suites en cascada (28 pruebas verificables) y genera el informe consolidado maestro en ~15 segundos:
 ```bash
 node scripts/run-all-tests.mjs
+# o bien: npm run test:all
 ```
 
 ---
@@ -33,6 +34,7 @@ node scripts/run-all-tests.mjs
 Evalúa autenticación Staff y Paciente, emisión de token JWT, consulta de bloques de agenda, RBAC y Health Check del sistema:
 ```bash
 node scripts/run-functional-tests.mjs
+# o bien: npm run test:functional
 ```
 
 ---
@@ -41,6 +43,7 @@ node scripts/run-functional-tests.mjs
 Evalúa que un paciente NO pueda acceder a rutas de Staff (HTTP 403), protección contra inyección de campos (*Mass Assignment*) y confidencialidad médica:
 ```bash
 node scripts/run-security-rbac-tests.mjs
+# o bien: npm run test:security
 ```
 
 ---
@@ -49,6 +52,7 @@ node scripts/run-security-rbac-tests.mjs
 Evalúa el registro de notas SOAP por parte del kinesiólogo, casos límite de dolor fuera de escala (ej: EVA = 15 o ROM = -20°) y consulta de avance del paciente:
 ```bash
 node scripts/run-clinical-tests.mjs
+# o bien: npm run test:clinical
 ```
 
 ---
@@ -57,6 +61,7 @@ node scripts/run-clinical-tests.mjs
 Evalúa la consulta de sesiones restantes del paquete activo, bloqueo de agendamiento en fechas pasadas y coherencia de horarios oficiales:
 ```bash
 node scripts/run-business-rules-tests.mjs
+# o bien: npm run test:business
 ```
 
 ---
@@ -65,14 +70,25 @@ node scripts/run-business-rules-tests.mjs
 Evalúa la recepción asíncrona de Webhooks IPN transaccionales, validación de datos de pago y control de idempotencia (`X-Idempotency-Key`):
 ```bash
 node scripts/run-payments-tests.mjs
+# o bien: npm run test:payments
 ```
 
 ---
 
-#### 7. 🚀 Prueba No Funcional (Carga, Rendimiento y Hardware)
-Lanza 1.000 solicitudes reales con 50 usuarios virtuales concurrentes (166% del aforo del gimnasio), midiendo Throughput, percentil 95 ($p95$) y memoria RAM:
+#### 7. 🛡️ Pruebas No Funcionales de Resiliencia y Dependencias (Rúbrica Hito 3)
+Evalúa la tolerancia a fallos ante caída de dependencias externas (Mercado Pago), integridad referencial en BD (Rollback en Neon), concurrencia de red y desconexión abrupta de sockets con recuperación en < 50 ms:
+```bash
+node scripts/run-resilience-tests.mjs
+# o bien: npm run test:resilience
+```
+
+---
+
+#### 8. 🚀 Pruebas No Funcionales de Carga, Rendimiento y Hardware
+Lanza 1.000 solicitudes reales con 50 usuarios virtuales concurrentes (166% del aforo del gimnasio), midiendo Throughput, percentil 95 ($p95$), CPU y memoria RAM:
 ```bash
 node scripts/run-load-tests.mjs
+# o bien: npm run test:load
 ```
 
 ---
@@ -81,15 +97,16 @@ node scripts/run-load-tests.mjs
 
 También puedes usar estos atajos equivalentes configurados en el `package.json`:
 
-| Comando `node scripts/...` | Atajo `npm run ...` |
-| :--- | :--- |
-| `node scripts/run-all-tests.mjs` | `npm run test:all` |
-| `node scripts/run-functional-tests.mjs` | `npm run test:functional` |
-| `node scripts/run-security-rbac-tests.mjs` | `npm run test:security` |
-| `node scripts/run-clinical-tests.mjs` | `npm run test:clinical` |
-| `node scripts/run-business-rules-tests.mjs` | `npm run test:business` |
-| `node scripts/run-payments-tests.mjs` | `npm run test:payments` |
-| `node scripts/run-load-tests.mjs` | `npm run test:load` |
+| Comando `node scripts/...` | Atajo `npm run ...` | Dimensión / Tipo |
+| :--- | :--- | :--- |
+| `node scripts/run-all-tests.mjs` | `npm run test:all` | **Orquestador Maestro (28 pruebas)** |
+| `node scripts/run-functional-tests.mjs` | `npm run test:functional` | Funcional General |
+| `node scripts/run-security-rbac-tests.mjs` | `npm run test:security` | Seguridad y RBAC |
+| `node scripts/run-clinical-tests.mjs` | `npm run test:clinical` | Ficha Kinésica SOAP / Límites |
+| `node scripts/run-business-rules-tests.mjs` | `npm run test:business` | Reglas de Negocio y Saldos |
+| `node scripts/run-payments-tests.mjs` | `npm run test:payments` | Pasarela Mercado Pago |
+| `node scripts/run-resilience-tests.mjs` | `npm run test:resilience` | **No Funcional: Resiliencia y Fallos** |
+| `node scripts/run-load-tests.mjs` | `npm run test:load` | **No Funcional: Carga y Rendimiento** |
 
 ---
 
@@ -98,10 +115,17 @@ También puedes usar estos atajos equivalentes configurados en el `package.json`
 Cada vez que se ejecuta cualquiera de estos comandos, los resultados y evidencias forenses se guardan automáticamente en la carpeta raíz:
 
 📁 **[`evidencias/`](./evidencias/)**
-* `evidencias/reporte-consolidado-hito-3.md` *(Informe maestro global)*
+* `evidencias/reporte-consolidado-hito-3.md` *(Informe maestro global consolidado)*
 * `evidencias/resultado-pruebas-funcionales.md` y `.json`
 * `evidencias/resultado-seguridad-rbac.md` y `.json`
 * `evidencias/resultado-ficha-clinica.md` y `.json`
 * `evidencias/resultado-reglas-negocio.md` y `.json`
 * `evidencias/resultado-pagos.md` y `.json`
+* `evidencias/resultado-resiliencia.md` y `.json`
 * `evidencias/resultado-pruebas-carga.md` y `.json`
+
+---
+
+### 🎤 Guía de Demostración para la Presentación
+Revisa la guía paso a paso de 5 a 7 minutos para exponer la demostración ante el profesor:  
+📄 **[`GUIA_PRESENTACION_5_7_MIN_HITO3.md`](./GUIA_PRESENTACION_5_7_MIN_HITO3.md)**

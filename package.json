@@ -15,6 +15,7 @@
     "test:clinical": "node scripts/run-clinical-tests.mjs",
     "test:business": "node scripts/run-business-rules-tests.mjs",
     "test:payments": "node scripts/run-payments-tests.mjs",
+    "test:resilience": "node scripts/run-resilience-tests.mjs",
     "test:load": "node scripts/run-load-tests.mjs"
   },
   "dependencies": {

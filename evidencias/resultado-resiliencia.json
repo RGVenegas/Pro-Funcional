@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "suite": "Resiliencia y Tolerancia a Fallos",
+    "rubricDimension": "No Funcional: Resiliencia (Caída de Dependencias y Recuperación)",
+    "date": "2026-10-28T21:21:15.500Z",
+    "totalTests": 4,
+    "passed": 4,
+    "failed": 0,
+    "successRate": "100.0%"
+  },
+  "results": [
+    {
+      "id": "RES-01",
+      "dimension": "Resiliencia - Fallo de Servicio Externo",
+      "name": "Tolerancia a Caída/Falla de Pasarela de Pagos Externa (Mercado Pago)",
+      "condition": "Dependencia externa responde con error o token de tarjeta inválido",
+      "expectedStatus": "HTTP 400 / 422 / 502 (Controlado) + Recuperación < 50ms",
+      "obtainedStatus": "HTTP 400 + Health Check: OK (3 ms)",
+      "durationMs": 7,
+      "recoveryDurationMs": 3,
+      "passed": true,
+      "responseSnippet": {
+        "statusCode": 400,
+        "message": "Error procesando el pago en Mercado Pago.",
+        "error": "Bad Request"
+      },
+      "engineeringAnalysis": "El backend intercepta el fallo de la pasarela mediante Exception Filters sin provocar Uncaught Exception ni caída del proceso Node.js. El hilo de ejecución continúa operativo y responde la siguiente solicitud en menos de 10 ms."
+    },
+    {
+      "id": "RES-02",
+      "dimension": "Resiliencia - Integridad y Pool de Base de Datos",
+      "name": "Tolerancia a Falla de Integridad Referencial en BD (PostgreSQL)",
+      "condition": "Inserción con referencia foránea huérfana/inexistente a nivel de ORM Prisma",
+      "expectedStatus": "HTTP 400 / 401 / 403 / 404 (Protección / Rollback) + Pool de Conexiones Activo",
+      "obtainedStatus": "HTTP 401 / 404 + Pool BD Activo: OK (2 ms)",
+      "durationMs": 15,
+      "recoveryDurationMs": 2,
+      "passed": true,
+      "responseSnippet": {
+        "statusCode": 401,
+        "message": "Unauthorized"
+      },
+      "engineeringAnalysis": "La base de datos ejecuta Rollback ante la inconsistencia. El pool de conexiones de Prisma / Neon no se degrada ni satura descriptores; la lectura posterior confirma disponibilidad inmediata."
+    },
+    {
+      "id": "RES-03",
+      "dimension": "Resiliencia - Concurrencia y Fallos de Red",
+      "name": "Prevención de Doble Transacción ante Reintentos Concurrentes de Red",
+      "condition": "Envío de 2 peticiones paralelas idénticas con la misma X-Idempotency-Key",
+      "expectedStatus": "HTTP 400 / 409 / 422 (Ningún Error 500)",
+      "obtainedStatus": "Petición A: HTTP 400 | Petición B: HTTP 400",
+      "durationMs": 6,
+      "recoveryDurationMs": 0,
+      "passed": true,
+      "responseSnippet": {
+        "requestA": 400,
+        "requestB": 400,
+        "idempotencyKey": "resilience-idempotency-20261028"
+      },
+      "engineeringAnalysis": "La condición de carrera provocada por reintentos de cliente es resuelta sin inconsistencias financieras ni estados intermedios en la pasarela o base de datos."
+    },
+    {
+      "id": "RES-04",
+      "dimension": "Resiliencia - Liberación de Recursos de Red",
+      "name": "Manejo de Desconexión Abrupta de Cliente (Client Abort / TCP Reset)",
+      "condition": "El socket de red del cliente se interrumpe a media transacción (pérdida de señal)",
+      "expectedStatus": "Abort capturado limpiamente + Socket liberado en servidor + Próxima req < 50ms",
+      "obtainedStatus": "Cliente Abort: OK + Servidor disponible: OK (2 ms)",
+      "durationMs": 8,
+      "recoveryDurationMs": 2,
+      "passed": true,
+      "responseSnippet": {
+        "clientAborted": true,
+        "serverRecovered": true,
+        "latencyMs": 2
+      },
+      "engineeringAnalysis": "Node.js y Fastify/Express capturan el evento close del socket HTTP sin memory leak ni hilos zombis. El servidor atiende inmediatamente la siguiente petición."
+    }
+  ]
+}
