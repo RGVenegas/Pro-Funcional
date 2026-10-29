@@ -16,7 +16,8 @@
     "test:business": "node scripts/run-business-rules-tests.mjs",
     "test:payments": "node scripts/run-payments-tests.mjs",
     "test:resilience": "node scripts/run-resilience-tests.mjs",
-    "test:load": "node scripts/run-load-tests.mjs"
+    "test:load": "node scripts/run-load-tests.mjs",
+    "test:unit": "node --experimental-strip-types --test tests/unit/*.test.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",
