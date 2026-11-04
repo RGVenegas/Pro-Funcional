@@ -5,9 +5,10 @@ interface LogoProps {
   imgClassName?: string;
   showText?: boolean;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  src?: string;
 }
 
-export function Logo({ className = '', imgClassName = '', showText = true, size = 'md' }: LogoProps) {
+export function Logo({ className = '', imgClassName = '', showText = true, size = 'md', src = '/Firefly.png' }: LogoProps) {
   const sizeMap = {
     sm: { img: 'h-8 w-auto', text: 'text-base' },
     md: { img: 'h-10 w-auto', text: 'text-xl' },
@@ -20,7 +21,7 @@ export function Logo({ className = '', imgClassName = '', showText = true, size 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img
-        src="/Firefly.png"
+        src={src}
         alt="Logo Oficial Pro-Funcional"
         className={`object-contain filter drop-shadow-md transition-transform hover:scale-105 ${currentSize.img} ${imgClassName}`}
       />

@@ -15,6 +15,7 @@ import { UserProfile } from './components/user/UserProfile';
 import { AdminSidebar } from './components/navigation/AdminSidebar';
 import { UserBottomNav } from './components/navigation/UserBottomNav';
 import { OfflineStatusBanner } from './components/OfflineStatusBanner';
+import { LandingPage } from './components/landing/LandingPage';
 
 import { Logo } from './components/shared/Logo';
 
@@ -23,6 +24,21 @@ type AdminView = 'dashboard' | 'members' | 'member-detail' | 'schedule' | 'risk'
 type UserView = 'home' | 'plan' | 'calendar' | 'training' | 'card' | 'profile';
 
 export default function App() {
+  const [showLogin, setShowLogin] = useState(() => window.location.hash === '#ingresar');
+  const [loginMode, setLoginMode] = useState<'member' | 'staff'>(
+    () => window.location.hash === '#personal' ? 'staff' : 'member'
+  );
+
+  useEffect(() => {
+    const syncAccessScreen = () => {
+      const hash = window.location.hash;
+      setShowLogin(['#ingresar', '#miembros', '#personal'].includes(hash));
+      setLoginMode(hash === '#personal' ? 'staff' : 'member');
+    };
+    window.addEventListener('hashchange', syncAccessScreen);
+    return () => window.removeEventListener('hashchange', syncAccessScreen);
+  }, []);
+
   const [role, setRole] = useState<Role | null>(() => {
     return (sessionStorage.getItem('profuncional-auth-role') as Role) || null;
   });
@@ -117,7 +133,17 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#010A01] text-white flex flex-col">
         <OfflineStatusBanner />
-        <Login onAuthenticated={handleAuthenticated} />
+        {showLogin ? (
+          <Login
+            initialMode={loginMode}
+            onAuthenticated={handleAuthenticated}
+            onBackToLanding={() => {
+              window.location.hash = '';
+            }}
+          />
+        ) : (
+          <LandingPage />
+        )}
       </div>
     );
   }
