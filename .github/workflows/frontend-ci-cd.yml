@@ -49,6 +49,10 @@ jobs:
             echo "Secretos de AWS no configurados en GitHub. Omitiendo subida a S3/CloudFront."
             exit 0
           fi
+          if ! aws sts get-caller-identity >/dev/null 2>&1; then
+            echo "Credenciales de AWS no activas o expiradas. Omitiendo subida a S3/CloudFront."
+            exit 0
+          fi
           if ! aws s3api head-bucket --bucket "$S3_BUCKET" 2>/dev/null; then
             echo "El bucket $S3_BUCKET no existe. Creándolo en AWS..."
             if [ "$AWS_DEFAULT_REGION" = "us-east-1" ]; then

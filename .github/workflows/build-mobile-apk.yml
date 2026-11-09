@@ -123,6 +123,7 @@ jobs:
 
   build-ios:
     name: Compilar iOS (Xcode Archive para Apple App Store)
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-14
     steps:
       - name: Descargar Código del Repositorio
