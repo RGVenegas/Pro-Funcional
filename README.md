@@ -140,19 +140,97 @@ npm run build
 cd backend && npm run build && cd ..
 ```
 
-#### 📱 App Móvil (PWA Instalable & Nativa Android APK con Capacitor)
+#### 📱 Guía Paso a Paso: Descarga Pública y Publicación en Google Play Store (Android) y Apple App Store (iPhone)
 
-La aplicación móvil cuenta con **Estrategia Dual** lista para usar:
+El proyecto cuenta con las plataformas nativas inicializadas en `/android` y `/ios` bajo el identificador oficial **`com.profuncional.app`**, además de soporte **PWA** y compilación automática en la nube mediante `.github/workflows/build-mobile-apk.yml`.
 
-1. **Instalación Inmediata PWA (Web App Instalable)**:
-   - Abre la web desde Safari (iOS) o Chrome (Android).
-   - Toca el botón emergente *"Instalar ProFuncional"* o *"Agregar a pantalla de inicio"*. La app se ejecuta a pantalla completa, con icono propio y modo offline.
+---
 
-2. **Proyecto Nativo Android (Capacitor)**:
-   - Plataforma Android ya inicializada en la carpeta `/android` con package `com.profuncional.app`.
-   - **Sincronizar cambios**: `npm run mobile:sync` (compila Vite y actualiza assets en Android).
-   - **Abrir en Android Studio**: `npm run mobile:open` (para generar APK/AAB firmados).
-   - **Compilación Automática en la Nube (GitHub Actions)**: El workflow `.github/workflows/build-mobile-apk.yml` compila el instalador `.apk` automáticamente en cada push a `main` y lo deja listo para descarga en la pestaña *Actions*.
+##### 🟢 Opción 1: Descarga Pública Inmediata y Gratuita (Sin pagar cuentas de tienda)
+
+Cualquier persona puede instalar la aplicación hoy mismo en Android o iPhone siguiendo estos pasos:
+
+1. **Subir cambios al repositorio (`main`) para disparar la compilación en la nube**:
+   ```bash
+   git add .
+   git commit -m "build: actualizar instaladores móviles Android e iOS"
+   git push origin main
+   ```
+2. **Publicación automática en GitHub Releases**:
+   - Al hacer `git push`, el workflow **Build Mobile Android & iOS** compila automáticamente en la nube (sin requerir Android Studio ni Mac en tu PC) y publica los archivos en la sección **Releases (`latest`)** de tu repositorio GitHub.
+3. **Cómo la descarga cualquier usuario en Android (`.APK` Directo)**:
+   - Compartiendo el enlace público directo (no pide cuenta de GitHub):
+     `https://github.com/RGVenegas/Pro-Funcional/releases/latest/download/ProFuncional-Android.apk`
+   - O entrando a la web de ProFuncional y tocando **"Descargar APK"** o escaneando el **Código QR** en pantalla.
+   - Al abrir el archivo `.apk` descargado en el teléfono, el usuario autoriza *"Instalar aplicaciones desconocidas"* y presiona **Instalar**.
+4. **Cómo la instala cualquier usuario en iPhone / iOS (PWA Instalable)**:
+   - Abre la URL web de ProFuncional desde **Safari** en el iPhone.
+   - Toca el aviso emergente **"Instalar en iPhone"** (o el botón **Compartir** de Safari $\rightarrow$ **"Agregar a pantalla de inicio"**).
+   - La app queda instalada en el inicio del iPhone con su ícono oficial, pantalla completa (sin barras de navegador) y soporte offline.
+
+---
+
+##### 🤖 Opción 2: Paso a Paso para Publicar en Google Play Store (Android)
+
+Google Play exige subir un archivo **`.aab` (Android App Bundle)** firmado digitalmente. El proyecto ya lo genera automáticamente.
+
+1. **Crear cuenta de desarrollador en Google Play Console**:
+   - Ingresa a [Google Play Console](https://play.google.com/console) y registra tu cuenta de desarrollador (pago único de **\$25 USD**).
+2. **(Opcional pero recomendado) Generar tu llave privada de firma (`Keystore`) permanente**:
+   - Si deseas conservar tu propia llave para futuras actualizaciones en Play Store, ejecuta una sola vez:
+     ```bash
+     keytool -genkeypair -v -keystore profuncional-release.keystore -alias profuncional -keyalg RSA -keysize 2048 -validity 10000
+     ```
+   - En tu repositorio de GitHub ve a **Settings $\rightarrow$ Secrets and variables $\rightarrow$ Actions** y agrega:
+     - `ANDROID_KEYSTORE_BASE64`: Contenido del archivo `.keystore` convertido a Base64.
+     - `ANDROID_KEYSTORE_PASSWORD`: Contraseña de tu keystore.
+     - `ANDROID_KEY_ALIAS`: `profuncional`
+     - `ANDROID_KEY_PASSWORD`: Contraseña de la llave.
+   - *(Si no configuras estos secretos, el workflow de GitHub Actions genera un keystore automáticamente para que la compilación nunca falle).*
+3. **Obtener el archivo `ProFuncional-PlayStore.aab`**:
+   - **Vía Nube (Recomendado)**: Ve a la pestaña **Releases** o **Actions** de tu repositorio en GitHub y descarga **`ProFuncional-PlayStore.aab`**.
+   - **Vía PC Local (Con Android Studio + JDK 17)**:
+     ```bash
+     npm run mobile:sync
+     npm run mobile:open
+     ```
+     En Android Studio ve a *Build $\rightarrow$ Generate Signed Bundle / APK $\rightarrow$ Android App Bundle (.aab)*.
+4. **Subir a Google Play Console**:
+   - En Play Console haz clic en **"Crear aplicación"** $\rightarrow$ Nombre: `ProFuncional`, Idioma: `Español (Chile / Latinoamérica)`, Tipo: `Aplicación`, Gratis/Pago: `Gratis`.
+   - En el menú lateral ve a **Producción** (o *Prueba cerrada / interna*) $\rightarrow$ **Crear nueva versión**.
+   - Sube el archivo **`ProFuncional-PlayStore.aab`**.
+   - Completa la **Ficha de Play Store** (descripción, ícono de 512x512 en `public/icon-512.png`, capturas de pantalla, clasificación de contenido y política de privacidad) y presiona **Enviar a revisión**.
+
+---
+
+##### 🍎 Opción 3: Paso a Paso para Publicar en Apple App Store (iPhone / iPad)
+
+Apple exige una cuenta en el **Apple Developer Program** y firmar el proyecto nativo `/ios` con certificados de Apple antes de enviarlo a **App Store Connect**.
+
+1. **Inscribirse en el Apple Developer Program**:
+   - Regístrate en [Apple Developer Program](https://developer.apple.com/programs/) (**\$99 USD anuales**).
+2. **Sincronizar el proyecto nativo iOS**:
+   - Todos los archivos nativos de Xcode, ícono de `1024x1024 px` sin canal alfa (`ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png`), Splash Screens y configuración de cifrado (`ITSAppUsesNonExemptEncryption = false` en `Info.plist`) ya están generados en la carpeta `/ios`.
+   - Si modificas el frontend o los íconos, sincroniza con:
+     ```bash
+     npm run mobile:build:ios
+     # Si necesitas regenerar íconos de Android e iOS desde public/logo.png:
+     powershell -ExecutionPolicy Bypass -File scripts/generate-android-assets.ps1
+     ```
+3. **Crear el registro de la App en App Store Connect**:
+   - Entra a [App Store Connect](https://appstoreconnect.apple.com/) $\rightarrow$ **Mis Apps $\rightarrow$ (+ Nueva App)**.
+   - Selecciona plataforma **iOS**, Nombre: `ProFuncional`, Idioma principal: `Spanish`, **Bundle ID**: `com.profuncional.app` y SKU: `PROFUNCIONAL-01`.
+4. **Firmar y enviar la compilación a App Store Connect**:
+   - **Opción A — Desde una Mac con Xcode**:
+     1. Ejecuta `npm run mobile:open:ios` (abre `ios/App/App.xcodeproj` en Xcode).
+     2. En Xcode selecciona el proyecto **App** $\rightarrow$ pestaña **Signing & Capabilities** $\rightarrow$ marca *Automatically manage signing* y elige tu **Team** de Apple Developer.
+     3. En la barra superior elige como destino **Any iOS Device (arm64)** y ve al menú **Product $\rightarrow$ Archive**.
+     4. Al finalizar el archivo, haz clic en **Distribute App $\rightarrow$ App Store Connect $\rightarrow$ Upload**.
+   - **Opción B — Sin tener Mac física (Usando GitHub Actions `macos-14` o Codemagic)**:
+     - El job `build-ios` en `.github/workflows/build-mobile-apk.yml` ya compila el proyecto en un servidor **macOS 14 con Xcode** en GitHub Actions y genera el artefacto `ProFuncional-iOS-AppStore-IPA`.
+     - Puedes conectar tu repositorio a [Codemagic](https://codemagic.io/) (tiene capa gratuita con Mac) o agregar tu certificado `.p12` y *Provisioning Profile* de Apple en GitHub Actions para que suba el `.ipa` directamente a **TestFlight / App Store Connect** en cada push.
+5. **Publicar en la tienda**:
+   - Una vez procesado el build en **App Store Connect**, agrégalo a la versión `1.0`, adjunta las capturas de pantalla de iPhone y presiona **Submit for Review**.
 
 #### ☁️ Despliegue de Infraestructura AWS con Terraform
 

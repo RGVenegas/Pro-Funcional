@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Share2, X, Smartphone, CheckCircle2 } from 'lucide-react';
+import { Download, Share2, X, Smartphone, CheckCircle2, QrCode, ExternalLink } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+
+export const APK_DIRECT_DOWNLOAD_URL =
+  'https://github.com/RGVenegas/Pro-Funcional/releases/latest/download/ProFuncional-Android.apk';
+export const PLAY_STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.profuncional.app';
+export const APP_STORE_URL =
+  'https://apps.apple.com/cl/app/profuncional/idcom.profuncional.app';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -11,6 +19,7 @@ export const PWAInstallPrompt: React.FC = () => {
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
   const [isIOS, setIsIOS] = useState<boolean>(false);
   const [showIOSGuide, setShowIOSGuide] = useState<boolean>(false);
+  const [showQRModal, setShowQRModal] = useState<boolean>(false);
   const [dismissed, setDismissed] = useState<boolean>(false);
   const [installedSuccess, setInstalledSuccess] = useState<boolean>(false);
 
@@ -82,11 +91,6 @@ export const PWAInstallPrompt: React.FC = () => {
     return null;
   }
 
-  // Si no hay evento ni es iOS, o ya se instaló
-  if (!deferredPrompt && !isIOS && !installedSuccess) {
-    return null;
-  }
-
   return (
     <>
       <div 
@@ -111,11 +115,11 @@ export const PWAInstallPrompt: React.FC = () => {
             <div className="flex-1 pr-6">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#00E676]">App Móvil</span>
-                <span className="text-[10px] bg-white/10 text-white/70 px-1.5 py-0.5 rounded-full font-medium">Oficial</span>
+                <span className="text-[10px] bg-white/10 text-white/70 px-1.5 py-0.5 rounded-full font-medium">iOS & Android</span>
               </div>
-              <h4 className="text-sm font-black text-white mt-0.5">Instalar ProFuncional</h4>
+              <h4 className="text-sm font-black text-white mt-0.5">Descargar ProFuncional</h4>
               <p className="text-xs text-white/70 mt-0.5 leading-snug">
-                Accede en 1 toque a tus horas, ficha de evolución y credencial QR sin abrir el navegador.
+                Disponible para iPhone (App Store / iOS) y Android (Google Play / APK directo).
               </p>
 
               {installedSuccess ? (
@@ -124,19 +128,32 @@ export const PWAInstallPrompt: React.FC = () => {
                   <span>¡Aplicación instalada con éxito!</span>
                 </div>
               ) : (
-                <div className="mt-3 flex items-center gap-2">
-                  <button
-                    onClick={handleInstallClick}
-                    className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#00E676] hover:bg-[#00E676]/90 text-black font-extrabold text-xs shadow-lg shadow-[#00E676]/20 transition-all active:scale-95"
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {(deferredPrompt || isIOS) && (
+                    <button
+                      onClick={handleInstallClick}
+                      className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#00E676] hover:bg-[#00E676]/90 text-black font-extrabold text-xs shadow-lg shadow-[#00E676]/20 transition-all active:scale-95"
+                    >
+                      {isIOS ? <Share2 className="w-3.5 h-3.5 text-black" /> : <Download className="w-3.5 h-3.5 text-black" />}
+                      <span>{isIOS ? 'Instalar en iPhone' : 'Instalar App'}</span>
+                    </button>
+                  )}
+                  <a
+                    href={APK_DIRECT_DOWNLOAD_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs transition-all active:scale-95"
                   >
-                    {isIOS ? <Share2 className="w-3.5 h-3.5 text-black" /> : <Download className="w-3.5 h-3.5 text-black" />}
-                    <span>{isIOS ? 'Cómo Instalar en iPhone' : 'Instalar en Celular'}</span>
-                  </button>
+                    <Download className="w-3.5 h-3.5 text-[#00E676]" />
+                    <span>Descargar APK</span>
+                  </a>
                   <button
-                    onClick={handleDismiss}
-                    className="px-3 py-2 text-xs font-medium text-white/60 hover:text-white transition-colors"
+                    onClick={() => setShowQRModal(true)}
+                    title="Ver código QR y enlaces de tiendas"
+                    className="flex items-center justify-center gap-1 px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white text-xs font-semibold transition-colors"
                   >
-                    Ahora no
+                    <QrCode className="w-3.5 h-3.5 text-[#00E676]" />
+                    <span>QR / Tiendas</span>
                   </button>
                 </div>
               )}
@@ -144,6 +161,78 @@ export const PWAInstallPrompt: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal QR y Enlaces de Tiendas (App Store & Google Play + APK) */}
+      {showQRModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-3xl bg-[#030f1d] border border-white/20 p-6 text-white shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-[#00E676]" />
+                <h3 className="font-black text-base">Descarga ProFuncional en tu Celular</h3>
+              </div>
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="text-white/50 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-white/70 mt-3 leading-relaxed">
+              Escanea el código QR con la cámara de tu teléfono o selecciona tu plataforma para descargar la aplicación:
+            </p>
+
+            <div className="mt-4 bg-white rounded-2xl p-4 flex flex-col items-center">
+              <QRCodeSVG
+                value={APK_DIRECT_DOWNLOAD_URL}
+                size={150}
+                level="M"
+                includeMargin={true}
+                fgColor="#021826"
+              />
+              <span className="text-[11px] font-bold text-[#021826] mt-1">
+                Escanea para descarga directa Android (.APK)
+              </span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <a
+                href={APK_DIRECT_DOWNLOAD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between gap-2 rounded-xl bg-[#00E676] hover:bg-[#00E676]/90 px-3.5 py-2.5 text-black font-extrabold text-xs shadow-md transition-all"
+              >
+                <span className="flex items-center gap-2">
+                  <Download className="w-4 h-4" />
+                  <span>APK Directo (Android)</span>
+                </span>
+                <ExternalLink className="w-3.5 h-3.5 opacity-75" />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowQRModal(false);
+                  setShowIOSGuide(true);
+                }}
+                className="flex items-center justify-between gap-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 px-3.5 py-2.5 text-white font-bold text-xs transition-all"
+              >
+                <span className="flex items-center gap-2">
+                  <Share2 className="w-4 h-4 text-[#00E676]" />
+                  <span>iPhone / App Store</span>
+                </span>
+                <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+              </button>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between text-[11px] text-white/50 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+              <span>Bundle ID oficial: <code className="text-[#00E676]">com.profuncional.app</code></span>
+              <span>v1.0.0</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Guía para iPhone / Safari */}
       {showIOSGuide && (

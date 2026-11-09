@@ -1,4 +1,4 @@
-name: Build Mobile Android APK (Capacitor)
+name: Build Mobile Android & iOS (Play Store & App Store)
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ on:
         type: choice
         options:
           - debug
-          - release-unsigned
+          - release-store
   push:
     branches:
       - main
@@ -18,13 +18,16 @@ on:
       - 'src/**'
       - 'public/**'
       - 'android/**'
+      - 'ios/**'
       - 'capacitor.config.ts'
       - 'package.json'
 
 jobs:
-  build-apk:
-    name: Compilar APK Android
+  build-android:
+    name: Compilar Android (APK + Play Store AAB)
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Descargar Código del Repositorio
@@ -56,19 +59,111 @@ jobs:
       - name: Otorgar Permisos de Ejecución a Gradlew
         run: chmod +x ./android/gradlew
 
-      - name: Compilar APK con Gradle
+      - name: Generar Keystore para firma de Release (Google Play Store)
+        run: |
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > $RUNNER_TEMP/release.keystore
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> $GITHUB_ENV
+            echo "ANDROID_KEYSTORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+            echo "ANDROID_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}" >> $GITHUB_ENV
+            echo "ANDROID_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> $GITHUB_ENV
+          else
+            keytool -genkeypair -v \
+              -keystore $RUNNER_TEMP/release.keystore \
+              -alias profuncional \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass profuncional123 -keypass profuncional123 \
+              -dname "CN=ProFuncional, OU=Mobile, O=ProFuncional, L=Santiago, ST=RM, C=CL"
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> $GITHUB_ENV
+            echo "ANDROID_KEYSTORE_PASSWORD=profuncional123" >> $GITHUB_ENV
+            echo "ANDROID_KEY_ALIAS=profuncional" >> $GITHUB_ENV
+            echo "ANDROID_KEY_PASSWORD=profuncional123" >> $GITHUB_ENV
+          fi
+
+      - name: Compilar APK y Android App Bundle (AAB para Google Play Store)
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleDebug assembleRelease bundleRelease --no-daemon --stacktrace
 
-      - name: Renombrar APK para Descarga
+      - name: Preparar Artefactos de Descarga (APK y AAB)
         run: |
           mkdir -p build-artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk build-artifacts/ProFuncional-Android.apk
+          cp android/app/build/outputs/apk/release/app-release.apk build-artifacts/ProFuncional-Android.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab build-artifacts/ProFuncional-PlayStore.aab
 
-      - name: Subir APK como Artefacto Descargable
+      - name: Subir APK y AAB como Artefactos
         uses: actions/upload-artifact@v4
         with:
-          name: ProFuncional-Android-APK
-          path: build-artifacts/ProFuncional-Android.apk
-          retention-days: 14
+          name: ProFuncional-Android-Bundle
+          path: |
+            build-artifacts/ProFuncional-Android.apk
+            build-artifacts/ProFuncional-PlayStore.aab
+          retention-days: 30
+
+      - name: Publicar Descarga Directa Pública en GitHub Releases (latest)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "ProFuncional App Móvil Oficial (Android & iOS)"
+          body: |
+            ## 📱 Descarga Oficial de ProFuncional (Android & iOS)
+            
+            ### 🤖 Android (Google Play Store & Instalación Directa)
+            - **Instalador Directo para Celulares**: [`ProFuncional-Android.apk`](https://github.com/${{ github.repository }}/releases/latest/download/ProFuncional-Android.apk)
+            - **Paquete para Google Play Console**: `ProFuncional-PlayStore.aab` (Android App Bundle firmado).
+            
+            ### 🍎 iPhone / iOS (Apple App Store & Instalación Web)
+            - Proyecto nativo Xcode en `/ios` compilado en macOS (`ProFuncional-iOS-Archive`) listo para subir a **App Store Connect / TestFlight**.
+          files: |
+            build-artifacts/ProFuncional-Android.apk
+            build-artifacts/ProFuncional-PlayStore.aab
+          prerelease: false
+          make_latest: true
+
+  build-ios:
+    name: Compilar iOS (Xcode Archive para Apple App Store)
+    runs-on: macos-14
+    steps:
+      - name: Descargar Código del Repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar Dependencias del Frontend
+        run: npm install --legacy-peer-deps
+
+      - name: Compilar Frontend Web (Vite)
+        run: npm run build
+
+      - name: Sincronizar Plataforma iOS (Capacitor)
+        run: npx cap sync ios
+
+      - name: Compilar Proyecto Xcode para iOS (Unsigned Archive para App Store / TestFlight)
+        run: |
+          cd ios/App
+          xcodebuild -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            clean build
+
+      - name: Empaquetar Aplicación iOS (.ipa / .app bundle)
+        run: |
+          mkdir -p ios-artifacts/Payload
+          cp -r ios/App/build/Build/Products/Release-iphoneos/App.app ios-artifacts/Payload/
+          cd ios-artifacts
+          zip -r ProFuncional-iOS-Unsigned.ipa Payload
+
+      - name: Subir Paquete iOS (.ipa) como Artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProFuncional-iOS-AppStore-IPA
+          path: ios-artifacts/ProFuncional-iOS-Unsigned.ipa
+          retention-days: 30

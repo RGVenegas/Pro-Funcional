@@ -1,4 +1,4 @@
-Add-Type -AssemblyName System.Drawing
+.Add-Type -AssemblyName System.Drawing
 
 function Generate-Icon($srcPath, $destPath, $width, $height) {
     $img = [System.Drawing.Bitmap]::FromFile($srcPath)
@@ -24,10 +24,10 @@ $resPath = Join-Path $root "android\app\src\main\res"
 
 # Mipmap App Icons
 $iconSizes = @{
-    "mipmap-mdpi" = 48
-    "mipmap-hdpi" = 72
-    "mipmap-xhdpi" = 96
-    "mipmap-xxhdpi" = 144
+    "mipmap-mdpi"    = 48
+    "mipmap-hdpi"    = 72
+    "mipmap-xhdpi"   = 96
+    "mipmap-xxhdpi"  = 144
     "mipmap-xxxhdpi" = 192
 }
 
@@ -45,4 +45,18 @@ foreach ($folder in $iconSizes.Keys) {
 $drawableSplash = Join-Path $resPath "drawable\splash.png"
 Generate-Icon $logoPath $drawableSplash 480 800
 
-Write-Host "Android assets updated successfully with official branding!"
+# iOS App Store Icon (1024x1024 mandatory for App Store Connect) & Splash
+$iosAssetsPath = Join-Path $root "ios\App\App\Assets.xcassets"
+if (Test-Path $iosAssetsPath) {
+    $iosIconPath = Join-Path $iosAssetsPath "AppIcon.appiconset\AppIcon-512@2x.png"
+    Generate-Icon $logoPath $iosIconPath 1024 1024
+
+    $iosSplashDir = Join-Path $iosAssetsPath "Splash.imageset"
+    if (Test-Path $iosSplashDir) {
+        Generate-Icon $logoPath (Join-Path $iosSplashDir "splash-2732x2732.png") 1024 1024
+        Generate-Icon $logoPath (Join-Path $iosSplashDir "splash-2732x2732-1.png") 1024 1024
+        Generate-Icon $logoPath (Join-Path $iosSplashDir "splash-2732x2732-2.png") 1024 1024
+    }
+}
+
+Write-Host "Android & iOS assets updated successfully with official branding!"

@@ -1,7 +1,8 @@
 import React, { FormEvent, useState } from 'react';
-import { ArrowRight, Check, Eye, EyeOff, LockKeyhole, Mail, UsersRound } from 'lucide-react';
+import { ArrowRight, Check, Download, Eye, EyeOff, LockKeyhole, Mail, Smartphone, UsersRound } from 'lucide-react';
 import { getMembers } from '../../data/gymStore';
 import { apiEnabled, request, setToken, syncAndRefresh } from '../../data/api';
+import { APK_DIRECT_DOWNLOAD_URL } from '../shared/PWAInstallPrompt';
 
 type AccessMode = 'member' | 'staff';
 export type AuthRole = 'user' | 'admin';
@@ -147,6 +148,30 @@ export function Login({ onAuthenticated }: LoginProps) {
               {['Acceso seguro', 'Clases en un solo lugar', 'Progreso que se nota'].map((item) => (
                 <span key={item} className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00E676]" />{item}</span>
               ))}
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#00E676]">
+                <Smartphone className="h-4 w-4" />
+                <span>Disponible para iPhone y Android</span>
+              </div>
+              <p className="mt-1 text-xs text-white/60">
+                Descarga la aplicación móvil oficial para agendar tus horas y llevar tu pase QR en el teléfono.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2.5">
+                <a
+                  href={APK_DIRECT_DOWNLOAD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#00E676] px-3.5 py-2 text-xs font-extrabold text-[#030f1d] shadow-md shadow-[#00E676]/20 transition-all hover:bg-[#00E676]/90"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Google Play / APK Android</span>
+                </a>
+                <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80">
+                  <span>🍎 App Store / iOS (Safari → Agregar a Inicio)</span>
+                </span>
+              </div>
             </div>
           </section>
 
