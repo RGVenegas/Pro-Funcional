@@ -21,6 +21,7 @@ on:
       - 'ios/**'
       - 'capacitor.config.ts'
       - 'package.json'
+      - '.github/workflows/build-mobile-apk.yml'
 
 jobs:
   build-android:

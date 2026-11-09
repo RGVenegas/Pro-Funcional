@@ -36,40 +36,28 @@ jobs:
       - name: Compilar Frontend (Vite Build)
         run: npm run build
 
-      - name: Configurar Credenciales de AWS
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.AWS_ACCESS_KEY_ID != ''
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
-
-      - name: Asegurar que el Bucket S3 Exista
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.AWS_ACCESS_KEY_ID != ''
+      - name: Desplegar a AWS S3 y CloudFront (Opcional si existen credenciales AWS)
         env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
           S3_BUCKET: ${{ secrets.S3_BUCKET || 'profuncional-prod-frontend-hosting' }}
-          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
-        run: |
-          if ! aws s3api head-bucket --bucket "$S3_BUCKET" 2>/dev/null; then
-            echo "El bucket $S3_BUCKET no existe. Creándolo en AWS..."
-            if [ "$AWS_REGION" = "us-east-1" ]; then
-              aws s3api create-bucket --bucket "$S3_BUCKET"
-            else
-              aws s3api create-bucket --bucket "$S3_BUCKET" --create-bucket-configuration LocationConstraint="$AWS_REGION"
-            fi
-          fi
-
-      - name: Sincronizar Artefactos Estáticos a AWS S3
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.AWS_ACCESS_KEY_ID != ''
-        env:
-          S3_BUCKET: ${{ secrets.S3_BUCKET || 'profuncional-prod-frontend-hosting' }}
-        run: |
-          aws s3 sync dist/ s3://$S3_BUCKET/ --delete
-
-      - name: Invalidar Caché de Amazon CloudFront CDN
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.AWS_ACCESS_KEY_ID != '' && secrets.CLOUDFRONT_DISTRIBUTION_ID != ''
-        env:
           CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
-          aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_ID --paths "/*"
+          if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+            echo "Secretos de AWS no configurados en GitHub. Omitiendo subida a S3/CloudFront."
+            exit 0
+          fi
+          if ! aws s3api head-bucket --bucket "$S3_BUCKET" 2>/dev/null; then
+            echo "El bucket $S3_BUCKET no existe. Creándolo en AWS..."
+            if [ "$AWS_DEFAULT_REGION" = "us-east-1" ]; then
+              aws s3api create-bucket --bucket "$S3_BUCKET"
+            else
+              aws s3api create-bucket --bucket "$S3_BUCKET" --create-bucket-configuration LocationConstraint="$AWS_DEFAULT_REGION"
+            fi
+          fi
+          aws s3 sync dist/ s3://$S3_BUCKET/ --delete
+          if [ -n "$CLOUDFRONT_ID" ]; then
+            aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_ID" --paths "/*"
+          fi
