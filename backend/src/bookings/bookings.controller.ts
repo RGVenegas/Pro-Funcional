@@ -38,7 +38,7 @@ export class BookingsController {
   }
 
   @Patch(':id/cancel')
-  @ApiOperation({ summary: 'Cancelar una reserva con verificación de plazo de 24h (HU-04)' })
+  @ApiOperation({ summary: 'Cancelar una reserva con verificación de plazo de 3h (HU-04)' })
   cancel(@Param('id') id: string, @GetUser() user: any) {
     return this.bookingsService.cancel(id, user);
   }

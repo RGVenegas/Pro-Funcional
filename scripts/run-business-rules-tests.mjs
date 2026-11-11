@@ -51,7 +51,7 @@ async function login(email, password) {
 async function runBusinessRulesTests() {
   console.log(`\n${COLORS.bold}${COLORS.cyan}========================================================================${COLORS.reset}`);
   console.log(`${COLORS.bold}📋 SUITE DE PRUEBAS DE REGLAS DE NEGOCIO Y SALDOS — HITO 3 UNAB${COLORS.reset}`);
-  console.log(`${COLORS.dim}Proyecto: Pro-Funcional | Foco: Regla 24h, Saldo de Packs y Horarios Oficiales${COLORS.reset}`);
+  console.log(`${COLORS.dim}Proyecto: Pro-Funcional | Foco: Regla 3h, Saldo de Packs y Horarios Oficiales${COLORS.reset}`);
   console.log(`${COLORS.bold}${COLORS.cyan}========================================================================\n${COLORS.reset}`);
 
   const isOnline = await checkOnline();

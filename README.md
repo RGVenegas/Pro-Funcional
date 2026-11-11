@@ -1,6 +1,6 @@
 # ProFuncional — Ecosistema de Gestión Kinésico-Deportiva
 
-Ecosistema digital integral compuesto por un **Programa de Escritorio (PC)** para la administración, kinesiólogos y entrenadores del centro, y una **App Móvil (Web & Nativa iOS/Android)** para pacientes y alumnos. Conecta la kinesiología y la rehabilitación física con el entrenamiento funcional, gestionando citas, fichas clínicas evolutivas (metodología SOAP, dolor EVA 1-10, movilidad ROM °), políticas de cancelación de 24h, recordatorios de asistencia in-app, accesibilidad universal (WCAG 2.1 AA) y arquitectura en la nube sobre AWS.
+Ecosistema digital integral compuesto por un **Programa de Escritorio (PC)** para la administración, kinesiólogos y entrenadores del centro, y una **App Móvil (Web & Nativa iOS/Android)** para pacientes y alumnos. Conecta la kinesiología y la rehabilitación física con el entrenamiento funcional, gestionando citas, fichas clínicas evolutivas (metodología SOAP, dolor EVA 1-10, movilidad ROM °), políticas de cancelación de 3h, recordatorios de asistencia in-app, accesibilidad universal (WCAG 2.1 AA) y arquitectura en la nube sobre AWS.
 
 ---
 
@@ -45,9 +45,9 @@ Ecosistema digital integral compuesto por un **Programa de Escritorio (PC)** par
 ### 📱 App Móvil (Pacientes / Alumnos) 
 
 - **HU-03 / HU-03.b · Agendamiento Autónomo & Tema Verde Limón**: Catálogo de horas disponibles, reserva en 1 clic y branding institucional.
-- **HU-04 / HU-04.b · Cancelación (Regla 24h) y Reagendamiento**:
-  - Reagendamiento sin costo ni descuento de saldo a nuevos bloques disponibles.
-  - Cancelación con **regla de 24 horas**: Reembolso automático (+1 sesión) si es $\ge 24\text{h}$, o liberación sin reembolso si es $< 24\text{h}$.
+- **HU-04 / HU-04.b · Cancelación (Regla 3h) y Reagendamiento**:
+  - Reagendamiento sin costo ni descuento de saldo a nuevos bloques disponibles (con $\ge 3\text{h}$ de anticipación).
+  - Cancelación con **regla de 3 horas**: Reembolso automático (+1 sesión) si es $\ge 3\text{h}$, o liberación sin reembolso si es $< 3\text{h}$.
 - **HU-06 · Gráficos de Evolución Kinésica**: Visualización interactiva del descenso del dolor y ganancia de movilidad.
 - **HU-11 · Recordatorio In-App de Confirmación de Asistencia**: Banner interactivo de confirmación previa.
 
@@ -267,7 +267,7 @@ node scripts/run-security-rbac-tests.mjs
 # 🩺 Pruebas de Ficha Clínica Kinésica (SOAP, dolor EVA 1-10 y ROM °):
 node scripts/run-clinical-tests.mjs
 
-# 📋 Pruebas de Reglas de Negocio, Cancelaciones 24h y Saldos:
+# 📋 Pruebas de Reglas de Negocio, Cancelaciones 3h y Saldos:
 node scripts/run-business-rules-tests.mjs
 
 # 💳 Pruebas de Pasarela de Pagos Mercado Pago y Webhooks:

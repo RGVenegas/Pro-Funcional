@@ -816,7 +816,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                               title: `ProFuncional: ${booking.title}`,
                               dateStr: booking.date,
                               timeStr: (booking.time || '').split(' - ')[0] || '10:00',
-                              description: `Sesión con ${booking.instructor}. Recuerda la regla de cancelación de 24h.`,
+                              description: `Sesión con ${booking.instructor}. Recuerda la regla de cancelación de 3h.`,
                             })}
                             className="min-h-[44px] touch-target-44 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold flex items-center justify-center gap-1.5 border border-white/10"
                             title="Descargar evento para Apple/Google Calendar"
@@ -833,7 +833,7 @@ export function UserCalendar({ memberName }: UserCalendarProps) {
                           </button>
                           <button
                             type="button"
-                            onClick={() => { if (window.confirm('¿Cancelar esta clase?')) void handleCancel(booking.id); }}
+                            onClick={() => { if (window.confirm('¿Cancelar esta clase? Con al menos 3 horas de anticipación se devuelve la sesión a tu saldo. Con menos de 3 horas, el cupo se libera sin devolución.')) void handleCancel(booking.id); }}
                             className="min-h-[44px] touch-target-44 py-2 px-3 rounded-xl bg-rose-500/20 text-rose-300 text-xs font-bold"
                           >
                             Cancelar

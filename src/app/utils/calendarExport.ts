@@ -29,7 +29,7 @@ export const parseEventDates = (dateStr: string, timeStr: string, durationMinute
 export const downloadIcsEvent = (event: CalendarEventData): void => {
   const { start, end } = parseEventDates(event.dateStr, event.timeStr, event.durationMinutes ?? 60);
   const location = event.location || 'ProFuncional — Centro Kinésico y Deportivo';
-  const description = event.description || 'Sesión programada en ProFuncional. Recuerda la política de cancelación con 24h de anticipación.';
+  const description = event.description || 'Sesión programada en ProFuncional. Recuerda la política de cancelación con 3h de anticipación.';
 
   const icsContent = [
     'BEGIN:VCALENDAR',
@@ -46,11 +46,11 @@ export const downloadIcsEvent = (event: CalendarEventData): void => {
     `DESCRIPTION:${description.replace(/\n/g, '\\n')}`,
     `LOCATION:${location}`,
     'STATUS:CONFIRMED',
-    // Alarma 24 horas antes para recordar política de cancelación
+    // Alarma 4 horas antes para recordar el límite de cancelación de 3 horas
     'BEGIN:VALARM',
     'ACTION:DISPLAY',
-    'DESCRIPTION:Recordatorio ProFuncional: Límite de 24h para reagendar sin costo tu sesión.',
-    'TRIGGER:-PT24H',
+    'DESCRIPTION:Recordatorio ProFuncional: Recuerda el límite de 3h antes para reagendar o cancelar sin costo tu sesión.',
+    'TRIGGER:-PT4H',
     'END:VALARM',
     // Alarma 2 horas antes
     'BEGIN:VALARM',
@@ -76,7 +76,7 @@ export const downloadIcsEvent = (event: CalendarEventData): void => {
 export const getGoogleCalendarUrl = (event: CalendarEventData): string => {
   const { start, end } = parseEventDates(event.dateStr, event.timeStr, event.durationMinutes ?? 60);
   const location = event.location || 'ProFuncional — Centro Kinésico y Deportivo';
-  const description = event.description || 'Sesión programada en ProFuncional. Recuerda la política de cancelación de 24h.';
+  const description = event.description || 'Sesión programada en ProFuncional. Recuerda la política de cancelación de 3h.';
 
   const params = new URLSearchParams({
     action: 'TEMPLATE',

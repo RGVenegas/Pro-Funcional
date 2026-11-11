@@ -145,7 +145,7 @@ export function UserHome({ user: account, onNavigate }: UserHomeProps) {
                     title: `ProFuncional: ${upcoming.title || 'Sesión Kinésica'}`,
                     dateStr: upcoming.date,
                     timeStr: upcoming.time || '10:00',
-                    description: `Sesión con ${upcoming.instructor || 'Kinesiólogo'}. Recuerda política de cancelación de 24h.`,
+                    description: `Sesión con ${upcoming.instructor || 'Kinesiólogo'}. Recuerda política de cancelación de 3h.`,
                   })}
                   title="Descargar para Apple Calendar / Outlook (.ics)"
                   className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-[#00E676] bg-[#00E676]/10 hover:bg-[#00E676]/20 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border border-[#00E676]/30 transition-colors"
@@ -158,7 +158,7 @@ export function UserHome({ user: account, onNavigate }: UserHomeProps) {
                     title: `ProFuncional: ${upcoming.title || 'Sesión Kinésica'}`,
                     dateStr: upcoming.date,
                     timeStr: upcoming.time || '10:00',
-                    description: `Sesión con ${upcoming.instructor || 'Kinesiólogo'}. Recuerda política de cancelación de 24h.`,
+                    description: `Sesión con ${upcoming.instructor || 'Kinesiólogo'}. Recuerda política de cancelación de 3h.`,
                   })}
                   target="_blank"
                   rel="noopener noreferrer"
