@@ -65,36 +65,16 @@ nginx -v   # Debe ser nginx/1.x.x
 
 ## 3. Configuración de la Base de Datos PostgreSQL
 
-Accede a PostgreSQL para crear la base de datos y el usuario con permisos adecuados:
-
-```bash
-# Acceder a la consola de PostgreSQL
-sudo -u postgres psql
-```
-
-Dentro del intérprete SQL de psql (`postgres=#`), ejecuta:
-
-```sql
--- Crear la base de datos profuncional
-CREATE DATABASE profuncional;
-
--- Crear o asegurar usuario postgres con contraseña
-CREATE USER postgres WITH PASSWORD 'postgres';
-
--- Otorgar todos los privilegios sobre la base de datos
-GRANT ALL PRIVILEGES ON DATABASE profuncional TO postgres;
-
--- (Opcional) Otorgar superusuario para permitir ejecución fluida de migraciones Prisma
-ALTER USER postgres WITH SUPERUSER;
-
--- Salir de psql
-\q
-```
-
-Verifica que el servicio de PostgreSQL esté activo:
-```bash
-sudo systemctl status postgresql
-```
+> **Nota de Arquitectura Actual:**  
+> La base de datos principal de ProFuncional se encuentra alojada en **Neon Cloud PostgreSQL (AWS us-east-2)** con connection pooling de alta concurrencia.  
+> Por tanto, **NO es necesario instalar ni ejecutar PostgreSQL dentro de la instancia EC2**, lo cual ahorra valiosa memoria RAM y CPU en instancias `t2.micro` o `t3.micro`. El backend se conecta directamente a Neon mediante SSL seguro.
+>
+> *(Opcional)* Si por contingencia académica o de red deseas ejecutar una base de datos local en la misma EC2, puedes instalarla con:
+> ```bash
+> sudo apt install -y postgresql postgresql-contrib
+> sudo -u postgres psql -c "CREATE DATABASE profuncional;"
+> sudo -u postgres psql -c "CREATE USER postgres WITH PASSWORD 'postgres' SUPERUSER;"
+> ```
 
 ---
 
@@ -108,7 +88,7 @@ git clone https://github.com/RGVenegas/Pro-Funcional.git
 cd Pro-Funcional
 ```
 
-### Configuración del archivo `.env` del Backend:
+### A. Configuración del archivo `.env` del Backend:
 Crea o edita el archivo `backend/.env`:
 
 ```bash
@@ -116,13 +96,41 @@ cd ~/Pro-Funcional/backend
 nano .env
 ```
 
+Ingresa la configuración actualizada (conectada a Neon PostgreSQL y pasarela Mercado Pago):
+
+```env
+# Puerto del servidor
+PORT=3001
+NODE_ENV=production
+
+# Base de Datos PostgreSQL (Neon Cloud en AWS us-east-2 con Connection Pooling)
+DATABASE_URL="postgresql://neondb_owner:npg_30oaUfGvenQd@ep-royal-leaf-b57dul4v-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require"
+DIRECT_URL="postgresql://neondb_owner:npg_30oaUfGvenQd@ep-royal-leaf-b57dul4v.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require"
+
+# Seguridad y Autenticación JWT
+JWT_SECRET="pro-funcional-secret-key-2026"
+
+# Integración Pasarela Mercado Pago
+MP_ACCESS_TOKEN="APP_USR-7927538972553829-102314-8176823578ad9dc95e0107da81d187bd-3786162905"
+MP_WEBHOOK_SECRET="bc812a5c2953ca4a1ac9cadb4f1142ed488a7b7ad8828ddb8f7d2e8a3fcaa8d9"
+```
+
+### B. Configuración del archivo `.env` del Frontend:
+Crea o edita el archivo `.env` en la raíz del proyecto (`~/Pro-Funcional/.env`):
+
+```bash
+cd ~/Pro-Funcional
+nano .env
+```
+
 Ingresa el siguiente contenido:
 
 ```env
-PORT=3001
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/profuncional?schema=public"
-JWT_SECRET="profuncional_jwt_secret_key_2026_super_secure"
-NODE_ENV=production
+# En producción servido por Nginx se usa /api como proxy inverso
+VITE_API_URL=/api
+
+# Clave pública de Mercado Pago (Checkout Bricks en el navegador)
+VITE_MP_PUBLIC_KEY=APP_USR-94b0da71-7536-48d0-979f-764848198412
 ```
 
 ---
@@ -252,24 +260,31 @@ sudo systemctl restart nginx
 
 ## 8. Script y Comandos de Actualización Rápida
 
-Cuando realices futuros cambios en el repositorio de GitHub (`main`), puedes actualizar tu servidor en AWS ejecutando el siguiente bloque de comandos:
+Cuando actualices tu servidor en AWS para reflejar los últimos cambios del repositorio (`main`) o cambios de base de datos / variables `.env`, puedes ejecutar el siguiente bloque de comandos:
 
 ```bash
+# 1. Posicionarse en la raíz y descargar los últimos cambios
 cd ~/Pro-Funcional
 git pull origin main
 
-# --- Actualizar Frontend ---
+# 2. Actualizar Frontend (React + Vite)
 npm install
 npm run build
 sudo cp -r dist/* /var/www/profuncional/
 sudo systemctl restart nginx
 
-# --- Actualizar Backend ---
+# 3. Actualizar Backend (NestJS + Prisma + Neon DB)
 cd ~/Pro-Funcional/backend
 npm install
+npx prisma generate
 npx prisma db push
 npm run build
-pm2 restart backend
+pm2 restart backend || pm2 start dist/main.js --name "backend"
+pm2 save
+
+# 4. Verificar salud del servicio
+curl http://localhost:3001/v1/health
+pm2 status
 ```
 
 ---
@@ -277,9 +292,9 @@ pm2 restart backend
 ### 📝 Resumen de Puertos y Servicios
 | Servicio | Puerto Local | Exposición | Descripción |
 | :--- | :--- | :--- | :--- |
-| **Nginx Web Server** | `80` | Pública | Sirve el frontend estático y proxy `/api` |
-| **NestJS Backend** | `3001` | Interna (`localhost`) | Proceso gestionado por PM2 |
-| **PostgreSQL Database** | `5432` | Interna (`localhost`) | Base de datos relacional `profuncional` |
+| **Nginx Web Server** | `80` (HTTP) | Pública (`0.0.0.0/0`) | Sirve el frontend estático SPA y proxy inverso hacia `/api` |
+| **NestJS Backend API** | `3001` | Interna (`localhost`) | API REST gestionada en segundo plano por PM2 |
+| **PostgreSQL Database** | `5432` / SSL | Nube AWS us-east-2 | Neon Cloud PostgreSQL con Pooler de conexiones |
 
 ---
-*Documento generado el 8 de Octubre de 2026 para el proyecto ProFuncional.*
+*Documento actualizado en Noviembre de 2026 para el proyecto ProFuncional.*
